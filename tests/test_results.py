@@ -39,3 +39,11 @@ def test_real_evo_export():
     assert [r['value'] for r in result['measurements']] == [104, .20, 1.08]
     assert result['sha256'] == 'ab6af3bc36541c8bb0d6d2634e3ee7367239af082de1c42de0fe2cf9dd0038f7'
     assert all(result['sha256'] in r['evidence'] for r in result['measurements'])
+
+
+@pytest.mark.skipif(not (ROOT/'local/validation-summary-v2.pdf').exists(), reason='Local live artifact is not distributed')
+def test_second_evo_export():
+    result = read_summary_pdf(str(ROOT/'local/validation-summary-v2.pdf'))
+    assert result['area_m2'] == 24
+    assert [r['value'] for r in result['measurements']] == [104, .22, 1.08]
+    assert result['sha256'] == '25f4a51ecbf4a5a9187a2dd1fc354bdf98b2e3dc3149d6d8234d0fae3e7d0820'

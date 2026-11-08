@@ -37,3 +37,18 @@ Hashes and byte sizes are in `live-validation-artifacts.json`. The actual native
 This proves a real end-to-end route from the current STF serializer through evo import, manufacturer ULD import, placement, calculation, native save/reopen, and PDF export for one synthetic room. It does not prove unattended CLI/MCP desktop control, repeatability across display configurations, bulk fixture placement, assignment geometry, or regulatory compliance.
 
 The current CLI/MCP still performs file preparation and criteria evaluation only. UI actions in this gate were agent-directed computer use. Accessibility snapshots sometimes lagged the screenshot, filename focus metadata incorrectly reported the search box, and a hidden/offscreen numeric edit timed out. Reliable automation must refresh state, verify visible results, and avoid treating successful input calls as proof of mutation. Do not encode the screen coordinates from this run as a portable driver.
+
+## Second calculation and persistence gate
+
+The separate `local/adapter-calculation-v2.evo` copy was edited through the visible Position X field: 2.800 to 3.000 m, leaving Y=2.000 and Z=3.035 m. After confirming the results-invalidation prompt, the agent started calculation, observed the progress panel and then the results overview. The report was exported again to `local/validation-summary-v2.pdf`; it has two pages, and page 1 was rendered and visually checked (centred luminaire, intact grid and room settings).
+
+The report reader extracted 104 lx, Uo=0.22 and LPD=1.08 W/m2. Documentation page 2 also shows glare valuation 15. Relative to v1, uniformity changes from 0.20 to 0.22; these are test results, not a compliant office design. The agent saved using the module's screenshot-guided path, observed the named save notification, closed via File > Close, reopened v2 from history and navigated to page 2. The same three result values appeared without recalculation.
+
+Checkpoint after save/reopen:
+
+| Local artifact | Bytes | SHA256 |
+|---|---:|---|
+| adapter-calculation-v2.evo | 823167 | c45178ca92434cc5316c24e22af82cdaa8569cb5fc6ae1af27a5f5544e801b53 |
+| validation-summary-v2.pdf | 391437 | 25f4a51ecbf4a5a9187a2dd1fc354bdf98b2e3dc3149d6d8234d0fae3e7d0820 |
+
+The second PDF is covered by an optional local-artifact regression test. It is not distributed in Git. Direct CLI execution and `python -m src.dialux_agent` now both resolve internal imports; subprocess tests exercise these entry points without the test suite's modified Python path. This gate still uses agent inspection between UI actions and does not establish standalone unattended operation.

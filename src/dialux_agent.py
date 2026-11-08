@@ -6,6 +6,12 @@ from pathlib import Path
 import sys
 
 
+def _local_module(name):
+    """Support both script and package entry points without altering sys.path."""
+    from importlib import import_module
+    return import_module(f'.{name}', __package__) if __package__ else import_module(name)
+
+
 def fingerprint(path):
     digest = hashlib.sha256()
     with path.open('rb') as stream:
@@ -66,16 +72,16 @@ def main():
     args = parser.parse_args()
     try:
         if args.command == 'room-create':
-            from backend import create_room
+            create_room = _local_module('backend').create_room
             result = create_room(json.loads(Path(args.spec).read_text(encoding='utf-8-sig')), args.output)
         elif args.command == 'stf-inspect':
-            from backend import inspect_stf
+            inspect_stf = _local_module('backend').inspect_stf
             result = inspect_stf(args.path)
         elif args.command == 'report-read':
-            from results import read_summary_pdf
+            read_summary_pdf = _local_module('results').read_summary_pdf
             result = read_summary_pdf(args.path)
         elif args.command == 'criteria-check':
-            from regulations import evaluate_profile
+            evaluate_profile = _local_module('regulations').evaluate_profile
             result = evaluate_profile(
                 json.loads(Path(args.profile).read_text(encoding='utf-8-sig')),
                 json.loads(Path(args.measurements).read_text(encoding='utf-8-sig')),
