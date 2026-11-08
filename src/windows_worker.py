@@ -362,9 +362,32 @@ def import_luminaire(app, main, process, expected_project, path, product_id):
     raise ValueError('Expected active luminaire not observed; import outcome unverified')
 
 
+def arrange_space(app, main, process, expected_project, product_id):
+    expected, state = prepare_project(app, main, process, expected_project)
+    if not product_id or product_id not in [c.window_text() for c in main.descendants(control_type='Text') if c.is_visible()]:
+        raise ValueError('Expected active luminaire is not visible')
+    if state['controls']['CalculationButtonStart']['enabled'] or state['controls']['DiscardResultsButton']['enabled']:
+        raise ValueError('Existing calculation-ready content or results detected; refuse potentially duplicate placement')
+    unique_control(main, 'Button', 'aid_ArrangementFromSpace').click()
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        try:
+            values = {key: unique_control(main, 'Edit', key).get_value() for key in
+                      ('ArrangementObjectName', 'ElementCountX', 'ElementCountY',
+                       'PolygonPosition_X', 'PolygonPosition_Y', 'PolygonPosition_Z')}
+        except ValueError:
+            time.sleep(.2)
+            continue
+        return {'operation': 'arrange_space', 'status': 'arrangement_observed',
+                'path': str(expected), 'arrangement': values,
+                'native_project_saved': False, 'uses_codex_computer_use': False,
+                'evidence': 'Native automatic arrangement invoked in current space; selected arrangement parameters read back. No illuminance target guarantee.'}
+    raise ValueError('Arrangement was invoked but readback failed; inspect before retry')
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space'])
     parser.add_argument('--product-id')
     parser.add_argument('--expected-project')
     parser.add_argument('--recalculate', action='store_true')
@@ -373,7 +396,7 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
@@ -387,6 +410,8 @@ def main():
             result = save_as(app, window, process, args.expected_project, args.path)
         elif args.action == 'import-luminaire':
             result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
+        elif args.action == 'arrange-space':
+            result = arrange_space(app, window, process, args.expected_project, args.product_id)
         else:
             result = calculate(app, window, process, args.expected_project, args.recalculate)
         print(json.dumps(result, ensure_ascii=True))

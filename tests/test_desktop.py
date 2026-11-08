@@ -25,6 +25,17 @@ def test_luminaire_requires_expected_product_before_worker(monkeypatch):
         desktop.desktop_import_luminaire('test.evo', 'fixture.uld', '')
 
 
+def test_arrangement_refuses_existing_calculation_content(monkeypatch):
+    state = {'controls': {'CalculationButtonStart': {'enabled': True},
+                          'DiscardResultsButton': {'enabled': False}}}
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: (Path('test.evo'), state))
+    text = SimpleNamespace(window_text=lambda: 'product', is_visible=lambda: True)
+    window = SimpleNamespace(descendants=lambda **k: [text])
+    monkeypatch.setattr(windows_worker, 'unique_control', lambda *a: pytest.fail('Placement invoked'))
+    with pytest.raises(ValueError, match='duplicate placement'):
+        windows_worker.arrange_space(None, window, None, 'test.evo', 'product')
+
+
 def test_worker_timeout_reports_unknown_without_retry(monkeypatch):
     monkeypatch.setattr(desktop.sys, 'platform', 'win32')
     calls = []

@@ -45,6 +45,17 @@ def desktop_import_luminaire(expected_project: str, path: str, product_id: str) 
     return _run('import-luminaire', expected_project, target=path, product_id=product_id)
 
 
+def desktop_arrange_space(expected_project: str, product_id: str) -> dict:
+    """Use native automatic placement in the current space of a single-room fixture.
+
+    Requires the expected active luminaire and refuses calculation-ready content
+    to reduce duplicate placement. Does not save or guarantee a lighting target.
+    """
+    if not isinstance(product_id, str) or not product_id.strip():
+        raise ValueError('product_id must be a nonempty string')
+    return _run('arrange-space', expected_project, product_id=product_id)
+
+
 def desktop_launch(executable: str = 'C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe') -> dict:
     """Start installed DIALux or reuse its unique existing process; never install software."""
     return _run('launch', target=executable)

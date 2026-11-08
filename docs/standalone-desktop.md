@@ -61,3 +61,12 @@ Use `python scripts/check_local_evidence.py` to compare the current local artifa
 A separate direct UIA exploratory invocation of `aid_ArrangementFromSpace` created a 3-by-2 six-luminaire arrangement. Its reported center was (3, 2, 3.035) m and its estimate was 539.2 lx. It is not yet a public placement command. Dimension annotations appeared as native Popup windows; only exact noninteractive one-text metric labels are exempted from the dialog guard.
 
 The following CLI calculation did **not** complete successfully. DIALux PID 3412 exited; Windows Application Error at 2026-11-09 07:22:42 reported DIALux 5.14.1.0, ntdll.dll and exception 0xc0000374. No cause is established. Placement had not been saved, and no actual result or report is claimed. The saved v5 geometry checkpoint remains the recovery input. The CLI reported completion unverified; no automatic mutation retry was performed.
+
+
+## Saved arrangement and crash controls, 2026-11-09
+
+Recovered the unmodified v5 geometry, re-imported the same ULD and repeated native automatic placement. Before calculation, `desktop-save-as` successfully created `local/standalone-array-v6.evo`, 421709 bytes, SHA256 `87d4249ea036262c92415dd90d6bbf9119a807586a0f28af1531fa24e8a4c315`. This preserves the six-luminaire reproduction independently of the failed calculation. Its calculation again terminated DIALux with 0xc0000374 (Application Error 07:25:26, PID 20476).
+
+The previously successful single-luminaire v3 project also terminated during a fresh recalculation in this session. A further controlled run opened saved v6 and invoked calculation but did **not** query UIA afterward: process-only monitoring observed DIALux exit after five seconds. This rules out subsequent repeated UIA reads as a necessary trigger in that run, but does not establish the underlying cause or exclude the Invoke operation itself.
+
+New CLI `desktop-arrange-space --expected-project <project.evo> --product-id <active-id>` and MCP `desktop_arrange_space` encapsulate the observed native automatic-placement action. It is scoped to the current space in a single-room fixture, requires visible expected product identity, refuses already calculation-ready content/results to reduce duplicate insertion, and reads back the selected arrangement. The native action was exercised directly; the public command still needs a fresh live end-to-end replay. It neither saves nor asserts lighting-target compliance. Stable calculation and independent PDF export remain unresolved acceptance gates.
