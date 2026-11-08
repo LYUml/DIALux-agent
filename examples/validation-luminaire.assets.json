@@ -1,0 +1,23 @@
+[
+  {
+    "format": "ies",
+    "url": "https://api.microservices.signify.com/api/configurator/v2/getPhotometricAssets/ies?id=910505102817&locale=en_AA",
+    "path": "local/luminaires/910505102817.ies",
+    "sha256": "96f1dec0d3945a5b82bbe619bc65f302a14badc230dd22c360fc8149e42f6741",
+    "bytes": 1022
+  },
+  {
+    "format": "ldt",
+    "url": "https://api.microservices.signify.com/api/configurator/v2/getPhotometricAssets/ldt?id=910505102817&locale=en_AA",
+    "path": "local/luminaires/910505102817.ldt",
+    "sha256": "6a9becf4f45e1c7d581cff52c5c1ebc13abed7b6774af0b3cc933e64df2f339f",
+    "bytes": 803
+  },
+  {
+    "format": "uld",
+    "url": "https://api.microservices.signify.com/api/configurator/v2/getPhotometricAssets/uld?id=910505102817&locale=en_AA",
+    "path": "local/luminaires/910505102817.uld",
+    "sha256": "6dc1c0220a9928ce96f7110daf816b9db73b614c8f8ed5041216113d6d40e1fa",
+    "bytes": 24064
+  }
+]
