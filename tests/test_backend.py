@@ -54,6 +54,19 @@ def test_preserve_existing(spec, tmp_path):
     assert path.read_bytes() == b'original'
 
 
+def test_preserve_output_created_during_serialization(spec, tmp_path, monkeypatch):
+    import backend
+    original_writer = backend.escribir
+    target = tmp_path/'race.stf'
+    def concurrent_writer(*args, **kwargs):
+        original_writer(*args, **kwargs)
+        target.write_bytes(b'created by another writer')
+    monkeypatch.setattr(backend, 'escribir', concurrent_writer)
+    with pytest.raises(FileExistsError):
+        create_room(spec, str(target))
+    assert target.read_bytes() == b'created by another writer'
+
+
 def test_source_changes_detected(tmp_path):
     path = tmp_path / 'source.dwg'
     path.write_bytes(b'AC1032original')

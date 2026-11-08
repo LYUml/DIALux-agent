@@ -3,7 +3,7 @@
 The domain boundaries are independent of country:
 
 - Geometry/photometry adapters: source formats, units, fixture identities and geometry; reuse licensed upstream parsers.
-- DIALux execution: live project state, actual calculation and native export. Not implemented yet.
+- DIALux execution: agent-inspected Computer Use plus an injected desktop session adapter for save/calculation. Real import, placement and export are verified workflows; standalone CLI/MCP desktop automation is not implemented.
 - Result adapters: normalize measured values, units, calculation surfaces and artifact evidence.
 - Regulations: region-independent evaluator consumes versioned criteria profiles. No thresholds embedded in evaluator code.
 - Reporting: compares evidence-backed results and produces reviewable outputs; independent from rules and simulation.
@@ -12,4 +12,4 @@ First jurisdiction: Hong Kong. `profiles/hk-office.template.json` is deliberatel
 
 Each criterion carries a stable ID, metric, unit, comparator, threshold, calculation surface and complete source citation. Each measurement carries metric, unit, value, surface and artifact evidence. Unit or surface mismatch, missing sources, missing results and duplicate matching measurements produce `unverified`, never a pass. A verified flag records review; it does not itself prove the source or measurements are authentic.
 
-Future jurisdiction packs use the same schema. New calculation metrics can use result-adapter plugins without changing geometry or desktop control. The first evaluator supports numeric comparisons; conditional applicability and complex formulas must be explicitly implemented and tested before they are accepted.
+Future jurisdiction packs use the same schema. New calculation metrics can use result-adapter plugins without changing geometry or desktop control. The evaluator supports numeric comparisons and tested evidence-bearing conjunctive applicability conditions. Complex formulas are not implemented. `workflow.check_report` joins PDF evidence to a supplied profile without embedding regional thresholds. The Hong Kong energy and occupational-advice profiles remain separate.

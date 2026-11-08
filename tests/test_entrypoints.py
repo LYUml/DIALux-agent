@@ -23,3 +23,13 @@ def test_package_server_import():
     run = subprocess.run([sys.executable, '-c', 'import src.server'], cwd=ROOT,
                          capture_output=True, text=True)
     assert run.returncode == 0, run.stderr
+
+
+def test_broken_report_returns_json_instead_of_traceback(tmp_path):
+    path = tmp_path/'broken.pdf'
+    path.write_bytes(b'not a PDF')
+    run = subprocess.run([sys.executable, '-m', 'src.dialux_agent', 'report-read', '--path', str(path)],
+                         cwd=ROOT, capture_output=True, text=True)
+    assert run.returncode == 2
+    assert 'Unreadable' in json.loads(run.stdout)['error']
+    assert not run.stderr

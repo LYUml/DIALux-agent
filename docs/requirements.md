@@ -1,6 +1,6 @@
 # Assignment-driven tool requirements
 
-Source: BSE3125 DIALux Assignment 2627.pdf, pages 1–2. Text extracted locally on 2026-11-08; visual review pending. Project layout.dwg is the supplied geometry; dimensions and units have not been verified.
+Source: BSE3125 DIALux Assignment 2627.pdf, pages 1–2. Text extracted and both pages rendered and visually reviewed locally on 2026-11-08. The 10-page main report limit, 10 MB combined PDF, independent layout plan, ceiling-grid alignment and rubric weights were confirmed. Project layout.dwg is the supplied geometry; dimensions and units have not been verified.
 
 - Open-plan office on a typical floor; international lighting guidance and local building energy code.
 - Explicit assumptions for surface reflectances and other necessary parameters.

@@ -1,10 +1,13 @@
 """Read the tested English two-page DIALux room Summary, without inferring compliance."""
 import hashlib
 from io import BytesIO
+import math
 from pathlib import Path
 import re
 
 import pdfplumber
+from pdfminer.psexceptions import PSException
+from pdfplumber.utils.exceptions import PdfminerException
 
 NUMBER = r'(\d+(?:\.\d+)?)'
 
@@ -36,7 +39,8 @@ def parse_summary_pages(pages: list[str]) -> dict:
         raise ValueError('Illuminance and uniformity refer to different calculation surfaces')
     illuminance, uniformity = float(em), float(uo)
     lpd = float(_one(r'^Space Lighting power density\s+' + NUMBER + r'\s+W/m²\s', b))
-    if area <= 0 or not 0 <= plane < height or not 0 <= uniformity <= 1:
+    if (not all(math.isfinite(v) for v in (area, plane, height, illuminance, uniformity, lpd))
+            or area <= 0 or not 0 <= plane < height or not 0 <= uniformity <= 1):
         raise ValueError('Invalid physical values in summary')
     return {'room_scene_header': headers[0], 'area_m2': area,
             'height_m': height, 'workplane_m': plane,
@@ -57,8 +61,11 @@ def read_summary_pdf(path: str) -> dict:
     # Parse precisely the bytes whose hash is attached to measurements.
     data = source.read_bytes()
     digest = hashlib.sha256(data).hexdigest()
-    with pdfplumber.open(BytesIO(data)) as pdf:
-        pages = [page.extract_text() or '' for page in pdf.pages]
+    try:
+        with pdfplumber.open(BytesIO(data)) as pdf:
+            pages = [page.extract_text() or '' for page in pdf.pages]
+    except (PSException, PdfminerException) as exc:
+        raise ValueError(f'Unreadable or unsupported PDF: {type(exc).__name__}') from exc
     result = parse_summary_pages(pages)
     for row in result['measurements']:
         row['evidence'] = f'{source}#page={row["page"]};sha256={digest}'

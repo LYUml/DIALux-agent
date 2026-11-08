@@ -21,6 +21,19 @@ def test_actual_values_not_targets(pages):
     assert result['measurements'][0]['calculation_surface'] == 'WP7'
 
 
+def test_overflow_value_is_not_reported_as_infinity(pages):
+    pages[1] = pages[1].replace('217 lx', '9' * 400 + ' lx')
+    with pytest.raises(ValueError, match='physical'):
+        parse_summary_pages(pages)
+
+
+def test_corrupt_pdf_is_domain_error(tmp_path):
+    path = tmp_path/'broken.pdf'
+    path.write_bytes(b'not a PDF')
+    with pytest.raises(ValueError, match='Unreadable'):
+        read_summary_pdf(str(path))
+
+
 @pytest.mark.parametrize('mutation', ['duplicate', 'room', 'surface', 'missing', 'unit', 'extra_page'])
 def test_reject_ambiguous_reports(pages, mutation):
     if mutation == 'duplicate': pages[1] += '\nWorking plane Ēperpendicular 9 lx ≥ 500 lx WP7'

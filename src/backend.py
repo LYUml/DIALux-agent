@@ -2,6 +2,7 @@
 from pathlib import Path
 import math
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'vendor' / 'MCP_Dialux'))
@@ -49,7 +50,15 @@ def create_room(spec: dict, output: str) -> dict:
     if not 0 <= plane < height or not 0 < mf <= 1 or not all(0 <= x <= 100 for x in reflections):
         raise ValueError('Invalid height, workplane, maintenance factor or reflectances')
     room = Estancia(name, [tuple(map(float, p)) for p in contour], height, plane, *reflections, mf)
-    escribir([room], path, proyecto='DIALux-agent', autor='DIALux-agent')
+    # Serialize privately, then acquire the destination exclusively. The earlier
+    # existence check is useful feedback but cannot prevent a concurrent writer.
+    with tempfile.TemporaryDirectory(prefix='dialux-stf-') as staging:
+        staged = Path(staging) / 'room.stf'
+        escribir([room], staged, proyecto='DIALux-agent', autor='DIALux-agent')
+        data = staged.read_bytes()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('xb') as stream:
+        stream.write(data)
     return {'path': str(path), 'area_m2': polygon.area, 'room_count': 1,
             'assumptions': spec['assumptions'], 'dialux_import_verified': False,
             'warnings': ['Geometry exchange only; no photometry or simulation results.']}
