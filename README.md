@@ -6,7 +6,7 @@ Experimental Windows tooling for DIALux evo, driven by the BSE3125 lighting-desi
 
 `python src/dialux_agent.py inventory --source <assignment-folder>` hashes PDF/DWG inputs without modifying them and reports the DWG header. `verify --manifest <json>` checks that originals remain unchanged. `room-create` generates a single-room STF through the vendored backend, and `stf-inspect` reads it back. `criteria-check` evaluates supplied sourced criteria against evidence-bearing measurements. All commands emit JSON.
 
-The real evo 14.1 workflow has been verified through agent-directed computer use: STF import, manufacturer ULD import, single-luminaire placement, calculation, native save/reopen and PDF export, followed by a second edit/recalculate/export/reopen cycle. The CLI/MCP does not yet automate those desktop operations. The [desktop session adapter](docs/desktop-adapter.md) supports inspected actions through the existing Computer Use client. See [live evidence](docs/live-validation-2026-11-08.md). This is not a completed CLI-Anything harness.
+Desktop operations now use an independent Windows pywinauto backend through CLI/MCP, without Codex Computer Use. Launch, STF import, native save/open, photometry import and PDF export have live evidence. Automatic arrangement is implemented from an observed native action, but its public command still needs a fresh end-to-end replay. Earlier calculations succeeded; current fresh calculations reproducibly crash DIALux 14.1. The prototype is **not yet acceptance-complete**. See [standalone evidence and diagnostics](docs/standalone-desktop.md). The older [Computer Use adapter](docs/desktop-adapter.md) is historical research, not the required desktop backend.
 
 The MIT-licensed MCP_Dialux geometry backend is incorporated under `vendor/MCP_Dialux`, with its license. CLI-Anything informs the CLI/JSON/shared-backend approach. See [upstream review](docs/upstream-review.md) for pinned revisions and license decisions. Research checkouts remain local-only under `upstream/`.
 
@@ -35,7 +35,7 @@ Available Hong Kong modules are [BEC 2024 office LPD](docs/hk-office-lpd.md) and
 
 ## MCP configuration
 
-The independently running Windows backend provides `desktop-launch`, `desktop-status`, `desktop-import-stf`, `desktop-save-as`, `desktop-save`, `desktop-calculate` and `desktop-open` CLI commands, with corresponding underscore-named MCP tools. They use pywinauto UIA, not Codex Computer Use. These paths have been live-tested; imported geometry parameter readback, photometry import, placement and export are still being implemented. See [standalone desktop requirements and evidence](docs/standalone-desktop.md).
+Independent desktop CLI commands are `desktop-launch`, `desktop-status`, `desktop-import-stf`, `desktop-import-luminaire`, `desktop-arrange-space`, `desktop-save-as`, `desktop-save`, `desktop-open`, `desktop-calculate`, and `desktop-export-pdf`. MCP exposes the same names with underscores. Use `--help` for each command and [the standalone guide](docs/standalone-desktop.md) for preconditions and evidence. These operations can take foreground keyboard focus; they do not provide a private desktop or separate mouse. A worker timeout or unexpected dialog means the outcome is unverified: inspect before retrying. Export uses stored results and does not prove a fresh calculation.
 
 The repository also includes an AI workflow skill at [skills/dialux-agent/SKILL.md](skills/dialux-agent/SKILL.md). It describes the actual commands, provenance checks and live verification boundary. It is not globally installed and does not add desktop control by itself. PyYAML in the locked environment supports the skill validator.
 
@@ -52,7 +52,7 @@ Configure a stdio MCP client with these absolute paths (adjust the checkout loca
 }
 ```
 
-Tools: `inventory`, `verify`, `create_room`, `inspect_stf`, `evaluate_profile`, `read_summary_pdf`, `check_report`. The MCP test exercises initialization, discovery, geometry creation and readback through real subprocess transport, plus report assessment when the local exported PDF is present. Paths are caller-specified: this is a trusted local prototype, not a remotely exposed service.
+Non-desktop tools: `inventory`, `verify`, `create_room`, `inspect_stf`, `evaluate_profile`, `read_summary_pdf`, `check_report`. The MCP test exercises initialization, discovery, geometry creation and readback through real subprocess transport, plus report assessment when the local exported PDF is present. Paths are caller-specified: this is a trusted local prototype, not a remotely exposed service.
 
 `report-read --path <summary.pdf>` extracts average perpendicular illuminance, uniformity and LPD from the tested English two-page single-room Summary, either standalone or embedded in a complete report containing exactly one Summary. It retains the room/scene header, surface identifier, page and PDF SHA-256 for traceability. Its `measurements` array can be passed to the criteria evaluator after checking scope. Unsupported/ambiguous text layouts are rejected; scanned PDFs and reports containing multiple room/scene summaries are rejected. Original document page numbers are retained. Reading values does not establish compliance or authenticate a report. The local real evo export is tested when present; that test is skipped on fresh checkouts without the private artifact.
 
@@ -73,7 +73,8 @@ This example returns exit code **3 / unverified**, because no project applicabil
 | CLI / MCP | Real process tests; common backend |
 | Hong Kong sources | Eight official PDFs cached locally with hashes, editions and review register |
 | Hong Kong rules | Source-reviewed BEC 2024 office LPD module with evidenced applicability; other criteria pending, no whole-project certification |
-| DIALux import, real luminaires, calculation, save/reopen, report export | Synthetic-room initial run and edited second cycle verified through computer use; unattended driver pending |
+| Independent DIALux desktop operations | Import, save/open, photometry and PDF export have live evidence; full public-command replay pending |
+| Fresh calculation | Previously observed success; current repeatable native crash, dump captured, unresolved |
 | BSE3125 assignment | Requirements extracted, originals preserved; design not produced |
 
 See [requirements](docs/requirements.md), [test plan](docs/test-plan.md), [module boundaries](docs/modules.md), and [Hong Kong source review](docs/hk-source-register.md). Refresh local official PDF caches with `python scripts/cache_hk_sources.py`; caching does not activate rules.

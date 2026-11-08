@@ -25,9 +25,11 @@ Measurements must identify units, calculation surface and evidence. `criteria-ch
 
 ## Real DIALux work
 
-Consult `docs/test-plan.md` and `docs/validation-luminaire.md` when testing the application. Use the available computer-use skill/tool for native interactions, respecting the user's current shared-desktop availability. Do not assume a separate mouse or an existing automation API.
+Use the independent `desktop-*` CLI commands or their underscore-named MCP equivalents. Read `docs/standalone-desktop.md` for verified capabilities and current failures, and `docs/validation-luminaire.md` for the manufacturer's asset discrepancies. The older sky/Computer Use adapter is historical research; do not substitute it for standalone CLI/MCP acceptance.
 
-For reusable session operations, read `docs/desktop-adapter.md`. The adapter injects the existing sky client; observe and inspect in one call, act in the next. Saving is live-verified; other methods must retain their documented validation status. It is not a standalone MCP desktop server.
+Start with `desktop-status`. Match the exact expected native project before mutation. Import STF into an empty workspace, then Save As to a new `.evo` path. Import local photometry with an expected product ID; this loads an active luminaire but does not place it. `desktop-arrange-space` is scoped to the current space of a single-room fixture and refuses calculation-ready content to reduce duplicate insertion. Save placement before calculation. Operations may take shared foreground focus, so respect the user's current desktop availability.
+
+A successful command submission is not proof of completion. After a timeout, unexpected dialog or process exit, inspect state and preserve evidence before retrying. Current DIALux 14.1 calculations have a documented repeatable native crash: do not silently substitute cached results or synthetic numbers. `desktop-export-pdf` exports the current documentation selection to a new PDF using stored results. `report-read` preserves document page numbers and hashes, supports exactly one adjacent English two-page room Summary inside a larger report, and rejects multiple summaries.
 
 Verify room inputs in evo, load traceable manufacturer photometry, calculate, save a native project, reopen it, and compare the exported report with application results. Record actual observations and artifact paths. Keep unperformed stages explicitly pending. Source discrepancies must be resolved for design conclusions, not silently overwritten. A catalogue UGR label is not a calculated room UGR.
 
