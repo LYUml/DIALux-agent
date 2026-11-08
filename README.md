@@ -4,10 +4,60 @@ Experimental Windows tooling for DIALux evo, driven by the BSE3125 lighting-desi
 
 ## Current capabilities
 
-`python src/dialux_agent.py inventory --source <assignment-folder>` hashes PDF/DWG inputs without modifying them and reports the DWG header. `verify --manifest <json>` checks that originals remain unchanged. Both commands emit JSON and nonzero exit codes on failure.
+`python src/dialux_agent.py inventory --source <assignment-folder>` hashes PDF/DWG inputs without modifying them and reports the DWG header. `verify --manifest <json>` checks that originals remain unchanged. `room-create` generates a single-room STF through the vendored backend, and `stf-inspect` reads it back. `criteria-check` evaluates supplied sourced criteria against evidence-bearing measurements. All commands emit JSON.
 
-Live DIALux control and calculation are not implemented yet. A previous desktop probe reached evo 14.1's login screen and exposed UI Automation IDs; project editing and simulation are unverified. This is not a completed CLI-Anything harness.
+Live DIALux control and calculation are not implemented yet. A desktop probe reached evo 14.1's STF import dialog after login; project editing and simulation are unverified. Desktop interaction is paused while the user uses the computer. This is not a completed CLI-Anything harness.
 
-Upstream research checkouts are local-only under `upstream/`: https://github.com/MarcosCastanedaVentura/MCP_Dialux and https://github.com/HKUDS/CLI-Anything. Their code has not been incorporated into this package.
+The MIT-licensed MCP_Dialux geometry backend is incorporated under `vendor/MCP_Dialux`, with its license. CLI-Anything informs the CLI/JSON/shared-backend approach. See [upstream review](docs/upstream-review.md) for pinned revisions and license decisions. Research checkouts remain local-only under `upstream/`.
+
+## Setup and commands
+
+Python 3.12 is the tested runtime. From this repository in PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe src/dialux_agent.py room-create --spec examples/validation-room.json --output local/demo-room.stf
+.\.venv\Scripts\python.exe src/dialux_agent.py stf-inspect --path local/demo-room.stf
+.\.venv\Scripts\python.exe src/dialux_agent.py criteria-check --profile profiles/hk-office.template.json --measurements local/measurements.json
+```
+
+`room-create` refuses to overwrite existing output: choose a new version name. The example is a synthetic 6 x 4 m room, not assignment geometry. STF round-trip tests prove serialization, not successful evo import. Latin-1 room names are required by the upstream format. Invoking the script by absolute path works from another working directory.
+
+Create `local/measurements.json` as an array containing `metric`, `unit`, `calculation_surface`, numeric `value`, and `evidence` on each item. The Hong Kong template has no adopted criteria and returns `unverified`, including with an empty measurement array `[]`. A profile's `verified` label is a caller assertion, not independent verification of the document or project applicability.
+
+Exit codes: `0` successful operation / supplied criteria pass; `1` source mismatch or criteria fail; `2` invalid input or I/O error; `3` criteria unverified. Missing evidence is never passing. The engine does not certify the entire project.
+
+## MCP configuration
+
+Configure a stdio MCP client with these absolute paths (adjust the checkout location on other machines):
+
+```json
+{
+  "mcpServers": {
+    "dialux-agent": {
+      "command": "C:/Users/lyuml-win/Desktop/DIALux-agent/.venv/Scripts/python.exe",
+      "args": ["C:/Users/lyuml-win/Desktop/DIALux-agent/src/server.py"]
+    }
+  }
+}
+```
+
+Tools: `inventory`, `verify`, `create_room`, `inspect_stf`, `evaluate_profile`. The MCP test exercises initialization, discovery, geometry creation and readback through real subprocess transport. Paths are caller-specified: this is a trusted local prototype, not a remotely exposed service.
+
+## Evidence and remaining work
+
+| Capability | Current evidence |
+|---|---|
+| PDF/DWG integrity | SHA-256 inventory and tamper test; no DWG geometry interpretation |
+| Single-room STF exchange | Reused serializer, parameter validation and round-trip tests |
+| CLI / MCP | Real process tests; common backend |
+| Hong Kong sources | Eight official PDFs cached locally with hashes, editions and review register |
+| Hong Kong automatic compliance | Pending applicability modelling and clause review; template inactive |
+| DIALux import, real luminaires, calculation, save, report export | Not verified |
+| BSE3125 assignment | Requirements extracted, originals preserved; design not produced |
+
+See [requirements](docs/requirements.md), [test plan](docs/test-plan.md), [module boundaries](docs/modules.md), and [Hong Kong source review](docs/hk-source-register.md). Refresh local official PDF caches with `python scripts/cache_hk_sources.py`; caching does not activate rules.
 
 Commit convention: `YYYY-MM-DD English change description`, matching polyu_bse3124. Do not publish assignment originals, credentials, logs containing personal data, or generated local projects.

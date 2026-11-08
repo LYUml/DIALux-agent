@@ -12,8 +12,12 @@ SOURCE_FIELDS = ('document_title', 'edition', 'clause_or_table', 'page',
 
 
 def evaluate_profile(profile: dict, measurements: list[dict]) -> dict:
+    if not isinstance(profile, dict) or not isinstance(measurements, list) or any(not isinstance(m, dict) for m in measurements):
+        raise ValueError('Expected a profile object and a list of measurement objects')
     if profile.get('schema') != 'dialux-agent/criteria-profile/v1':
         raise ValueError('Unsupported criteria profile')
+    if not isinstance(profile.get('criteria'), list) or any(not isinstance(c, dict) for c in profile['criteria']):
+        raise ValueError('Expected a list of criterion objects')
     rows = []
     seen = set()
     for criterion in profile.get('criteria', []):

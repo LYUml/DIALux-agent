@@ -1,4 +1,4 @@
-"""Read-only source inventory: first building block, not a DIALux simulator."""
+"""DIALux-agent JSON CLI: source integrity, geometry exchange and criteria checks."""
 import argparse
 import hashlib
 import json
@@ -58,6 +58,9 @@ def main():
     room.add_argument('--spec', required=True)
     room.add_argument('--output', required=True)
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
+    criteria = commands.add_parser('criteria-check')
+    criteria.add_argument('--profile', required=True)
+    criteria.add_argument('--measurements', required=True)
     args = parser.parse_args()
     try:
         if args.command == 'room-create':
@@ -66,10 +69,17 @@ def main():
         elif args.command == 'stf-inspect':
             from backend import inspect_stf
             result = inspect_stf(args.path)
+        elif args.command == 'criteria-check':
+            from regulations import evaluate_profile
+            result = evaluate_profile(
+                json.loads(Path(args.profile).read_text(encoding='utf-8-sig')),
+                json.loads(Path(args.measurements).read_text(encoding='utf-8-sig')))
         else:
             result = inventory(args.source) if args.command == 'inventory' else verify(
                 json.loads(Path(args.manifest).read_text(encoding='utf-8-sig')))
         print(json.dumps(result, ensure_ascii=True, indent=2))
+        if args.command == 'criteria-check':
+            return {'pass': 0, 'fail': 1, 'unverified': 3}[result['status']]
         return 0 if result.get('ok', True) else 1
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(json.dumps({'ok': False, 'error': str(exc)}))
