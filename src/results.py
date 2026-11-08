@@ -1,4 +1,4 @@
-"""Read the tested English two-page DIALux room Summary, without inferring compliance."""
+"""Read one English DIALux room Summary, standalone or within a full report."""
 import hashlib
 from io import BytesIO
 import math
@@ -10,6 +10,7 @@ from pdfminer.psexceptions import PSException
 from pdfplumber.utils.exceptions import PdfminerException
 
 NUMBER = r'(\d+(?:\.\d+)?)'
+SUMMARY_HEADER = r'^(Building .+?\(Light scene\s+\d+\))\s*\nSummary\s*$'
 
 
 def _one(pattern, text):
@@ -25,7 +26,7 @@ def parse_summary_pages(pages: list[str]) -> dict:
     headers = []
     for text in pages:
         # Match the complete header, including a light-scene number wrapped onto a new line.
-        header = _one(r'^(Building .+?\(Light scene\s+\d+\))\s*\nSummary\s*$', text)
+        header = _one(SUMMARY_HEADER, text)
         headers.append(' '.join(header.split()))
     if headers[0] != headers[1]:
         raise ValueError('Summary pages refer to different rooms or light scenes')
@@ -53,8 +54,22 @@ def parse_summary_pages(pages: list[str]) -> dict:
                  'unit': 'W/m2', 'calculation_surface': 'space', 'page': 2}]}
 
 
+def parse_report_pages(pages: list[str]) -> dict:
+    """Select exactly one adjacent two-page Summary; reject multi-room ambiguity."""
+    selected = [(i, text) for i, text in enumerate(pages)
+                if re.search(SUMMARY_HEADER, text, re.MULTILINE)]
+    if len(selected) != 2 or selected[1][0] != selected[0][0] + 1:
+        raise ValueError('Expected exactly one adjacent two-page room Summary in report')
+    result = parse_summary_pages([text for _, text in selected])
+    for row in result['measurements']:
+        row['page'] = selected[row['page'] - 1][0] + 1
+    result['summary_pages'] = [index + 1 for index, _ in selected]
+    result['document_pages'] = len(pages)
+    return result
+
+
 def read_summary_pdf(path: str) -> dict:
-    """Extract measured results from a tested English two-page room summary PDF."""
+    """Extract one tested English room Summary, including inside a full PDF report."""
     source = Path(path).resolve(strict=True)
     if source.suffix.lower() != '.pdf':
         raise ValueError('Expected a PDF report')
@@ -66,12 +81,12 @@ def read_summary_pdf(path: str) -> dict:
             pages = [page.extract_text() or '' for page in pdf.pages]
     except (PSException, PdfminerException) as exc:
         raise ValueError(f'Unreadable or unsupported PDF: {type(exc).__name__}') from exc
-    result = parse_summary_pages(pages)
+    result = parse_report_pages(pages)
     for row in result['measurements']:
         row['evidence'] = f'{source}#page={row["page"]};sha256={digest}'
     result.update(schema='dialux-agent/summary-results/v1', source=str(source), sha256=digest,
                   compliance_status='not_evaluated',
                   warnings=['Extracted report values only; no authentication of the report or design compliance.',
-                            'Only the tested English two-page single-room Summary is supported.',
+                            'Only one adjacent English two-page room Summary is supported; multiple summaries are refused.',
                             'Report targets and DIN energy estimates are not adopted Hong Kong criteria.'])
     return result

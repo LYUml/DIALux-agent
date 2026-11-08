@@ -4,7 +4,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-from results import parse_summary_pages, read_summary_pdf
+from results import parse_summary_pages, parse_report_pages, read_summary_pdf
 
 
 @pytest.fixture
@@ -19,6 +19,31 @@ def test_actual_values_not_targets(pages):
     result = parse_summary_pages(pages)
     assert [r['value'] for r in result['measurements']] == [217, .41, 4.2]
     assert result['measurements'][0]['calculation_surface'] == 'WP7'
+
+
+def test_full_document_preserves_original_page_numbers(pages):
+    result = parse_report_pages(['Cover', 'Table of Contents\nSummary'] + pages + ['Glossary'])
+    assert result['summary_pages'] == [3, 4]
+    assert result['document_pages'] == 5
+    assert all(row['page'] == 4 for row in result['measurements'])
+
+
+@pytest.mark.parametrize('kind', ['multiple', 'separated', 'mixed_room'])
+def test_full_document_refuses_ambiguous_summary_selection(pages, kind):
+    if kind == 'multiple': report = pages + pages
+    elif kind == 'separated': report = [pages[0], 'Unrelated page', pages[1]]
+    else: report = [pages[0], pages[1].replace('Room R', 'Room X')]
+    with pytest.raises(ValueError):
+        parse_report_pages(report)
+
+
+@pytest.mark.skipif(not (ROOT/'local/standalone-cli-export-v3.pdf').exists(), reason='Local live artifact is not distributed')
+def test_standalone_full_document_export():
+    result = read_summary_pdf(str(ROOT/'local/standalone-cli-export-v3.pdf'))
+    assert result['document_pages'] == 28
+    assert result['summary_pages'] == [14, 15]
+    assert [row['value'] for row in result['measurements']] == [104, .21, 1.08]
+    assert all('#page=15;' in row['evidence'] for row in result['measurements'])
 
 
 def test_overflow_value_is_not_reported_as_infinity(pages):

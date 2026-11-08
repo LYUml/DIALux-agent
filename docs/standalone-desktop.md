@@ -85,4 +85,11 @@ CLI `desktop-export-pdf --expected-project local/adapter-module-calculation-v3.e
 
 Live output: 28 pages, 1518595 bytes, SHA256 `f432e22c88174e64ba6a02d8e507ff7a89c7155a46a1ddbeaca748cb70a60f09`. Page 15 was extracted and rendered at 150 dpi for visual review: 104 lx, Uo 0.21, 1.08 W/m², one Philips 26 W / 3602 lm luminaire. The table and failure marks are legible. This exports the previously saved v3 calculation, **not** a successful new calculation; `fresh_calculation_verified` deliberately remains false. The preset office targets on this report are not the Hong Kong rule pack. Native project settings may become modified when visiting documentation; the export command does not save those settings.
 
-The existing strict two-page Summary reader does not yet accept this 28-page full-document export. No automatic report-check compatibility is claimed for this artifact. Stable fresh calculation, a complete new-project replay, and report-reader/export integration remain acceptance work.
+At this export checkpoint, the strict two-page reader did not yet accept the full document. The subsequent integration gate below resolves that reader limitation. Stable fresh calculation and a complete new-project replay remain acceptance work.
+
+
+## Export-to-reader integration gate, 2026-11-09
+
+`report-read --path local/standalone-cli-export-v3.pdf` now locates exactly one adjacent pair of English Summary pages within the complete report. The observed result identifies pages 14–15 of 28, area 24 m², height 3 m, workplane 0.8 m, and 104 lx / Uo 0.21 / 1.08 W/m². Each measurement cites original PDF page 15 and the exported artifact hash. Existing CLI/MCP report-check uses this same reader; report targets are still not adopted as regional criteria.
+
+Selection rejects multiple summaries, nonadjacent pages, different room/scene headers, missing fields, and calculation-surface mismatches. Tests cover original page-number mapping and those ambiguity cases; the local 28-page exported artifact is also parsed when present. This is report integration, not fresh-calculation evidence.
