@@ -63,3 +63,17 @@ test('capture redirected to another window invalidates the session observation',
   await assert.rejects(f.session.save(s),/Stale/);
   assert.equal(f.calls.length,0);
 });
+
+test('DIALux window-role message boxes block accessibility actions',async()=>{
+  const f=fixture('\n\t\t3 window DIALux ID: InformationBox\n\t\t\t4 button Yes ID: Yes');
+  await assert.rejects(f.session.calculate(await f.session.connect()),/message box/);
+  assert.equal(f.calls.length,0);
+});
+
+test('calculate accepts an explicitly inspected screenshot point',async()=>{
+  const f=fixture(), read=f.sky.get_window_state;
+  f.sky.get_window_state=async()=>({...await read(),screenshots:[{id:'shot',width:800,height:600}]});
+  await f.session.calculate(await f.session.connect(),{screenshotId:'shot',x:650,y:70});
+  assert.equal(f.calls[0].screenshotId,'shot');
+  assert.equal(f.calls[0].element_index,undefined);
+});

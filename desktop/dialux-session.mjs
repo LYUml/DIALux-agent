@@ -39,6 +39,11 @@ export class DialuxSession {
     const tree = observation.accessibility?.tree;
     if (!tree) throw new Error('No accessibility snapshot; observe again');
     const lines = tree.split('\n');
+    // DIALux represents its own message boxes as windows, not dialog roles.
+    // Check before excluding secondary windows. A stale modal is conservative:
+    // callers may use the separately inspected screenshot path if it is absent.
+    if (lines.some(l => /^\t\t\d+ window .* ID: InformationBox$/.test(l)))
+      throw new Error('DIALux message box requires visual inspection');
     // The helper may append foreign windows. Never select a control from those.
     let skippingWindow = false;
     const own = lines.filter(line => {
@@ -64,8 +69,14 @@ export class DialuxSession {
     return this.observe();
   }
 
-  save(observation) { return this.#invoke(observation, 'Save'); }
-  calculate(observation) { return this.#invoke(observation, 'CalculationButtonStart'); }
+  save(observation, visualPoint) {
+    return visualPoint ? this.clickObserved(observation, {...visualPoint, action: 'save'})
+      : this.#invoke(observation, 'Save');
+  }
+  calculate(observation, visualPoint) {
+    return visualPoint ? this.clickObserved(observation, {...visualPoint, action: 'calculate'})
+      : this.#invoke(observation, 'CalculationButtonStart');
+  }
 
   /** Explicit visual path when DIALux's accessibility cache is stale.
    * Caller must inspect the current screenshot and locate the named control.
