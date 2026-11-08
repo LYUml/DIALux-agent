@@ -31,6 +31,8 @@ Exit codes: `0` successful operation / supplied criteria pass; `1` source mismat
 
 Profiles can include evidence-bearing applicability conditions; pass `--context <facts.json>` to the CLI or `context` to the MCP evaluator. See [applicability schema](docs/profile-applicability.md). Missing context remains unverified, and an empty applicable scope does not pass.
 
+Available Hong Kong modules are [BEC 2024 office LPD](docs/hk-office-lpd.md) and the separately adopted [Labour Department desk-lighting recommendation](docs/hk-desk-lighting.md). They retain different authority and measurement semantics. The latter requires a directly evidenced task minimum that the current Summary reader does not extract.
+
 ## MCP configuration
 
 The repository also includes an AI workflow skill at [skills/dialux-agent/SKILL.md](skills/dialux-agent/SKILL.md). It describes the actual commands, provenance checks and live verification boundary. It is not globally installed and does not add desktop control by itself. PyYAML in the locked environment supports the skill validator.

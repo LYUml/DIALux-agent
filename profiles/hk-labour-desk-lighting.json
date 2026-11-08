@@ -1,0 +1,42 @@
+{
+  "schema": "dialux-agent/criteria-profile/v1",
+  "jurisdiction": "HK",
+  "status": "verified",
+  "application": "Voluntarily adopted Labour Department normal-desk-work minimum recommendation only",
+  "authority_type": "advisory_guidance_not_statutory_threshold",
+  "advisory_notes": [
+    "Page 8 paragraph 8 recommends 300-500 lx as optimum for normal desk work and says it should never fall below 200 lx. Only the latter recommendation is evaluated here.",
+    "Page 11 Appendix lists optimum average examples: general offices 500 lx, computer workstations 500 lx, drawing workstations 750 lx, other listed areas 300 lx. These examples are not converted into statutory minimums or maximums.",
+    "Do not derive minimum illuminance by multiplying rounded report average and uniformity. The tested Summary reader does not extract the required minimum or identify a normal-desk-work task surface.",
+    "Passing this recommendation does not establish optimum lighting, glare control, uniformity, energy compliance, or compliance under all operating conditions."
+  ],
+  "criteria": [
+    {
+      "id": "hk-labour-normal-desk-recommended-minimum",
+      "metric": "minimum_illuminance",
+      "unit": "lx",
+      "calculation_surface": "normal_desk_work",
+      "operator": ">=",
+      "threshold": 200,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Lighting in Offices",
+        "edition": "September 2003 Third Edition",
+        "clause_or_table": "Problems and Solutions, paragraph 8",
+        "page": "Printed 8; PDF 8",
+        "source_path_or_url": "https://www.labour.gov.hk/eng/public/oh/OHB50.pdf",
+        "applicability": "Advisory minimum for normal desk work, explicitly adopted for reviewed task surfaces and operating conditions; not a statutory threshold or average-illuminance criterion.",
+        "verified_by": "DIALux-agent: official PDF text and rendered pages 8 and 11 reviewed",
+        "verified_date": "2026-11-08",
+        "sha256": "777ed90aa692aa355713069d0e9fa451d645919be0bc3e2d53330df5213485d8",
+        "authority_type": "advisory_guidance_not_statutory_threshold"
+      },
+      "applicable_when": [
+        {"fact": "labour_desk_guidance_adopted", "operator": "==", "value": true},
+        {"fact": "visual_task", "operator": "==", "value": "normal_desk_work"},
+        {"fact": "task_surface_mapping_reviewed", "operator": "==", "value": true},
+        {"fact": "operating_conditions_coverage_reviewed", "operator": "==", "value": true}
+      ]
+    }
+  ]
+}
