@@ -58,6 +58,7 @@ def main():
     room.add_argument('--spec', required=True)
     room.add_argument('--output', required=True)
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
+    commands.add_parser('report-read').add_argument('--path', required=True)
     criteria = commands.add_parser('criteria-check')
     criteria.add_argument('--profile', required=True)
     criteria.add_argument('--measurements', required=True)
@@ -70,6 +71,9 @@ def main():
         elif args.command == 'stf-inspect':
             from backend import inspect_stf
             result = inspect_stf(args.path)
+        elif args.command == 'report-read':
+            from results import read_summary_pdf
+            result = read_summary_pdf(args.path)
         elif args.command == 'criteria-check':
             from regulations import evaluate_profile
             result = evaluate_profile(

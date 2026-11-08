@@ -48,7 +48,9 @@ Configure a stdio MCP client with these absolute paths (adjust the checkout loca
 }
 ```
 
-Tools: `inventory`, `verify`, `create_room`, `inspect_stf`, `evaluate_profile`. The MCP test exercises initialization, discovery, geometry creation and readback through real subprocess transport. Paths are caller-specified: this is a trusted local prototype, not a remotely exposed service.
+Tools: `inventory`, `verify`, `create_room`, `inspect_stf`, `evaluate_profile`, `read_summary_pdf`. The MCP test exercises initialization, discovery, geometry creation and readback through real subprocess transport. Paths are caller-specified: this is a trusted local prototype, not a remotely exposed service.
+
+`report-read --path <summary.pdf>` extracts average perpendicular illuminance, uniformity and LPD from the tested English two-page single-room Summary. It retains the room/scene header, surface identifier, page and PDF SHA-256 for traceability. Its `measurements` array can be passed to the criteria evaluator after checking scope. Unsupported/ambiguous text layouts are rejected; scanned PDFs and complete multi-room reports are not supported yet. Reading values does not establish compliance or authenticate a report. The local real evo export is tested when present; that test is skipped on fresh checkouts without the private artifact.
 
 ## Evidence and remaining work
 
