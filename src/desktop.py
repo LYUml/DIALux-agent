@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 
-def _run(action, expected_project=None, recalculate=False, target=None, save_current=False, product_id=None):
+def _run(action, expected_project=None, recalculate=False, target=None, save_current=False, product_id=None, runtime_temp=None):
     if sys.platform != 'win32':
         raise ValueError('DIALux desktop control requires Windows')
     command = [sys.executable, str(Path(__file__).with_name('windows_worker.py')), action]
@@ -19,6 +19,8 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command.append('--save-current')
     if product_id is not None:
         command += ['--product-id', product_id]
+    if runtime_temp is not None:
+        command += ['--runtime-temp', str(runtime_temp)]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
                              timeout=75 if action in {'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
@@ -56,9 +58,12 @@ def desktop_arrange_space(expected_project: str, product_id: str) -> dict:
     return _run('arrange-space', expected_project, product_id=product_id)
 
 
-def desktop_launch(executable: str = 'C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe') -> dict:
-    """Start installed DIALux or reuse its unique existing process; never install software."""
-    return _run('launch', target=executable)
+def desktop_launch(executable: str = 'C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe', runtime_temp: str | None = None) -> dict:
+    """Launch with a process-local ASCII temp directory (default checkout/local/tmp).
+
+    Reusing an existing process cannot change its inherited TEMP/TMP.
+    """
+    return _run('launch', target=executable, runtime_temp=runtime_temp)
 
 
 def desktop_import_stf(path: str) -> dict:

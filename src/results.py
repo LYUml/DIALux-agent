@@ -10,7 +10,7 @@ from pdfminer.psexceptions import PSException
 from pdfplumber.utils.exceptions import PdfminerException
 
 NUMBER = r'(\d+(?:\.\d+)?)'
-SUMMARY_HEADER = r'^(Building .+?\(Light scene\s+\d+\))\s*\nSummary\s*$'
+SUMMARY_HEADER = r'^(Building .+?\s*\(Light scene\s+\d+\))\s*\nSummary\s*$'
 
 
 def _one(pattern, text):

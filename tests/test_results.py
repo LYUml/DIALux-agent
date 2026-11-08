@@ -21,6 +21,11 @@ def test_actual_values_not_targets(pages):
     assert result['measurements'][0]['calculation_surface'] == 'WP7'
 
 
+def test_room_header_wrap_before_light_scene(pages):
+    wrapped = [page.replace('Room R (Light scene', 'Room R\n(Light scene') for page in pages]
+    assert parse_report_pages(wrapped)['measurements'][0]['value'] == 217
+
+
 def test_full_document_preserves_original_page_numbers(pages):
     result = parse_report_pages(['Cover', 'Table of Contents\nSummary'] + pages + ['Glossary'])
     assert result['summary_pages'] == [3, 4]

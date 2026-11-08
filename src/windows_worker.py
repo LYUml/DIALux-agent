@@ -2,13 +2,14 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 from pathlib import Path
 import sys
 import time
 
 
-def launch(executable):
+def launch(executable, runtime_temp=None):
     import psutil
     from pywinauto import Application
     path = Path(executable).resolve(strict=True)
@@ -23,7 +24,23 @@ def launch(executable):
             raise ValueError('Running DIALux executable differs from requested executable')
         app = Application(backend='uia').connect(process=running[0].pid)
     else:
-        app = Application(backend='uia').start('"' + str(path) + '"', timeout=20)
+        # libzmq 4.3.5's Windows IPC signaler failed with inherited 8.3 TEMP
+        # on the validation machine. Use a plain, bounded path for this child
+        # process only; never alter Windows/user environment configuration.
+        scratch = Path(runtime_temp or Path(__file__).resolve().parents[1] / 'local' / 'tmp').resolve()
+        if not str(scratch).isascii() or len(str(scratch)) > 70:
+            raise ValueError('Use --runtime-temp with an ASCII directory path of at most 70 characters')
+        scratch.mkdir(parents=True, exist_ok=True)
+        previous = {key: os.environ.get(key) for key in ('TEMP', 'TMP')}
+        try:
+            os.environ.update(TEMP=str(scratch), TMP=str(scratch))
+            app = Application(backend='uia').start('"' + str(path) + '"', timeout=20)
+        finally:
+            for key, value in previous.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
     app.window(auto_id='MainWindow').wait('exists visible', timeout=30)
     return connect()
 
@@ -412,6 +429,7 @@ def export_pdf(app, main, process, expected_project, path):
         time.sleep(.2)
     if dialog is None:
         raise ValueError('PDF export settings not observed')
+    wait_control(dialog, 'Group', 'expander').iface_expand_collapse.Expand()
     wait_control(dialog, 'RadioButton', 'radioButtonAll').select()
     open_after = unique_control(dialog, 'CheckBox', 'checkBoxOpenAfterExport')
     if open_after.get_toggle_state():
@@ -444,13 +462,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf'])
     parser.add_argument('--product-id')
+    parser.add_argument('--runtime-temp')
     parser.add_argument('--expected-project')
     parser.add_argument('--recalculate', action='store_true')
     parser.add_argument('--path')
     parser.add_argument('--save-current', action='store_true')
     args = parser.parse_args()
     try:
-        app, window, process = launch(args.path) if args.action == 'launch' else connect()
+        app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
         if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:

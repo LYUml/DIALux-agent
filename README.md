@@ -6,7 +6,7 @@ Experimental Windows tooling for DIALux evo, driven by the BSE3125 lighting-desi
 
 `python src/dialux_agent.py inventory --source <assignment-folder>` hashes PDF/DWG inputs without modifying them and reports the DWG header. `verify --manifest <json>` checks that originals remain unchanged. `room-create` generates a single-room STF through the vendored backend, and `stf-inspect` reads it back. `criteria-check` evaluates supplied sourced criteria against evidence-bearing measurements. All commands emit JSON.
 
-Desktop operations now use an independent Windows pywinauto backend through CLI/MCP, without Codex Computer Use. Launch, STF import, native save/open, photometry import and PDF export have live evidence. Automatic arrangement is implemented from an observed native action, but its public command still needs a fresh end-to-end replay. Earlier calculations succeeded; current fresh calculations reproducibly crash DIALux 14.1. The prototype is **not yet acceptance-complete**. See [standalone evidence and diagnostics](docs/standalone-desktop.md). The older [Computer Use adapter](docs/desktop-adapter.md) is historical research, not the required desktop backend.
+Desktop operations now use an independent Windows pywinauto backend through CLI/MCP, without Codex Computer Use. Launch, STF import, native save/open, photometry import and PDF export have live evidence. Automatic arrangement is implemented from an observed native action, but its public command still needs a fresh end-to-end replay. Earlier calculations succeeded; a process-local TEMP/TMP workaround has now recovered fresh calculation on the reproducible six-luminaire fixture; full fresh-process replay is pending. The prototype is **not yet acceptance-complete**. See [standalone evidence and diagnostics](docs/standalone-desktop.md). The older [Computer Use adapter](docs/desktop-adapter.md) is historical research, not the required desktop backend.
 
 The MIT-licensed MCP_Dialux geometry backend is incorporated under `vendor/MCP_Dialux`, with its license. CLI-Anything informs the CLI/JSON/shared-backend approach. See [upstream review](docs/upstream-review.md) for pinned revisions and license decisions. Research checkouts remain local-only under `upstream/`.
 
@@ -74,7 +74,7 @@ This example returns exit code **3 / unverified**, because no project applicabil
 | Hong Kong sources | Eight official PDFs cached locally with hashes, editions and review register |
 | Hong Kong rules | Source-reviewed BEC 2024 office LPD module with evidenced applicability; other criteria pending, no whole-project certification |
 | Independent DIALux desktop operations | Import, save/open, photometry and PDF export have live evidence; full public-command replay pending |
-| Fresh calculation | Previously observed success; current repeatable native crash, dump captured, unresolved |
+| Fresh calculation | TEMP/TMP workaround recovered 531 lx / Uo 0.56 on six-luminaire fixture; repeatability and full replay pending |
 | BSE3125 assignment | Requirements extracted, originals preserved; design not produced |
 
 See [requirements](docs/requirements.md), [test plan](docs/test-plan.md), [module boundaries](docs/modules.md), and [Hong Kong source review](docs/hk-source-register.md). Refresh local official PDF caches with `python scripts/cache_hk_sources.py`; caching does not activate rules.

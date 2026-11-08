@@ -11,6 +11,28 @@ import desktop
 import windows_worker
 
 
+def test_launch_temp_is_process_local_and_restored_on_failure(tmp_path, monkeypatch):
+    import os
+    import psutil
+    import pywinauto
+    executable = tmp_path / 'DIALux_x64.exe'
+    executable.write_bytes(b'fixture only')
+    monkeypatch.setattr(psutil, 'process_iter', lambda *a: [])
+    monkeypatch.setenv('TEMP', 'original-temp')
+    monkeypatch.setenv('TMP', 'original-tmp')
+    def start(*a, **k):
+        assert os.environ['TEMP'] == os.environ['TMP']
+        assert Path(os.environ['TEMP']).is_absolute()
+        assert Path(os.environ['TEMP']).is_dir()
+        assert os.environ['TEMP'] != 'original-temp'
+        raise RuntimeError('simulated launch failure')
+    monkeypatch.setattr(pywinauto, 'Application', lambda **k: SimpleNamespace(start=start))
+    with pytest.raises(RuntimeError, match='simulated'):
+        windows_worker.launch(executable)
+    assert os.environ['TEMP'] == 'original-temp'
+    assert os.environ['TMP'] == 'original-tmp'
+
+
 def test_pdf_export_refuses_existing_output_before_ui(tmp_path, monkeypatch):
     target = tmp_path / 'existing.pdf'
     target.write_bytes(b'preserve')
