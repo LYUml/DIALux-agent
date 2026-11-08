@@ -69,6 +69,10 @@ def main():
     criteria.add_argument('--profile', required=True)
     criteria.add_argument('--measurements', required=True)
     criteria.add_argument('--context', help='JSON object of evidenced applicability facts')
+    report_check = commands.add_parser('report-check')
+    report_check.add_argument('--path', required=True)
+    report_check.add_argument('--profile', required=True)
+    report_check.add_argument('--context', help='JSON object of evidenced applicability facts')
     args = parser.parse_args()
     try:
         if args.command == 'room-create':
@@ -80,6 +84,10 @@ def main():
         elif args.command == 'report-read':
             read_summary_pdf = _local_module('results').read_summary_pdf
             result = read_summary_pdf(args.path)
+        elif args.command == 'report-check':
+            result = _local_module('workflow').check_report(
+                args.path, json.loads(Path(args.profile).read_text(encoding='utf-8-sig')),
+                json.loads(Path(args.context).read_text(encoding='utf-8-sig')) if args.context else None)
         elif args.command == 'criteria-check':
             evaluate_profile = _local_module('regulations').evaluate_profile
             result = evaluate_profile(
@@ -90,7 +98,7 @@ def main():
             result = inventory(args.source) if args.command == 'inventory' else verify(
                 json.loads(Path(args.manifest).read_text(encoding='utf-8-sig')))
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        if args.command == 'criteria-check':
+        if args.command in {'criteria-check', 'report-check'}:
             return {'pass': 0, 'fail': 1, 'unverified': 3}[result['status']]
         return 0 if result.get('ok', True) else 1
     except (OSError, ValueError, KeyError, TypeError) as exc:

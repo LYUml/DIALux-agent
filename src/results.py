@@ -1,5 +1,6 @@
 """Read the tested English two-page DIALux room Summary, without inferring compliance."""
 import hashlib
+from io import BytesIO
 from pathlib import Path
 import re
 
@@ -53,8 +54,10 @@ def read_summary_pdf(path: str) -> dict:
     source = Path(path).resolve(strict=True)
     if source.suffix.lower() != '.pdf':
         raise ValueError('Expected a PDF report')
-    digest = hashlib.sha256(source.read_bytes()).hexdigest()
-    with pdfplumber.open(source) as pdf:
+    # Parse precisely the bytes whose hash is attached to measurements.
+    data = source.read_bytes()
+    digest = hashlib.sha256(data).hexdigest()
+    with pdfplumber.open(BytesIO(data)) as pdf:
         pages = [page.extract_text() or '' for page in pdf.pages]
     result = parse_summary_pages(pages)
     for row in result['measurements']:

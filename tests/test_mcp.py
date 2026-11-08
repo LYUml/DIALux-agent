@@ -14,7 +14,7 @@ def test_real_stdio_tools(tmp_path):
             async with ClientSession(read,write,read_timeout_seconds=15) as session:
                 await session.initialize()
                 listing=await session.list_tools()
-                assert {'create_room','inspect_stf','inventory','evaluate_profile','read_summary_pdf'} <= {t.name for t in listing.tools}
+                assert {'create_room','inspect_stf','inventory','evaluate_profile','read_summary_pdf','check_report'} <= {t.name for t in listing.tools}
                 spec=json.loads((ROOT/'examples/validation-room.json').read_text())
                 path=tmp_path/'mcp-room.stf'
                 result=await session.call_tool('create_room',{'spec':spec,'output':str(path)})
@@ -23,4 +23,13 @@ def test_real_stdio_tools(tmp_path):
                 readback=await session.call_tool('inspect_stf',{'path':str(path)})
                 assert not readback.is_error
                 assert 'Agent validation room' in str(readback)
+                report = ROOT/'local/validation-summary-v2.pdf'
+                if report.exists():
+                    checked = await session.call_tool('check_report', {
+                        'path': str(report),
+                        'profile': json.loads((ROOT/'profiles/hk-bec2024-office-lpd.json').read_text())})
+                    assert not checked.is_error
+                    payload = json.loads(checked.content[0].text)
+                    assert payload['status'] == 'unverified'
+                    assert payload['report']['measurements'][1]['value'] == .22
     asyncio.run(run())
