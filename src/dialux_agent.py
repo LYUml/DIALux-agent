@@ -68,6 +68,9 @@ def main():
     commands.add_parser('desktop-status')
     commands.add_parser('desktop-launch').add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
     commands.add_parser('desktop-import-stf').add_argument('--path', required=True)
+    exporting = commands.add_parser('desktop-export-pdf')
+    exporting.add_argument('--expected-project', required=True)
+    exporting.add_argument('--path', required=True)
     arrangement = commands.add_parser('desktop-arrange-space')
     arrangement.add_argument('--expected-project', required=True)
     arrangement.add_argument('--product-id', required=True)
@@ -102,6 +105,8 @@ def main():
             result = _local_module('desktop').desktop_launch(args.executable)
         elif args.command == 'desktop-import-stf':
             result = _local_module('desktop').desktop_import_stf(args.path)
+        elif args.command == 'desktop-export-pdf':
+            result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
         elif args.command == 'desktop-arrange-space':
             result = _local_module('desktop').desktop_arrange_space(args.expected_project, args.product_id)
         elif args.command == 'desktop-import-luminaire':

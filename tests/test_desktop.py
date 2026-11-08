@@ -11,6 +11,15 @@ import desktop
 import windows_worker
 
 
+def test_pdf_export_refuses_existing_output_before_ui(tmp_path, monkeypatch):
+    target = tmp_path / 'existing.pdf'
+    target.write_bytes(b'preserve')
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
+    with pytest.raises(ValueError, match='new .pdf path'):
+        windows_worker.export_pdf(None, None, None, 'test.evo', target)
+    assert target.read_bytes() == b'preserve'
+
+
 def test_luminaire_import_rejects_unsupported_file_before_ui(tmp_path, monkeypatch):
     path = tmp_path / 'wrong.exe'
     path.write_bytes(b'not photometry')

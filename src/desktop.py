@@ -21,7 +21,7 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--product-id', product_id]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=75 if action in {'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire'} else 30)
+                             timeout=75 if action in {'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -92,3 +92,8 @@ def desktop_open(path: str, expected_current_project: str | None = None, save_cu
     if not isinstance(save_current, bool):
         raise ValueError('save_current must be a boolean')
     return _run('open', expected_current_project, target=path, save_current=save_current)
+
+
+def desktop_export_pdf(expected_project: str, path: str) -> dict:
+    """Export selected documentation to a new PDF using stored results, without recalculation."""
+    return _run('export-pdf', expected_project, target=path)

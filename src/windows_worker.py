@@ -388,9 +388,61 @@ def arrange_space(app, main, process, expected_project, product_id):
     raise ValueError('Arrangement was invoked but readback failed; inspect before retry')
 
 
+def export_pdf(app, main, process, expected_project, path):
+    import pdfplumber
+    target = Path(path).resolve()
+    if target.suffix.lower() != '.pdf' or target.exists() or not target.parent.is_dir():
+        raise ValueError('PDF export requires a new .pdf path in an existing directory')
+    expected, state = prepare_project(app, main, process, expected_project)
+    if not state['controls']['DiscardResultsButton']['enabled']:
+        raise ValueError('No stored calculation results available for report export')
+    unique_control(main, 'MenuItem', 'File').iface_expand_collapse.Expand()
+    wait_control(main, 'MenuItem', 'PrintPreview').iface_invoke.Invoke()
+    menu = wait_control(main, 'Menu', 'MenuSaveAs', timeout=20)
+    unique_control(menu, 'MenuItem', '').iface_expand_collapse.Expand()
+    wait_control(main, 'MenuItem', 'ExportFormatMenuItem_Pdf').iface_invoke.Invoke()
+    deadline = time.monotonic() + 10
+    dialog = None
+    while time.monotonic() < deadline:
+        matches = {c.element_info.runtime_id: c for c in main.descendants(control_type='Window')
+                   if c.is_visible() and c.window_text() == 'Adobe PDF File - Export Settings'}
+        if len(matches) == 1:
+            dialog = next(iter(matches.values()))
+            break
+        time.sleep(.2)
+    if dialog is None:
+        raise ValueError('PDF export settings not observed')
+    wait_control(dialog, 'RadioButton', 'radioButtonAll').select()
+    open_after = unique_control(dialog, 'CheckBox', 'checkBoxOpenAfterExport')
+    if open_after.get_toggle_state():
+        open_after.toggle()
+    unique_control(dialog, 'Button', 'buttonOk').click()
+    submit_file_dialog(main, 'Adobe PDF File', target)
+    deadline = time.monotonic() + 30
+    previous, stable = None, 0
+    while time.monotonic() < deadline:
+        if target.exists():
+            stat = target.stat()
+            signature = (stat.st_size, stat.st_mtime_ns)
+            stable = stable + 1 if signature == previous else 0
+            previous = signature
+            if stat.st_size and stable >= 3:
+                with pdfplumber.open(target) as pdf:
+                    pages = len(pdf.pages)
+                if pages < 1:
+                    raise ValueError('Exported PDF contains no pages')
+                return {'operation': 'export_pdf', 'status': 'exported', 'path': str(target),
+                        'project': str(expected), 'bytes': stat.st_size, 'pages': pages,
+                        'sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
+                        'uses_codex_computer_use': False, 'fresh_calculation_verified': False,
+                        'evidence': 'Native PDF export of all currently selected documentation pages; new file stabilized and parsed. Stored results are not proof of a fresh calculation.'}
+        time.sleep(.3)
+    raise ValueError('PDF export submitted but file not verified; inspect before retry')
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf'])
     parser.add_argument('--product-id')
     parser.add_argument('--expected-project')
     parser.add_argument('--recalculate', action='store_true')
@@ -399,7 +451,7 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
@@ -415,6 +467,8 @@ def main():
             result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
         elif args.action == 'arrange-space':
             result = arrange_space(app, window, process, args.expected_project, args.product_id)
+        elif args.action == 'export-pdf':
+            result = export_pdf(app, window, process, args.expected_project, args.path)
         else:
             result = calculate(app, window, process, args.expected_project, args.recalculate)
         print(json.dumps(result, ensure_ascii=True))
