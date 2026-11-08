@@ -1,0 +1,13 @@
+{
+  "schema": "dialux-agent/acceptance-artifacts/v1",
+  "recorded_date": "2026-11-08",
+  "note": "Local checkpoint integrity only. Matching files do not replay desktop actions or establish compliance. The original v1 native file was subsequently saved and is not a current-hash baseline.",
+  "artifacts": [
+    {"path":"local/adapter-room-v1.stf","sha256":"810562a8522979b6dfdb1b6b02e0b272d0ce37c4e8b1a7b493d78295cb81eba5"},
+    {"path":"local/luminaires/910505102817.uld","sha256":"6dc1c0220a9928ce96f7110daf816b9db73b614c8f8ed5041216113d6d40e1fa"},
+    {"path":"local/validation-summary-v1.pdf","sha256":"ab6af3bc36541c8bb0d6d2634e3ee7367239af082de1c42de0fe2cf9dd0038f7"},
+    {"path":"local/validation-summary-v2.pdf","sha256":"25f4a51ecbf4a5a9187a2dd1fc354bdf98b2e3dc3149d6d8234d0fae3e7d0820"},
+    {"path":"local/adapter-calculation-v2.evo","sha256":"c45178ca92434cc5316c24e22af82cdaa8569cb5fc6ae1af27a5f5544e801b53"},
+    {"path":"local/adapter-module-calculation-v3.evo","sha256":"f0fd47cd68e13c21de28a5a11da3c0714a9310da0dfea6c8577dda4d306f3eaf"}
+  ]
+}

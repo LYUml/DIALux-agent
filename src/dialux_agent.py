@@ -65,6 +65,8 @@ def main():
     room.add_argument('--output', required=True)
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
     commands.add_parser('report-read').add_argument('--path', required=True)
+    commands.add_parser('desktop-status')
+    commands.add_parser('desktop-save').add_argument('--expected-project', required=True)
     criteria = commands.add_parser('criteria-check')
     criteria.add_argument('--profile', required=True)
     criteria.add_argument('--measurements', required=True)
@@ -75,7 +77,11 @@ def main():
     report_check.add_argument('--context', help='JSON object of evidenced applicability facts')
     args = parser.parse_args()
     try:
-        if args.command == 'room-create':
+        if args.command == 'desktop-status':
+            result = _local_module('desktop').desktop_status()
+        elif args.command == 'desktop-save':
+            result = _local_module('desktop').desktop_save(args.expected_project)
+        elif args.command == 'room-create':
             create_room = _local_module('backend').create_room
             result = create_room(json.loads(Path(args.spec).read_text(encoding='utf-8-sig')), args.output)
         elif args.command == 'stf-inspect':
