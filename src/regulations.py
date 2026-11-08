@@ -90,6 +90,13 @@ def evaluate_profile(profile: dict, measurements: list[dict], context: dict | No
         if not measured.get('evidence') or isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
             row['reason'] = 'Missing evidence or invalid measurement'
             continue
+        minimum = criterion.get('measurement_min')
+        if minimum is not None:
+            if isinstance(minimum, bool) or not isinstance(minimum, (int, float)) or not math.isfinite(minimum):
+                raise ValueError('Invalid measurement minimum')
+            if value < minimum:
+                row['reason'] = 'Measurement is outside the physical domain specified by the profile'
+                continue
         row.update(value=value, threshold=threshold, unit=criterion['unit'],
                    evidence=measured['evidence'], status='pass' if OPS[op](value, threshold) else 'fail')
     active = [r for r in rows if r['status'] != 'not_applicable']

@@ -60,7 +60,7 @@ Tools: `inventory`, `verify`, `create_room`, `inspect_stf`, `evaluate_profile`, 
 | Single-room STF exchange | Reused serializer, parameter validation and round-trip tests |
 | CLI / MCP | Real process tests; common backend |
 | Hong Kong sources | Eight official PDFs cached locally with hashes, editions and review register |
-| Hong Kong automatic compliance | Pending applicability modelling and clause review; template inactive |
+| Hong Kong rules | Source-reviewed BEC 2024 office LPD module with evidenced applicability; other criteria pending, no whole-project certification |
 | DIALux import, real luminaires, calculation, save/reopen, report export | One synthetic-room run verified through computer use; unattended driver pending |
 | BSE3125 assignment | Requirements extracted, originals preserved; design not produced |
 

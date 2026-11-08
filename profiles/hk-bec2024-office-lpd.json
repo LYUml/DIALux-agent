@@ -1,0 +1,237 @@
+{
+  "schema": "dialux-agent/criteria-profile/v1",
+  "jurisdiction": "HK",
+  "status": "verified",
+  "application": "Office LPD only",
+  "criteria": [
+    {
+      "id": "hk-bec2024-office-lpd-enclosed-up-to-15",
+      "metric": "lighting_power_density",
+      "unit": "W/m2",
+      "calculation_surface": "space",
+      "operator": "<=",
+      "threshold": 9.0,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Code of Practice for Energy Efficiency of Building Services Installation",
+        "edition": "BEC 2024",
+        "clause_or_table": "5.1, 5.4.1-5.4.3 and Table 5.4",
+        "page": "Printed 14-17; PDF 20-23",
+        "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+        "applicability": "Office LPD only; evidenced code scope, boundary, power basis and area classification required.",
+        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_date": "2026-11-08",
+        "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7"
+      },
+      "applicable_when": [
+        {
+          "fact": "design_code",
+          "operator": "==",
+          "value": "BEC 2024"
+        },
+        {
+          "fact": "bec_section5_scope_confirmed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_use",
+          "operator": "==",
+          "value": "office"
+        },
+        {
+          "fact": "single_function_space",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_boundary_5_4_3_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "lpd_power_basis_5_4_2_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "internal_area",
+          "operator": ">",
+          "value": 0,
+          "unit": "m2"
+        },
+        {
+          "fact": "complete_fixed_lighting_power",
+          "operator": ">",
+          "value": 70,
+          "unit": "W"
+        },
+        {
+          "fact": "enclosed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "internal_area",
+          "operator": "<=",
+          "value": 15,
+          "unit": "m2"
+        }
+      ]
+    },
+    {
+      "id": "hk-bec2024-office-lpd-above-15-up-to-200",
+      "metric": "lighting_power_density",
+      "unit": "W/m2",
+      "calculation_surface": "space",
+      "operator": "<=",
+      "threshold": 8.5,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Code of Practice for Energy Efficiency of Building Services Installation",
+        "edition": "BEC 2024",
+        "clause_or_table": "5.1, 5.4.1-5.4.3 and Table 5.4",
+        "page": "Printed 14-17; PDF 20-23",
+        "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+        "applicability": "Office LPD only; evidenced code scope, boundary, power basis and area classification required.",
+        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_date": "2026-11-08",
+        "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7"
+      },
+      "applicable_when": [
+        {
+          "fact": "design_code",
+          "operator": "==",
+          "value": "BEC 2024"
+        },
+        {
+          "fact": "bec_section5_scope_confirmed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_use",
+          "operator": "==",
+          "value": "office"
+        },
+        {
+          "fact": "single_function_space",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_boundary_5_4_3_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "lpd_power_basis_5_4_2_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "internal_area",
+          "operator": ">",
+          "value": 0,
+          "unit": "m2"
+        },
+        {
+          "fact": "complete_fixed_lighting_power",
+          "operator": ">",
+          "value": 70,
+          "unit": "W"
+        },
+        {
+          "fact": "internal_area",
+          "operator": ">",
+          "value": 15,
+          "unit": "m2"
+        },
+        {
+          "fact": "internal_area",
+          "operator": "<=",
+          "value": 200,
+          "unit": "m2"
+        }
+      ]
+    },
+    {
+      "id": "hk-bec2024-office-lpd-above-200",
+      "metric": "lighting_power_density",
+      "unit": "W/m2",
+      "calculation_surface": "space",
+      "operator": "<=",
+      "threshold": 7.2,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Code of Practice for Energy Efficiency of Building Services Installation",
+        "edition": "BEC 2024",
+        "clause_or_table": "5.1, 5.4.1-5.4.3 and Table 5.4",
+        "page": "Printed 14-17; PDF 20-23",
+        "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+        "applicability": "Office LPD only; evidenced code scope, boundary, power basis and area classification required.",
+        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_date": "2026-11-08",
+        "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7"
+      },
+      "applicable_when": [
+        {
+          "fact": "design_code",
+          "operator": "==",
+          "value": "BEC 2024"
+        },
+        {
+          "fact": "bec_section5_scope_confirmed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_use",
+          "operator": "==",
+          "value": "office"
+        },
+        {
+          "fact": "single_function_space",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_boundary_5_4_3_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "lpd_power_basis_5_4_2_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "internal_area",
+          "operator": ">",
+          "value": 0,
+          "unit": "m2"
+        },
+        {
+          "fact": "complete_fixed_lighting_power",
+          "operator": ">",
+          "value": 70,
+          "unit": "W"
+        },
+        {
+          "fact": "internal_area",
+          "operator": ">",
+          "value": 200,
+          "unit": "m2"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "Verified means clause extraction checked, not that a project is applicable or compliant.",
+    "Not a full BEC check: lighting controls, daylight, other installations and other space types are outside this module.",
+    "At or below 70 W the LPD conditions are not applicable; empty applicable scope returns unverified, not compliance.",
+    "Multifunction spaces are excluded from this module.",
+    "Provide enclosure evidence even for larger rooms because applicability evaluation is conservative.",
+    "LPD measurement must use the same space and power-basis review as context facts; caller must reconcile them."
+  ]
+}
