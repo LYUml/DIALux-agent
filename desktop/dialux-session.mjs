@@ -24,6 +24,8 @@ export class DialuxSession {
     if (!this.#window) throw new Error('Connect to DIALux first');
     const state = await this.#sky.get_window_state({window: this.#window,
       include_screenshot: true, include_text: true});
+    if (state.window.id !== this.#window.id || state.window.app !== this.#window.app)
+      throw new Error('Captured window differs from selected DIALux window; reconnect');
     this.#window = state.window;
     this.#observation = state;
     return state;
@@ -64,4 +66,22 @@ export class DialuxSession {
 
   save(observation) { return this.#invoke(observation, 'Save'); }
   calculate(observation) { return this.#invoke(observation, 'CalculationButtonStart'); }
+
+  /** Explicit visual path when DIALux's accessibility cache is stale.
+   * Caller must inspect the current screenshot and locate the named control.
+   * This validates provenance/bounds, not the visual meaning of the pixels.
+   */
+  async clickObserved(observation, {action, screenshotId, x, y} = {}) {
+    if (!observation || observation !== this.#observation)
+      throw new Error('Stale observation; observe and inspect before acting');
+    this.#observation = null;
+    if (!['save', 'calculate'].includes(action)) throw new Error('Unsupported visual action');
+    const shot = observation.screenshots?.find(s => s.id === screenshotId);
+    if (!shot || !Number.isFinite(shot.width) || !Number.isFinite(shot.height))
+      throw new Error('Current screenshot with dimensions required');
+    if (![x, y].every(Number.isFinite) || x < 0 || y < 0 || x >= shot.width || y >= shot.height)
+      throw new Error('Point outside current screenshot');
+    await this.#sky.click({window: observation.window, screenshotId, x, y});
+    return this.observe();
+  }
 }

@@ -38,3 +38,28 @@ test('failed click cannot be blindly repeated',async()=>{
   await assert.rejects(f.session.save(s),/unknown/);
   await assert.rejects(f.session.save(s),/Stale/);
 });
+
+test('visual fallback binds coordinates to current screenshot, not stale accessibility',async()=>{
+  const f=fixture();
+  const read=f.sky.get_window_state;
+  f.sky.get_window_state=async()=>({...await read(),screenshots:[{id:'current',width:800,height:600}]});
+  const s=await f.session.connect();
+  await f.session.clickObserved(s,{action:'save',screenshotId:'current',x:100,y:70});
+  assert.deepEqual(f.calls[0],{window:s.window,screenshotId:'current',x:100,y:70});
+  await assert.rejects(f.session.clickObserved(s,{action:'save',screenshotId:'current',x:100,y:70}),/Stale/);
+  for(const args of [
+    {action:'delete',screenshotId:'current',x:1,y:1},
+    {action:'save',screenshotId:'old',x:1,y:1},
+    {action:'save',screenshotId:'current',x:800,y:1},
+    {action:'save',screenshotId:'current',x:NaN,y:1},
+  ]) await assert.rejects(f.session.clickObserved(await f.session.observe(),args));
+  assert.equal(f.calls.length,1);
+});
+
+test('capture redirected to another window invalidates the session observation',async()=>{
+  const f=fixture(); const s=await f.session.connect();
+  f.sky.get_window_state=async()=>({window:{id:2,app:'other.exe'}});
+  await assert.rejects(f.session.observe(),/differs/);
+  await assert.rejects(f.session.save(s),/Stale/);
+  assert.equal(f.calls.length,0);
+});
