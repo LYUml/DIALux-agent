@@ -93,3 +93,10 @@ At this export checkpoint, the strict two-page reader did not yet accept the ful
 `report-read --path local/standalone-cli-export-v3.pdf` now locates exactly one adjacent pair of English Summary pages within the complete report. The observed result identifies pages 14–15 of 28, area 24 m², height 3 m, workplane 0.8 m, and 104 lx / Uo 0.21 / 1.08 W/m². Each measurement cites original PDF page 15 and the exported artifact hash. Existing CLI/MCP report-check uses this same reader; report targets are still not adopted as regional criteria.
 
 Selection rejects multiple summaries, nonadjacent pages, different room/scene headers, missing fields, and calculation-surface mismatches. Tests cover original page-number mapping and those ambiguity cases; the local 28-page exported artifact is also parsed when present. This is report integration, not fresh-calculation evidence.
+
+
+## Single-CPU diagnostic control, 2026-11-09
+
+After exporting, preserved documentation settings in `local/export-settings-v7.evo` (915352 bytes, SHA256 `6940d1d61f4caf85fbcd76f3e7953ed76e64551d60c490ba2d3a17adfc505d70`) without overwriting the original v3 checkpoint. Set only the running DIALux PID 8220 CPU affinity from 24 CPUs to CPU 0; recorded the original affinity in ignored local diagnostic data. Opened saved six-luminaire v6 and invoked the CLI calculation. DIALux again exited, and the new worker error identified the process exit immediately. Windows Application Error at 07:38:33 reports the same 0xc0000374 / ntdll.dll signature. The process terminated, so this process-only affinity setting no longer exists; no system CPU settings were changed.
+
+This control does not support a requirement for multiple active CPUs to reproduce the failure. It does not identify the faulty component. The machine has an Intel Core Ultra 9 275HX with 24 logical processors. Further troubleshooting needs a crash stack or equivalent diagnostic evidence rather than another identical calculation retry. Native project creation, import, saving and stored-result export continue to have separate positive evidence; fresh calculation remains a failed gate.
