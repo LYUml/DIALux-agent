@@ -109,3 +109,10 @@ Downloaded [Microsoft Sysinternals ProcDump](https://learn.microsoft.com/en-us/s
 Local-only `local/diagnostics/dialux-calculation.dmp`: 61951228 bytes, SHA256 `912069475210d515cbc2de5080b954a0abc3b53b38342987c073344354dc3e3c`. It is ignored by Git and has not been transmitted. Exception thread ID 9348, address 0x7ffa3169a3b5. [skelsec/minidump](https://github.com/skelsec/minidump), MIT, installed version 0.0.24, was reused for local parsing only; it is not a runtime dependency of the agent. ProcDump binaries are also local diagnostic tools, not redistributed repository dependencies.
 
 An aligned-word scan of the exception thread stack found addresses inside Dialux.PipeStreams.dll, libzmq-mt-4_3_5.dll, Dialux.NMTLib.dll and Dialux.Geometry.dll. This is **not an unwound/symbolized call stack** and does not establish causality. The dump now allows deeper analysis without another blind reproduction. Root cause and stable fresh calculation remain unresolved.
+
+
+## Shell-launch control and debugger preparation, 2026-11-09
+
+Closed the instrumented test instance without saving its failed-calculation changes; after the main window disappeared, its residual PID 14548 was terminated. Saved v6 remained the reproduction input. Launched DIALux through Windows Shell.Application.ShellExecute and opened v6 through the CLI. Calculation still exited. A 50 ms process-enumeration loop did not observe Dialux.ExtProcCalc.exe; this does not rule out a shorter-lived process. The installed signed executable exists at the installation's x64 subdirectory. This control did not fix the failure and does not prove complete separation from the originating process environment.
+
+Started installation of Microsoft WinDbg 1.2611.4001.0 through the official winget package for offline dump analysis. Winget verified its installer hash and Windows AppX deployment reported Stage operation running. Installation completion and symbolized analysis have not yet been established at this checkpoint. No new calculation result is claimed.
