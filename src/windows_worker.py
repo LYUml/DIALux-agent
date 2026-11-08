@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 import sys
 import time
@@ -55,6 +56,14 @@ def snapshot(app, main, process):
             dialogs.append({'title': window.window_text(), 'automation_id': window.element_info.automation_id})
     for window in main.descendants(control_type='Window'):
         if window.is_visible():
+            children = window.children()
+            # Arrangement selection exposes dimension labels as native popups.
+            # Only an exact, noninteractive one-text metric label is exempt.
+            if (window.class_name() == 'Popup' and not window.window_text()
+                    and len(children) == 1 and children[0].element_info.control_type == 'Text'
+                    and re.fullmatch(r'-?\d+(?:\.\d+)? m', children[0].window_text())
+                    and not children[0].children()):
+                continue
             button_ids = {c.element_info.automation_id for c in window.descendants(control_type='Button')}
             # Observed non-modal energy overlay; no other secondary UI is allowed.
             if not window.window_text() and button_ids == {
@@ -322,9 +331,41 @@ def open_project(app, main, process, target_path, expected_current=None, save_cu
     raise ValueError('Requested project title not observed; open outcome unverified')
 
 
+def import_luminaire(app, main, process, expected_project, path, product_id):
+    source = Path(path).resolve(strict=True)
+    if source.suffix.lower() not in {'.uld', '.ies', '.ldt'}:
+        raise ValueError('Expected ULD, IES or LDT photometry')
+    if not isinstance(product_id, str) or not product_id.strip():
+        raise ValueError('Expected product identifier is required for UI readback')
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    prepare_project(app, main, process, expected_project)
+    unique_control(main, 'MenuItem', 'File').iface_expand_collapse.Expand()
+    wait_control(main, 'MenuItem', 'Import').iface_expand_collapse.Expand()
+    wait_control(main, 'MenuItem', 'ImportLuminaire').iface_invoke.Invoke()
+    submit_file_dialog(main, 'Load luminaire files', source)
+    deadline = time.monotonic() + 20
+    while time.monotonic() < deadline:
+        if snapshot(app, main, process)['dialogs']:
+            time.sleep(.2)
+            continue
+        texts = [c.window_text() for c in main.descendants(control_type='Text') if c.is_visible()]
+        if product_id in texts:
+            values = {}
+            for key in ('TotalLuminaireFlux_1', 'Load_1', 'LightOutputRatio_1', 'LightEfficiency_1'):
+                values[key] = unique_control(main, 'Edit', key).get_value()
+            return {'operation': 'import_luminaire', 'status': 'active_luminaire_observed',
+                    'source': str(source), 'sha256': digest, 'product_id': product_id,
+                    'photometry_display': values, 'placed_in_room': False,
+                    'native_project_saved': False, 'uses_codex_computer_use': False,
+                    'evidence': 'File dialog submitted; expected product and photometry visible. Existing catalog entries may be reused by DIALux.'}
+        time.sleep(.2)
+    raise ValueError('Expected active luminaire not observed; import outcome unverified')
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire'])
+    parser.add_argument('--product-id')
     parser.add_argument('--expected-project')
     parser.add_argument('--recalculate', action='store_true')
     parser.add_argument('--path')
@@ -332,7 +373,7 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
@@ -344,6 +385,8 @@ def main():
             result = import_stf(app, window, process, args.path)
         elif args.action == 'save-as':
             result = save_as(app, window, process, args.expected_project, args.path)
+        elif args.action == 'import-luminaire':
+            result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
         else:
             result = calculate(app, window, process, args.expected_project, args.recalculate)
         print(json.dumps(result, ensure_ascii=True))

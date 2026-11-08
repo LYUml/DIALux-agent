@@ -11,6 +11,20 @@ import desktop
 import windows_worker
 
 
+def test_luminaire_import_rejects_unsupported_file_before_ui(tmp_path, monkeypatch):
+    path = tmp_path / 'wrong.exe'
+    path.write_bytes(b'not photometry')
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
+    with pytest.raises(ValueError, match='photometry'):
+        windows_worker.import_luminaire(None, None, None, 'test.evo', path, 'product')
+
+
+def test_luminaire_requires_expected_product_before_worker(monkeypatch):
+    monkeypatch.setattr(desktop, '_run', lambda *a, **k: pytest.fail('Worker accessed'))
+    with pytest.raises(ValueError, match='nonempty'):
+        desktop.desktop_import_luminaire('test.evo', 'fixture.uld', '')
+
+
 def test_worker_timeout_reports_unknown_without_retry(monkeypatch):
     monkeypatch.setattr(desktop.sys, 'platform', 'win32')
     calls = []

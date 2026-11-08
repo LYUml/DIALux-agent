@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 
-def _run(action, expected_project=None, recalculate=False, target=None, save_current=False):
+def _run(action, expected_project=None, recalculate=False, target=None, save_current=False, product_id=None):
     if sys.platform != 'win32':
         raise ValueError('DIALux desktop control requires Windows')
     command = [sys.executable, str(Path(__file__).with_name('windows_worker.py')), action]
@@ -17,9 +17,11 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--path', str(target)]
     if save_current:
         command.append('--save-current')
+    if product_id is not None:
+        command += ['--product-id', product_id]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=75 if action in {'calculate', 'open', 'launch', 'import-stf', 'save-as'} else 30)
+                             timeout=75 if action in {'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -34,6 +36,13 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
 def desktop_status() -> dict:
     """Read the unique running DIALux process and current controls using Windows UIA."""
     return _run('status')
+
+
+def desktop_import_luminaire(expected_project: str, path: str, product_id: str) -> dict:
+    """Import local photometry and read back the expected active product; does not place luminaires."""
+    if not isinstance(product_id, str) or not product_id.strip():
+        raise ValueError('product_id must be a nonempty string')
+    return _run('import-luminaire', expected_project, target=path, product_id=product_id)
 
 
 def desktop_launch(executable: str = 'C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe') -> dict:

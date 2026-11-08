@@ -44,7 +44,7 @@ Import proposes an `.evo` title before a native file exists. Save As therefore a
 
 Save notifications also appear as unnamed UIA windows. The worker now waits read-only for those windows to disappear rather than declaring immediate failure or answering an unknown dialog. Success requires the target file to stabilize and the exact requested title without an unsaved marker. The fully successful CLI checkpoint is `local/standalone-validation-v5.evo`, 419865 bytes, SHA256 `019662e5a15e85ec10c5dba558692331d25a26acd6497d758e0f8b0e9ac08ab5`. Earlier v4 attempts remain local for diagnosis. This fixture has no validated luminaires or lighting calculation yet.
 
-Standalone photometry import, luminaire placement, PDF export and full end-to-end verification are **not implemented or validated yet**. The goal remains active. Unit tests cover worker transport/error semantics, and MCP discovery covers registration; neither replaces those remaining live gates.
+Standalone luminaire placement, PDF export and full end-to-end verification remain incomplete. Photometry import now has the additional gate below. The goal remains active. Unit tests cover worker transport/error semantics, and MCP discovery covers registration; neither replaces those remaining live gates.
 
 ## Reused sources
 
@@ -52,3 +52,12 @@ Standalone photometry import, luminaire placement, PDF export and full end-to-en
 - [pywinauto 0.6.9 license](https://github.com/pywinauto/pywinauto/blob/0.6.9/LICENSE): BSD-3-Clause. Installed package reused, not copied into the repository.
 
 Use `python scripts/check_local_evidence.py` to compare the current local artifacts and official caches with recorded hashes. This read-only check does not replay DIALux, authenticate sources or establish compliance. Exit 0 means matching bytes, 1 changed, 2 malformed input/I/O error, 3 missing local files. The separate input-manifest verifier checks assignment originals.
+
+
+## Independent photometry import gate, 2026-11-09
+
+`desktop-import-luminaire --expected-project local/standalone-validation-v5.evo --path local/luminaires/910505102817.uld --product-id 910505102817` and MCP `desktop_import_luminaire` submit the native file dialog and require the expected identifier plus visible photometry fields. The live CLI returned 3602 lm, 26.0 W, 99.8% and 138.5 lm/W; source SHA256 was `6dc1c0220a9928ce96f7110daf816b9db73b614c8f8ed5041216113d6d40e1fa`. This confirms the active product, not placement, uniqueness of catalog entries, or suitability for the assignment. DIALux may reuse existing catalog entries.
+
+A separate direct UIA exploratory invocation of `aid_ArrangementFromSpace` created a 3-by-2 six-luminaire arrangement. Its reported center was (3, 2, 3.035) m and its estimate was 539.2 lx. It is not yet a public placement command. Dimension annotations appeared as native Popup windows; only exact noninteractive one-text metric labels are exempted from the dialog guard.
+
+The following CLI calculation did **not** complete successfully. DIALux PID 3412 exited; Windows Application Error at 2026-11-09 07:22:42 reported DIALux 5.14.1.0, ntdll.dll and exception 0xc0000374. No cause is established. Placement had not been saved, and no actual result or report is claimed. The saved v5 geometry checkpoint remains the recovery input. The CLI reported completion unverified; no automatic mutation retry was performed.
