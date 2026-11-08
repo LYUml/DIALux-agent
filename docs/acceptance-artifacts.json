@@ -8,6 +8,8 @@
     {"path":"local/validation-summary-v1.pdf","sha256":"ab6af3bc36541c8bb0d6d2634e3ee7367239af082de1c42de0fe2cf9dd0038f7"},
     {"path":"local/validation-summary-v2.pdf","sha256":"25f4a51ecbf4a5a9187a2dd1fc354bdf98b2e3dc3149d6d8234d0fae3e7d0820"},
     {"path":"local/adapter-calculation-v2.evo","sha256":"af1d6d05318772a2c1cfdab6e5ae294e1900dccf60dc7d7d0e04ca4d6791c602"},
-    {"path":"local/adapter-module-calculation-v3.evo","sha256":"7fc80a915e9c985769dcd965e56bcd19cbd7ffe129371edc858a7d5b200491ff"}
+    {"path":"local/adapter-module-calculation-v3.evo","sha256":"7fc80a915e9c985769dcd965e56bcd19cbd7ffe129371edc858a7d5b200491ff"},
+    {"path":"local/standalone-room-v4.stf","sha256":"5567bcdf31d727ce46915e06d75b1e3c04fdcd2caaa355b98c37237b3aa32658"},
+    {"path":"local/standalone-validation-v5.evo","sha256":"019662e5a15e85ec10c5dba558692331d25a26acd6497d758e0f8b0e9ac08ab5"}
   ]
 }

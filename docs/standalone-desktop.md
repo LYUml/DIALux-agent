@@ -28,7 +28,23 @@ Standalone calculation was subsequently implemented and live-tested through both
 
 The latest standalone recalculate/save/open cycle changed local native checkpoint hashes: v2 `af1d6d05318772a2c1cfdab6e5ae294e1900dccf60dc7d7d0e04ca4d6791c602`, v3 `7fc80a915e9c985769dcd965e56bcd19cbd7ffe129371edc858a7d5b200491ff`. The acceptance manifest tracks these new checkpoints; earlier documentation retains historical hashes. Exported v1/v2 PDFs were not changed.
 
-Standalone STF/photometry import, luminaire placement, PDF export and full end-to-end verification are **not implemented or validated yet**. The goal remains active. Unit tests cover worker transport/error semantics, and MCP discovery covers registration; neither replaces those remaining live gates.
+## Startup, STF import and Save As gate, 2026-11-09
+
+After resuming, no DIALux process was running. The independent `desktop-launch` command started the installed executable and observed its main window. It reuses a unique matching existing process rather than spawning a second instance. A missing executable, wrong executable name or multiple running processes is refused.
+
+```powershell
+.\.venv\Scripts\python.exe -m src.dialux_agent desktop-launch
+.\.venv\Scripts\python.exe -m src.dialux_agent desktop-import-stf --path local/standalone-room-v4.stf
+.\.venv\Scripts\python.exe -m src.dialux_agent desktop-save-as --expected-project local/standalone-room-v4.evo --path local/new-validation.evo
+```
+
+Equivalent MCP tools: `desktop_launch`, `desktop_import_stf`, `desktop_save_as`. STF import requires an empty workspace and a parseable room input. It does not close or replace an existing project. The imported fixture is named `Standalone UIA validation`, with source hash `5567bcdf31d727ce46915e06d75b1e3c04fdcd2caaa355b98c37237b3aa32658`. The independent app capture showed the named room and its geometry. Exact dimensions/reflectances have not yet been read back through UIA, so the operation deliberately returns `geometry_verified_in_evo: false`.
+
+Import proposes an `.evo` title before a native file exists. Save As therefore accepts a matching current title even when that proposed path is absent, but requires a **new** destination. Existing outputs are refused. Windows Open used filename ID 1148; the resumed Save dialog used ID 1001. Its ValuePattern alone changed the displayed/read-back value without updating the internal filename: an initial attempt saved the original proposed name and correctly failed the requested-path check. The fixed path commits the field with targeted keyboard events before submission. No user clipboard is used. This can take keyboard focus.
+
+Save notifications also appear as unnamed UIA windows. The worker now waits read-only for those windows to disappear rather than declaring immediate failure or answering an unknown dialog. Success requires the target file to stabilize and the exact requested title without an unsaved marker. The fully successful CLI checkpoint is `local/standalone-validation-v5.evo`, 419865 bytes, SHA256 `019662e5a15e85ec10c5dba558692331d25a26acd6497d758e0f8b0e9ac08ab5`. Earlier v4 attempts remain local for diagnosis. This fixture has no validated luminaires or lighting calculation yet.
+
+Standalone photometry import, luminaire placement, PDF export and full end-to-end verification are **not implemented or validated yet**. The goal remains active. Unit tests cover worker transport/error semantics, and MCP discovery covers registration; neither replaces those remaining live gates.
 
 ## Reused sources
 

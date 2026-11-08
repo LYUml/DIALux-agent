@@ -35,7 +35,7 @@ Available Hong Kong modules are [BEC 2024 office LPD](docs/hk-office-lpd.md) and
 
 ## MCP configuration
 
-The independently running Windows backend provides `desktop-status`, `desktop-save`, `desktop-calculate` and `desktop-open` CLI commands, with corresponding underscore-named MCP tools. They use pywinauto UIA, not Codex Computer Use. Status, save, recalculate and native opening have been live-tested; import, placement and export are still being implemented. See [standalone desktop requirements and evidence](docs/standalone-desktop.md).
+The independently running Windows backend provides `desktop-launch`, `desktop-status`, `desktop-import-stf`, `desktop-save-as`, `desktop-save`, `desktop-calculate` and `desktop-open` CLI commands, with corresponding underscore-named MCP tools. They use pywinauto UIA, not Codex Computer Use. These paths have been live-tested; imported geometry parameter readback, photometry import, placement and export are still being implemented. See [standalone desktop requirements and evidence](docs/standalone-desktop.md).
 
 The repository also includes an AI workflow skill at [skills/dialux-agent/SKILL.md](skills/dialux-agent/SKILL.md). It describes the actual commands, provenance checks and live verification boundary. It is not globally installed and does not add desktop control by itself. PyYAML in the locked environment supports the skill validator.
 

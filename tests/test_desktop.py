@@ -81,3 +81,30 @@ def test_open_preserves_modified_current_project(tmp_path, monkeypatch):
                         (current, {'title': str(current)+'* - DIALux evo 14.1'}))
     with pytest.raises(ValueError, match='modified'):
         windows_worker.open_project(None, None, None, str(target), str(current), False)
+
+
+def test_save_as_refuses_existing_output_before_touching_app(tmp_path):
+    path = tmp_path/'original.evo'
+    path.write_bytes(b'original project')
+    with pytest.raises(ValueError, match='existing files'):
+        windows_worker.save_as(None, None, None, 'current.evo', str(path))
+    assert path.read_bytes() == b'original project'
+
+
+def test_modern_save_dialog_commits_filename_before_submit(tmp_path):
+    model = {'visible': 'old.evo', 'committed': 'old.evo', 'saved': None}
+    def set_text(value): model['visible'] = value
+    def commit(*args, **kwargs): model['committed'] = model['visible']
+    filename = SimpleNamespace(element_info=SimpleNamespace(runtime_id=(1,), automation_id='1001'),
+                               is_visible=lambda: True, set_edit_text=set_text, set_focus=lambda: None,
+                               type_keys=commit, get_value=lambda: model['visible'])
+    def save(): model['saved'] = model['committed']
+    button = SimpleNamespace(element_info=SimpleNamespace(runtime_id=(2,), automation_id='1'),
+                             is_visible=lambda: True, is_enabled=lambda: True, click=save)
+    dialog = SimpleNamespace(element_info=SimpleNamespace(runtime_id=(3,)), is_visible=lambda: True,
+                             window_text=lambda: 'Save project',
+                             descendants=lambda control_type: [filename] if control_type == 'Edit' else [button])
+    main = SimpleNamespace(descendants=lambda **kwargs: [dialog])
+    target = tmp_path/'new project.evo'
+    windows_worker.submit_file_dialog(main, 'Save project', target)
+    assert model['saved'] == str(target)

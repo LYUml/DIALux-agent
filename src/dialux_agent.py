@@ -66,6 +66,11 @@ def main():
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
     commands.add_parser('report-read').add_argument('--path', required=True)
     commands.add_parser('desktop-status')
+    commands.add_parser('desktop-launch').add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
+    commands.add_parser('desktop-import-stf').add_argument('--path', required=True)
+    saving_as = commands.add_parser('desktop-save-as')
+    saving_as.add_argument('--expected-project', required=True)
+    saving_as.add_argument('--path', required=True)
     commands.add_parser('desktop-save').add_argument('--expected-project', required=True)
     calculation = commands.add_parser('desktop-calculate')
     calculation.add_argument('--expected-project', required=True)
@@ -86,6 +91,12 @@ def main():
     try:
         if args.command == 'desktop-status':
             result = _local_module('desktop').desktop_status()
+        elif args.command == 'desktop-launch':
+            result = _local_module('desktop').desktop_launch(args.executable)
+        elif args.command == 'desktop-import-stf':
+            result = _local_module('desktop').desktop_import_stf(args.path)
+        elif args.command == 'desktop-save-as':
+            result = _local_module('desktop').desktop_save_as(args.expected_project, args.path)
         elif args.command == 'desktop-save':
             result = _local_module('desktop').desktop_save(args.expected_project)
         elif args.command == 'desktop-calculate':

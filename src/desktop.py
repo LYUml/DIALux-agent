@@ -19,7 +19,7 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command.append('--save-current')
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=75 if action in {'calculate', 'open'} else 30)
+                             timeout=75 if action in {'calculate', 'open', 'launch', 'import-stf', 'save-as'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -34,6 +34,21 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
 def desktop_status() -> dict:
     """Read the unique running DIALux process and current controls using Windows UIA."""
     return _run('status')
+
+
+def desktop_launch(executable: str = 'C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe') -> dict:
+    """Start installed DIALux or reuse its unique existing process; never install software."""
+    return _run('launch', target=executable)
+
+
+def desktop_import_stf(path: str) -> dict:
+    """Import a parsed STF into an empty DIALux workspace. Native project is not yet saved."""
+    return _run('import-stf', target=path)
+
+
+def desktop_save_as(expected_project: str, path: str) -> dict:
+    """Save an imported or existing project to a new native .evo path; never accept overwrite prompts."""
+    return _run('save-as', expected_project, target=path)
 
 
 def desktop_save(expected_project: str) -> dict:
