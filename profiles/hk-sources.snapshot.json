@@ -1,0 +1,74 @@
+[
+  {
+    "id": "emsd-bec-2024",
+    "url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+    "resolved_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+    "cache": "downloaded",
+    "bytes": 5225501,
+    "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
+    "path": "local/references/official/emsd-bec-2024.pdf"
+  },
+  {
+    "id": "emsd-tg-bec-2024",
+    "url": "https://www.emsd.gov.hk/beeo/sc/pee/TG-BEC_2024.pdf",
+    "resolved_url": "https://www.emsd.gov.hk/beeo/sc/pee/TG-BEC_2024.pdf",
+    "cache": "downloaded",
+    "bytes": 19758357,
+    "sha256": "2fce4b30773f1899635ee985876f418972fb3cacfccb176ba0df7283c4e61186",
+    "path": "local/references/official/emsd-tg-bec-2024.pdf"
+  },
+  {
+    "id": "archsd-bsgs-2022-corr05",
+    "url": "https://www.archsd.gov.hk/media/publications-publicity/general-specification-for-building-serivces/BSGS_2022_Edition_wCorr_GSBS05-2022_(Jul2026).pdf",
+    "resolved_url": "https://www.archsd.gov.hk/media/publications-publicity/general-specification-for-building-serivces/BSGS_2022_Edition_wCorr_GSBS05-2022_(Jul2026).pdf",
+    "cache": "downloaded",
+    "bytes": 21418160,
+    "sha256": "019e25573bde831d99bc169a96f9fdfed3ac92a899c0a0464540d5d4cda20381",
+    "path": "local/references/official/archsd-bsgs-2022-corr05.pdf"
+  },
+  {
+    "id": "labour-office-lighting",
+    "url": "https://www.labour.gov.hk/eng/public/oh/OHB50.pdf",
+    "resolved_url": "https://www.labour.gov.hk/eng/public/oh/OHB50.pdf",
+    "cache": "downloaded",
+    "bytes": 1385492,
+    "sha256": "777ed90aa692aa355713069d0e9fa451d645919be0bc3e2d53330df5213485d8",
+    "path": "local/references/official/labour-office-lighting.pdf"
+  },
+  {
+    "id": "labour-lighting-assessment",
+    "url": "https://www.labour.gov.hk/eng/public/oh/Lighting.pdf",
+    "resolved_url": "https://www.labour.gov.hk/eng/public/oh/Lighting.pdf",
+    "cache": "downloaded",
+    "bytes": 2016271,
+    "sha256": "effee1b30ed47dd031c3a1b9d0ecb584d4dd5a47a0e8b1595885a154c057ec85",
+    "path": "local/references/official/labour-lighting-assessment.pdf"
+  },
+  {
+    "id": "labour-good-hygiene-lighting",
+    "url": "https://www.labour.gov.hk/eng/public/oh/GOHP_Lighting_Eng.pdf",
+    "resolved_url": "https://www.labour.gov.hk/eng/public/oh/GOHP_Lighting_Eng.pdf",
+    "cache": "downloaded",
+    "bytes": 104026,
+    "sha256": "174d2a2815488a3002bd8525dc1628ab091262afe27f8963058f69bbf738116d",
+    "path": "local/references/official/labour-good-hygiene-lighting.pdf"
+  },
+  {
+    "id": "fsd-cop-2022",
+    "url": "https://www.hkfsd.gov.hk/eng/source/safety/File2022.pdf",
+    "resolved_url": "https://www.hkfsd.gov.hk/eng/source/safety/File2022.pdf",
+    "cache": "downloaded",
+    "bytes": 4774616,
+    "sha256": "ce1d88b6f2df3d4674db80763134eebac3ff6f1ec9bd0f29d1466cf16657622f",
+    "path": "local/references/official/fsd-cop-2022.pdf"
+  },
+  {
+    "id": "fsd-emergency-local-guidance",
+    "url": "https://www.hkfsd.gov.hk/eng/source/guidance/Technical_Guidance_BS5266_2016_BSEN1838_2013.pdf",
+    "resolved_url": "https://www.hkfsd.gov.hk/eng/source/guidance/Technical_Guidance_BS5266_2016_BSEN1838_2013.pdf",
+    "cache": "downloaded",
+    "bytes": 1047263,
+    "sha256": "295e93caaf662c86d91c326f1c127541d7dce034217e94cc96df6d68452c6f8a",
+    "path": "local/references/official/fsd-emergency-local-guidance.pdf"
+  }
+]

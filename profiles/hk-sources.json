@@ -1,0 +1,16 @@
+{
+  "schema": "dialux-agent/source-catalog/v1",
+  "jurisdiction": "HK",
+  "reviewed_date": "2026-11-08",
+  "notice": "Discovery and caching do not establish project applicability or activate criteria. Government contract specifications and advisory guidance are separate from statutory requirements.",
+  "sources": [
+    {"id":"emsd-bec-2024","authority":"EMSD","module":"energy","edition":"2024","url":"https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf","review":"Section 5 text reviewed; Table 5.4 office rows visually checked at PDF page 22, printed page 16. Project applicability pending."},
+    {"id":"emsd-tg-bec-2024","authority":"EMSD","module":"energy-interpretation","edition":"2024","url":"https://www.emsd.gov.hk/beeo/sc/pee/TG-BEC_2024.pdf","review":"Located; detailed review pending."},
+    {"id":"archsd-bsgs-2022-corr05","authority":"ArchSD","module":"government-contract","edition":"2022 incorporating GSBS05-2022, July 2026","url":"https://www.archsd.gov.hk/media/publications-publicity/general-specification-for-building-serivces/BSGS_2022_Edition_wCorr_GSBS05-2022_(Jul2026).pdf","review":"Official publication index links this edition. Detailed review and contractual applicability pending."},
+    {"id":"labour-office-lighting","authority":"Labour Department","module":"occupational-guidance","edition":"September 2003 third edition","url":"https://www.labour.gov.hk/eng/public/oh/OHB50.pdf","review":"Text reviewed. Guidance contains recommendations and examples, not a universal statutory office lux threshold."},
+    {"id":"labour-lighting-assessment","authority":"Labour Department","module":"measurement-guidance","edition":null,"url":"https://www.labour.gov.hk/eng/public/oh/Lighting.pdf","review":"Located; edition and detailed review pending."},
+    {"id":"labour-good-hygiene-lighting","authority":"Labour Department","module":"occupational-guidance","edition":null,"url":"https://www.labour.gov.hk/eng/public/oh/GOHP_Lighting_Eng.pdf","review":"Located; edition and detailed review pending."},
+    {"id":"fsd-cop-2022","authority":"FSD","module":"emergency-lighting","edition":"September 2022","url":"https://www.hkfsd.gov.hk/eng/source/safety/File2022.pdf","review":"FSD code index identifies current edition; section 5.9 and amendments need full review before activation."},
+    {"id":"fsd-emergency-local-guidance","authority":"FSD","module":"emergency-lighting","edition":"BS 5266-1:2016 and BS EN 1838:2013 local guidance","url":"https://www.hkfsd.gov.hk/eng/source/guidance/Technical_Guidance_BS5266_2016_BSEN1838_2013.pdf","review":"Located; do not substitute newer international editions without checking Hong Kong adoption and circulars."}
+  ]
+}
