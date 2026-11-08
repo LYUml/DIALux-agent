@@ -27,6 +27,8 @@ Measurements must identify units, calculation surface and evidence. `criteria-ch
 
 Consult `docs/test-plan.md` and `docs/validation-luminaire.md` when testing the application. Use the available computer-use skill/tool for native interactions, respecting the user's current shared-desktop availability. Do not assume a separate mouse or an existing automation API.
 
+For reusable session operations, read `docs/desktop-adapter.md`. The adapter injects the existing sky client; observe and inspect in one call, act in the next. Saving is live-verified; other methods must retain their documented validation status. It is not a standalone MCP desktop server.
+
 Verify room inputs in evo, load traceable manufacturer photometry, calculate, save a native project, reopen it, and compare the exported report with application results. Record actual observations and artifact paths. Keep unperformed stages explicitly pending. Source discrepancies must be resolved for design conclusions, not silently overwritten. A catalogue UGR label is not a calculated room UGR.
 
 For BSE3125, read `docs/requirements.md` before producing assignment outputs. Build and verify the tool first; preserve assignment originals and do not publish local project files or personal data merely because repository pushing is authorized.
