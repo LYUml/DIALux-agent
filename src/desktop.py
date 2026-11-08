@@ -5,14 +5,21 @@ import subprocess
 import sys
 
 
-def _run(action, expected_project=None):
+def _run(action, expected_project=None, recalculate=False, target=None, save_current=False):
     if sys.platform != 'win32':
         raise ValueError('DIALux desktop control requires Windows')
     command = [sys.executable, str(Path(__file__).with_name('windows_worker.py')), action]
     if expected_project is not None:
         command += ['--expected-project', str(expected_project)]
+    if recalculate:
+        command.append('--recalculate')
+    if target is not None:
+        command += ['--path', str(target)]
+    if save_current:
+        command.append('--save-current')
     try:
-        run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', timeout=30)
+        run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
+                             timeout=75 if action in {'calculate', 'open'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -32,3 +39,21 @@ def desktop_status() -> dict:
 def desktop_save(expected_project: str) -> dict:
     """Save only the specified currently open native project; reject dialogs and mismatches."""
     return _run('save', expected_project)
+
+
+def desktop_calculate(expected_project: str, recalculate: bool = False) -> dict:
+    """Invoke real DIALux calculation. Optional recalculate discards cached results first.
+
+    Does not save the native project. Returns observed result controls, not a
+    compliance judgment. Large calculations may exceed the bounded worker time.
+    """
+    if not isinstance(recalculate, bool):
+        raise ValueError('recalculate must be a boolean')
+    return _run('calculate', expected_project, recalculate)
+
+
+def desktop_open(path: str, expected_current_project: str | None = None, save_current: bool = False) -> dict:
+    """Open a native project, preserving modified current work unless saving is explicitly requested."""
+    if not isinstance(save_current, bool):
+        raise ValueError('save_current must be a boolean')
+    return _run('open', expected_current_project, target=path, save_current=save_current)

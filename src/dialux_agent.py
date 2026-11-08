@@ -67,6 +67,13 @@ def main():
     commands.add_parser('report-read').add_argument('--path', required=True)
     commands.add_parser('desktop-status')
     commands.add_parser('desktop-save').add_argument('--expected-project', required=True)
+    calculation = commands.add_parser('desktop-calculate')
+    calculation.add_argument('--expected-project', required=True)
+    calculation.add_argument('--recalculate', action='store_true')
+    opening = commands.add_parser('desktop-open')
+    opening.add_argument('--path', required=True)
+    opening.add_argument('--expected-current-project')
+    opening.add_argument('--save-current', action='store_true')
     criteria = commands.add_parser('criteria-check')
     criteria.add_argument('--profile', required=True)
     criteria.add_argument('--measurements', required=True)
@@ -81,6 +88,10 @@ def main():
             result = _local_module('desktop').desktop_status()
         elif args.command == 'desktop-save':
             result = _local_module('desktop').desktop_save(args.expected_project)
+        elif args.command == 'desktop-calculate':
+            result = _local_module('desktop').desktop_calculate(args.expected_project, args.recalculate)
+        elif args.command == 'desktop-open':
+            result = _local_module('desktop').desktop_open(args.path, args.expected_current_project, args.save_current)
         elif args.command == 'room-create':
             create_room = _local_module('backend').create_room
             result = create_room(json.loads(Path(args.spec).read_text(encoding='utf-8-sig')), args.output)
