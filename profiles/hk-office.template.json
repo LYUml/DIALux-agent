@@ -1,0 +1,10 @@
+{
+  "schema": "dialux-agent/criteria-profile/v1",
+  "jurisdiction": "HK",
+  "application": "open-plan office",
+  "status": "unverified-template",
+  "criteria": [],
+  "required_source_fields": ["document_title", "edition", "clause_or_table", "page", "source_path_or_url", "applicability", "verified_by", "verified_date"],
+  "required_criterion_fields": ["metric", "unit", "operator", "threshold", "source", "calculation_surface"],
+  "notes": ["No compliance thresholds adopted. Verify assignment, international guidance and applicable Hong Kong energy-code editions before filling criteria.", "Geometry import and synthetic test parameters are not compliance evidence."]
+}

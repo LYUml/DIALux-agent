@@ -2,11 +2,13 @@
 from mcp.server.mcpserver import MCPServer
 from backend import create_room, inspect_stf
 from dialux_agent import inventory
+from regulations import evaluate_profile
 
 server = MCPServer('DIALux-agent', instructions='Geometry tools do not run lighting calculations. Preserve source files; report unverified capabilities explicitly.')
 server.tool()(create_room)
 server.tool()(inspect_stf)
 server.tool()(inventory)
+server.tool()(evaluate_profile)
 
 if __name__ == '__main__':
     server.run()
