@@ -18,4 +18,4 @@ When shared-desktop time is available:
 6. Export the calculation documentation to PDF. Check its room, luminaire count, photometry, maintenance factor and result values against the application. Record hashes of the saved project and report.
 7. Only after this gate works, test placement automation and multiple fixtures. A product's catalogue UGR label is not a calculated room UGR result.
 
-Current status: manufacturer assets downloaded; no import, calculation or native save has been verified. No desktop input was performed to prepare these assets.
+Current status: the ULD was successfully imported, placed, calculated, saved and exported in the first live gate; see `live-validation-2026-11-08.md`. The application reports 3602 lm and 26 W for this dataset. This observation does not resolve the manufacturer's source discrepancies or approve the product for the assignment.

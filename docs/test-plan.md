@@ -6,4 +6,4 @@ Live gate pending: import a 6 x 4 x 3 m synthetic room, verify workplane and ref
 
 A manufacturer ULD/IES/LDT candidate is now cached. Follow `docs/validation-luminaire.md`, including its unresolved source discrepancies, for the live gate. The asset manifest records exact bytes; a successful download does not satisfy the gate.
 
-Desktop interaction paused on user request: user needs their mouse. Continue background development; do not resume shared UI input without a suitable user-authorized window.
+The user authorized shared desktop operation on 2026-11-08. The first live gate has now completed; see `live-validation-2026-11-08.md` and its hashed artifacts. Further work must distinguish this observed agent-directed run from an implemented unattended CLI/MCP driver.

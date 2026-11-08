@@ -6,7 +6,7 @@ Experimental Windows tooling for DIALux evo, driven by the BSE3125 lighting-desi
 
 `python src/dialux_agent.py inventory --source <assignment-folder>` hashes PDF/DWG inputs without modifying them and reports the DWG header. `verify --manifest <json>` checks that originals remain unchanged. `room-create` generates a single-room STF through the vendored backend, and `stf-inspect` reads it back. `criteria-check` evaluates supplied sourced criteria against evidence-bearing measurements. All commands emit JSON.
 
-Live DIALux control and calculation are not implemented yet. A desktop probe reached evo 14.1's STF import dialog after login; project editing and simulation are unverified. Desktop interaction is paused while the user uses the computer. This is not a completed CLI-Anything harness.
+One real evo 14.1 workflow has been verified through agent-directed computer use: STF import, manufacturer ULD import, single-luminaire placement, calculation, native save/reopen and PDF export. The CLI/MCP does not yet automate those desktop operations. See [live evidence](docs/live-validation-2026-11-08.md). This is not a completed CLI-Anything harness.
 
 The MIT-licensed MCP_Dialux geometry backend is incorporated under `vendor/MCP_Dialux`, with its license. CLI-Anything informs the CLI/JSON/shared-backend approach. See [upstream review](docs/upstream-review.md) for pinned revisions and license decisions. Research checkouts remain local-only under `upstream/`.
 
@@ -59,7 +59,7 @@ Tools: `inventory`, `verify`, `create_room`, `inspect_stf`, `evaluate_profile`. 
 | CLI / MCP | Real process tests; common backend |
 | Hong Kong sources | Eight official PDFs cached locally with hashes, editions and review register |
 | Hong Kong automatic compliance | Pending applicability modelling and clause review; template inactive |
-| DIALux import, real luminaires, calculation, save, report export | Not verified |
+| DIALux import, real luminaires, calculation, save/reopen, report export | One synthetic-room run verified through computer use; unattended driver pending |
 | BSE3125 assignment | Requirements extracted, originals preserved; design not produced |
 
 See [requirements](docs/requirements.md), [test plan](docs/test-plan.md), [module boundaries](docs/modules.md), and [Hong Kong source review](docs/hk-source-register.md). Refresh local official PDF caches with `python scripts/cache_hk_sources.py`; caching does not activate rules.

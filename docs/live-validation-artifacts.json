@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-08",
+  "application": "DIALux evo 14.1 (64-bit)",
+  "artifacts": [
+    {
+      "path": "local/adapter-room-v1.stf",
+      "bytes": 431,
+      "sha256": "810562a8522979b6dfdb1b6b02e0b272d0ce37c4e8b1a7b493d78295cb81eba5"
+    },
+    {
+      "path": "local/adapter-room-v1.evo",
+      "bytes": 848071,
+      "sha256": "30a4558163a41ee2caaa1d9e1f033c215be13df0f5cd5559c5226fb6b91cf09d"
+    },
+    {
+      "path": "local/validation-summary-v1.pdf",
+      "bytes": 388755,
+      "sha256": "ab6af3bc36541c8bb0d6d2634e3ee7367239af082de1c42de0fe2cf9dd0038f7"
+    },
+    {
+      "path": "local/luminaires/910505102817.uld",
+      "bytes": 24064,
+      "sha256": "6dc1c0220a9928ce96f7110daf816b9db73b614c8f8ed5041216113d6d40e1fa"
+    }
+  ]
+}
