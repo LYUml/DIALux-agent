@@ -15,12 +15,19 @@ def evaluate_profile(profile: dict, measurements: list[dict]) -> dict:
     if profile.get('schema') != 'dialux-agent/criteria-profile/v1':
         raise ValueError('Unsupported criteria profile')
     rows = []
+    seen = set()
     for criterion in profile.get('criteria', []):
+        for key in ('id', 'metric', 'unit', 'calculation_surface'):
+            if not isinstance(criterion.get(key), str) or not criterion[key].strip():
+                raise ValueError(f'Missing criterion {key}')
+        if criterion['id'] in seen:
+            raise ValueError('Duplicate criterion id')
+        seen.add(criterion['id'])
         row = {'id': criterion.get('id'), 'metric': criterion.get('metric'),
                'status': 'unverified', 'source': criterion.get('source')}
         rows.append(row)
         source = criterion.get('source', {})
-        if profile.get('status') != 'verified' or not all(source.get(k) is not None and source.get(k) != '' for k in SOURCE_FIELDS):
+        if profile.get('status') != 'verified' or not isinstance(source, dict) or not all(isinstance(source.get(k), (str, int)) and not isinstance(source.get(k), bool) and str(source[k]).strip() for k in SOURCE_FIELDS):
             row['reason'] = 'Profile or source not verified'
             continue
         op = criterion.get('operator')
