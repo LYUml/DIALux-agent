@@ -122,6 +122,7 @@ def save(app, main, process, expected_project):
 
 
 def calculate(app, main, process, expected_project, recalculate=False):
+    import psutil
     expected, state = prepare_project(app, main, process, expected_project)
     def button(control_id):
         found = [c for c in main.descendants(control_type='Button') if c.element_info.automation_id == control_id]
@@ -139,6 +140,8 @@ def calculate(app, main, process, expected_project, recalculate=False):
     button('CalculationButtonStart').click()
     deadline = time.monotonic() + 45
     while time.monotonic() < deadline:
+        if not psutil.pid_exists(process['pid']):
+            raise ValueError('DIALux process exited during calculation; no result verified. Inspect Windows Application Error logs before retry.')
         state = snapshot(app, main, process)
         if state['dialogs']:
             raise ValueError('Dialog during calculation; outcome unverified')

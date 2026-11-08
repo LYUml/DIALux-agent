@@ -36,6 +36,19 @@ def test_arrangement_refuses_existing_calculation_content(monkeypatch):
         windows_worker.arrange_space(None, window, None, 'test.evo', 'product')
 
 
+def test_calculation_reports_process_exit_without_reading_stale_ui(monkeypatch):
+    import psutil
+    state = {'controls': {'CalculationButtonStart': {'enabled': True}}}
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: (Path('test.evo'), state))
+    button = SimpleNamespace(element_info=SimpleNamespace(automation_id='CalculationButtonStart'),
+                             is_enabled=lambda: True, click=lambda: None)
+    window = SimpleNamespace(descendants=lambda **k: [button])
+    monkeypatch.setattr(psutil, 'pid_exists', lambda pid: False)
+    monkeypatch.setattr(windows_worker, 'snapshot', lambda *a: pytest.fail('Stale UI queried'))
+    with pytest.raises(ValueError, match='process exited'):
+        windows_worker.calculate(None, window, {'pid': 999}, 'test.evo')
+
+
 def test_worker_timeout_reports_unknown_without_retry(monkeypatch):
     monkeypatch.setattr(desktop.sys, 'platform', 'win32')
     calls = []
