@@ -10,7 +10,15 @@ from dialux.leer_stf import leer
 from shapely.geometry import Polygon
 
 
+def _number(value, field):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError(f'{field} must be a finite JSON number')
+    return float(value)
+
+
 def create_room(spec: dict, output: str) -> dict:
+    if not isinstance(spec, dict):
+        raise ValueError('Room specification must be an object')
     path = Path(output).resolve()
     if path.suffix.lower() != '.stf':
         raise ValueError('Output must have .stf extension')
@@ -22,17 +30,20 @@ def create_room(spec: dict, output: str) -> dict:
     name.encode('latin-1', errors='strict')
     if spec['units'] != 'm':
         raise ValueError('Explicit metre units required')
-    if not isinstance(spec['assumptions'], list) or not spec['assumptions']:
+    if (not isinstance(spec['assumptions'], list) or not spec['assumptions']
+            or any(not isinstance(a, str) or not a.strip() for a in spec['assumptions'])):
         raise ValueError('Document input sources or assumptions')
     contour = spec['contour']
-    if any(len(p) != 2 or any(not math.isfinite(float(v)) for v in p) for p in contour):
+    if (not isinstance(contour, list) or len(contour) < 3
+            or any(not isinstance(p, (list, tuple)) or len(p) != 2 for p in contour)):
         raise ValueError('Invalid contour coordinates')
+    contour = [tuple(_number(v, 'Contour coordinate') for v in p) for p in contour]
     polygon = Polygon(contour)
     if not polygon.is_valid or polygon.area <= 0:
         raise ValueError('Contour must be a valid positive-area polygon')
-    height, plane = float(spec['height_m']), float(spec['workplane_m'])
-    mf = float(spec['maintenance_factor'])
-    reflections = [float(spec[k]) for k in ('ceiling_reflectance_pct', 'wall_reflectance_pct', 'floor_reflectance_pct')]
+    height, plane = _number(spec['height_m'], 'height_m'), _number(spec['workplane_m'], 'workplane_m')
+    mf = _number(spec['maintenance_factor'], 'maintenance_factor')
+    reflections = [_number(spec[k], k) for k in ('ceiling_reflectance_pct', 'wall_reflectance_pct', 'floor_reflectance_pct')]
     if not all(math.isfinite(x) for x in [height, plane, mf, *reflections]):
         raise ValueError('Parameters must be finite')
     if not 0 <= plane < height or not 0 < mf <= 1 or not all(0 <= x <= 100 for x in reflections):

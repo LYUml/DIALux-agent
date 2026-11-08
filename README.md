@@ -31,6 +31,8 @@ Exit codes: `0` successful operation / supplied criteria pass; `1` source mismat
 
 ## MCP configuration
 
+The repository also includes an AI workflow skill at [skills/dialux-agent/SKILL.md](skills/dialux-agent/SKILL.md). It describes the actual commands, provenance checks and live verification boundary. It is not globally installed and does not add desktop control by itself. PyYAML in the locked environment supports the skill validator.
+
 Configure a stdio MCP client with these absolute paths (adjust the checkout location on other machines):
 
 ```json

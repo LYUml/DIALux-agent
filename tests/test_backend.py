@@ -34,6 +34,9 @@ def test_roundtrip(spec, tmp_path):
     ('height_m', float('nan')), ('workplane_m', 3),
     ('maintenance_factor', 0), ('wall_reflectance_pct', 101),
     ('contour', [[0,0],[2,2],[0,2],[2,0]]),
+    ('height_m', True), ('height_m', '3'), ('assumptions', ['']),
+    ('assumptions', [42]), ('contour', []), ('contour', [1,2,3]),
+    ('contour', [[False,0],[2,0],[2,2]]),
 ])
 def test_reject_invalid(spec, tmp_path, key, value):
     spec[key] = value

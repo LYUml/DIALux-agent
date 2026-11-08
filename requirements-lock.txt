@@ -34,6 +34,7 @@ pypdfium2==5.15.1
 pytest==9.2.0
 python-multipart==0.0.33
 pywin32==312
+PyYAML==6.0.3
 referencing==0.37.0
 rpds-py==2026.9.1
 shapely==2.2.0
