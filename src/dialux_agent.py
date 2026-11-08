@@ -54,10 +54,21 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('inventory').add_argument('--source', required=True)
     commands.add_parser('verify').add_argument('--manifest', required=True)
+    room = commands.add_parser('room-create')
+    room.add_argument('--spec', required=True)
+    room.add_argument('--output', required=True)
+    commands.add_parser('stf-inspect').add_argument('--path', required=True)
     args = parser.parse_args()
     try:
-        result = inventory(args.source) if args.command == 'inventory' else verify(
-            json.loads(Path(args.manifest).read_text(encoding='utf-8-sig')))
+        if args.command == 'room-create':
+            from backend import create_room
+            result = create_room(json.loads(Path(args.spec).read_text(encoding='utf-8-sig')), args.output)
+        elif args.command == 'stf-inspect':
+            from backend import inspect_stf
+            result = inspect_stf(args.path)
+        else:
+            result = inventory(args.source) if args.command == 'inventory' else verify(
+                json.loads(Path(args.manifest).read_text(encoding='utf-8-sig')))
         print(json.dumps(result, ensure_ascii=True, indent=2))
         return 0 if result.get('ok', True) else 1
     except (OSError, ValueError, KeyError, TypeError) as exc:
