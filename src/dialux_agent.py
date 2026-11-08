@@ -61,6 +61,7 @@ def main():
     criteria = commands.add_parser('criteria-check')
     criteria.add_argument('--profile', required=True)
     criteria.add_argument('--measurements', required=True)
+    criteria.add_argument('--context', help='JSON object of evidenced applicability facts')
     args = parser.parse_args()
     try:
         if args.command == 'room-create':
@@ -73,7 +74,8 @@ def main():
             from regulations import evaluate_profile
             result = evaluate_profile(
                 json.loads(Path(args.profile).read_text(encoding='utf-8-sig')),
-                json.loads(Path(args.measurements).read_text(encoding='utf-8-sig')))
+                json.loads(Path(args.measurements).read_text(encoding='utf-8-sig')),
+                json.loads(Path(args.context).read_text(encoding='utf-8-sig')) if args.context else None)
         else:
             result = inventory(args.source) if args.command == 'inventory' else verify(
                 json.loads(Path(args.manifest).read_text(encoding='utf-8-sig')))

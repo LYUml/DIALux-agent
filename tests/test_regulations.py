@@ -41,3 +41,33 @@ def test_unverified_source(data):
 def test_missing_surface_is_not_wildcard(data):
     p,m=data;del p['criteria'][0]['calculation_surface'];del m['calculation_surface']
     with pytest.raises(ValueError):evaluate_profile(p,[m])
+
+
+@pytest.mark.parametrize('value,unit,evidence,expected', [
+    (15, 'm2', 'drawing A', 'not_applicable'),
+    (15.01, 'm2', 'drawing A', 'pass'),
+    (15000000, 'mm2', 'drawing A', 'unverified'),
+    (True, 'm2', 'drawing A', 'unverified'),
+    (20, 'm2', '', 'unverified'),
+])
+def test_applicability_boundary_and_evidence(data,value,unit,evidence,expected):
+    p,m=data
+    p['criteria'][0]['applicable_when']=[{'fact':'area','operator':'>','value':15,'unit':'m2'}]
+    result=evaluate_profile(p,[m],{'area':{'value':value,'unit':unit,'evidence':evidence}})
+    assert result['criteria'][0]['status']==expected
+    if expected=='not_applicable':
+        assert result['status']=='unverified'  # Empty scope is not certification.
+
+
+def test_missing_applicability_is_not_exemption(data):
+    p,m=data
+    p['criteria'][0]['applicable_when']=[{'fact':'office','operator':'==','value':True}]
+    assert evaluate_profile(p,[m])['status']=='unverified'
+    assert evaluate_profile(p,[m],{'office':{'value':1,'evidence':'x'}})['status']=='unverified'
+    assert evaluate_profile(p,[m],{'office':{'value':True,'evidence':'plan'}})['status']=='pass'
+
+
+def test_condition_requires_explicit_units(data):
+    p,m=data
+    p['criteria'][0]['applicable_when']=[{'fact':'area','operator':'>','value':15}]
+    with pytest.raises(ValueError):evaluate_profile(p,[m])

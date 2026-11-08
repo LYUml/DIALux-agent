@@ -29,6 +29,8 @@ Create `local/measurements.json` as an array containing `metric`, `unit`, `calcu
 
 Exit codes: `0` successful operation / supplied criteria pass; `1` source mismatch or criteria fail; `2` invalid input or I/O error; `3` criteria unverified. Missing evidence is never passing. The engine does not certify the entire project.
 
+Profiles can include evidence-bearing applicability conditions; pass `--context <facts.json>` to the CLI or `context` to the MCP evaluator. See [applicability schema](docs/profile-applicability.md). Missing context remains unverified, and an empty applicable scope does not pass.
+
 ## MCP configuration
 
 The repository also includes an AI workflow skill at [skills/dialux-agent/SKILL.md](skills/dialux-agent/SKILL.md). It describes the actual commands, provenance checks and live verification boundary. It is not globally installed and does not add desktop control by itself. PyYAML in the locked environment supports the skill validator.
