@@ -128,6 +128,13 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
         else:
             from cad_schedule import add_schedule_table
         add_schedule_table(doc, schedule, (min(xs), min(ys)-2), note_height)
+    sheet = None
+    if 'sheet' in spec:
+        if __package__:
+            from .cad_sheet import add_sheet
+        else:
+            from cad_sheet import add_sheet
+        sheet = add_sheet(doc,spec['sheet'])
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open('x', encoding='utf-8') as stream:
         doc.write(stream)
@@ -145,6 +152,7 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
     return {'schema':'dialux-agent/layout-cad/v1','path':str(target),'fixture_count':len(inserts),
             'fixture_handles':handles,'input_sha256':layout['input_sha256'],
             'label_placement':label_positions, 'label_envelopes_verified':True,
+            'sheet':sheet,
             'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),
             'dxf_readback_verified':True,'native_dwg_verified':False,'print_verified':False,
             'warnings':['Synthetic tool-test drawing only. Native AutoCAD opening and plotting remain separate verification gates.']}
@@ -233,6 +241,7 @@ def verify_layout_native(path: str, output_directory: str,
     before = _fixture_records(source)
     dimensions_before = dimension_records(source)
     schedule_before = schedule_records(source)
+    sheet_before = schedule_records(source,'SHEET')
     if destination.exists() or not str(destination).isascii():
         raise ValueError('Choose a new ASCII output directory')
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
@@ -260,6 +269,8 @@ def verify_layout_native(path: str, output_directory: str,
     compare_dimensions(dimensions_before, dimensions_after)
     if schedule_records(Path(reopened['dxf'])) != schedule_before:
         raise ValueError('Native schedule text or geometry changed')
+    if schedule_records(Path(reopened['dxf']),'SHEET') != sheet_before:
+        raise ValueError('Native sheet text or geometry changed')
     if set(before) != set(after):
         raise ValueError('Native fixture IDs changed')
     for identity, record in before.items():
@@ -277,6 +288,7 @@ def verify_layout_native(path: str, output_directory: str,
                 'fixture_count': len(after), 'fixture_records_verified': True,
                 'dimension_count': len(dimensions_after), 'dimension_records_verified': True,
                 'schedule_entity_count': len(schedule_before), 'schedule_records_verified': True,
+                'sheet_entity_count':len(sheet_before), 'sheet_records_verified':True,
                 'native_reopen_verified': True, 'block_shapes_verified': False,
                 'print_verified': False, 'reopen_evidence': reopened}
     (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
@@ -330,13 +342,22 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
                  '_M', '_L', '_N', '_E', f'1000={scale_denominator}' if scale_denominator else '_F', '_C', '_Y', 'monochrome.ctb', '_Y', '_A',
                  output.as_posix(), '_N', '_Y']
     preparation = ''
+    sheet_guard = '(setq daSheet (ssget "_X" (list (cons 8 "SHEET"))))\n'
+    if scale_denominator:
+        sheet_label = f'{paper} | 1:{scale_denominator} | SYNTHETIC TEST'
+        sheet_guard += ('(if daSheet (progn (setq daSheetLabel (ssget "_X" (list (cons 8 "SHEET") (cons 0 "TEXT") '
+                        f'(cons 1 {json.dumps(sheet_label)})))) '
+                        '(if (or (null daSheetLabel) (/= (sslength daSheetLabel) 1)) '
+                        '(error "Sheet paper or scale differs from plot request"))))\n')
+    else:
+        sheet_guard += '(if daSheet (error "Framed sheets require their explicit fixed scale"))\n'
     if scale_denominator:
         preparation = ('(if (/= (getvar "INSUNITS") 6) (error "Fixed plot requires metre drawing units"))\n'
             '(setq daScaleNotes (ssget "_X" (list (cons 0 "TEXT") (cons 1 "Plot scale: fit to page (not to scale)"))))\n'
             '(if (or (null daScaleNotes) (/= (sslength daScaleNotes) 1)) (error "Expected one original scale note"))\n'
             '(setq daScaleEntity (ssname daScaleNotes 0) daScaleData (entget daScaleEntity))\n'
             f'(entmod (subst (cons 1 "Plot scale: 1:{scale_denominator} at {paper} (print 100%)") (assoc 1 daScaleData) daScaleData))\n')
-    script.write_text('(setvar "FILEDIA" 0)\n(setvar "BACKGROUNDPLOT" 0)\n' + preparation
+    script.write_text('(setvar "FILEDIA" 0)\n(setvar "BACKGROUNDPLOT" 0)\n' + sheet_guard + preparation
                       + '(command ' + ' '.join(json.dumps(a) for a in arguments) + ')\n'
                       + '(princ "NATIVE_PLOT_COMPLETE")\n(princ)\n', encoding='ascii')
     try:

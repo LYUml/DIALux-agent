@@ -4,10 +4,10 @@ import ezdxf
 from ezdxf.tools.text_size import text_size
 
 
-def schedule_records(path):
+def schedule_records(path, layer='SCHEDULE'):
     records = []
     for entity in ezdxf.readfile(path).modelspace():
-        if entity.dxf.layer != 'SCHEDULE':
+        if entity.dxf.layer != layer:
             continue
         if entity.dxftype() == 'TEXT':
             records.append(('TEXT', entity.dxf.text, *[round(v,8) for v in entity.dxf.insert],
