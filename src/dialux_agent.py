@@ -72,6 +72,8 @@ def main():
     apply_layout.add_argument('--expected-project', required=True)
     apply_layout.add_argument('--group-id', required=True)
     apply_layout.add_argument('--evidence-directory', required=True)
+    addition_check = commands.add_parser('room-addition-verify')
+    addition_check.add_argument('--evidence', required=True)
     compare = commands.add_parser('layout-verify-observed')
     compare.add_argument('--layout', required=True)
     compare.add_argument('--observed', required=True)
@@ -170,6 +172,9 @@ def main():
             result = _local_module('cad').plot_layout_native(args.path, args.output_directory, args.fixture_ids)
         elif args.command == 'layout-verify-native':
             result = _local_module('cad').verify_layout_native(args.path, args.output_directory, args.executable)
+        elif args.command == 'room-addition-verify':
+            evidence = json.loads(Path(args.evidence).read_text(encoding='utf-8-sig'))
+            result = _local_module('verification').verify_room_addition(**evidence)
         elif args.command == 'layout-verify-observed':
             result = _local_module('layout').verify_observed_layout(json.loads(Path(args.layout).read_text(encoding='utf-8')), json.loads(Path(args.observed).read_text(encoding='utf-8')))
         elif args.command == 'layout-apply-grid':
