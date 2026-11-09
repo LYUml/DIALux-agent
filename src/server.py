@@ -3,7 +3,7 @@ from mcp.server.mcpserver import MCPServer
 if __package__:
     from .schedule import build_luminaire_schedule
     from .workplane import read_workplane_pdf
-    from .report_layout import read_report_layout
+    from .report_layout import read_report_layout, read_report_arrangements
     from .inspection import verify_group_checkpoint
     from .verification import verify_room_addition
     from .placement import inspect_group_checkpoint, apply_grid_layout
@@ -19,7 +19,7 @@ if __package__:
 else:
     from schedule import build_luminaire_schedule
     from workplane import read_workplane_pdf
-    from report_layout import read_report_layout
+    from report_layout import read_report_layout, read_report_arrangements
     from inspection import verify_group_checkpoint
     from verification import verify_room_addition
     from placement import inspect_group_checkpoint, apply_grid_layout
@@ -42,6 +42,7 @@ server.tool()(inspect_group_checkpoint)
 server.tool()(desktop_read_furniture)
 server.tool()(verify_group_checkpoint)
 server.tool()(read_report_layout)
+server.tool()(read_report_arrangements)
 server.tool()(read_workplane_pdf)
 server.tool()(build_luminaire_schedule)
 server.tool()(verify_room_addition)
