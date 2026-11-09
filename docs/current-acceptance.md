@@ -30,6 +30,15 @@ The baseline is MCP_Dialux commit `4489032e67cabe0d409819fad24f091128620a9d`, wi
 
 ## Next acceptance order
 
+The first large movement attempt (`local/large-grid-run-v1`) terminated during
+initial inspection after 88 recorded fixtures, before any movement. Native status
+identified an English 10-minute unsaved-project reminder. The worker previously
+recognized only the observed 5-minute form. Both exact forms are now supported;
+unknown prompts still fail closed. Mid-page reminder handling rechecks project,
+selection and displayed values before accepting evidence. Unit suite: 334 passed.
+The independent CLI retry (`local/large-grid-run-v2`) has started; this is pending
+native acceptance, not a successful large movement claim.
+
 1. Finish the currently running 168-fixture native movement gate from its actual process result; inspect before/after pages and every committed step, then independently calculate/export/save/reopen if geometry passes. Preserve any failure and do not restart from a stale progress file.
 2. Complete reusable engineering drawing composition: explicit dimensions, titleblock, legends and formatted evidence-linked schedule, tested on synthetic translated/concave/large cases with native plotting.
 3. Add bounded simulation iteration orchestration with explicit objectives/criteria, candidate budgets, no-improvement/failure stops and preserved source/evidence; verify multiple actual native iterations. Do not substitute a guessed illumination formula for DIALux simulation.

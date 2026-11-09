@@ -112,8 +112,9 @@ def is_save_reminder(dialog):
     return (dialog.get('automation_id') == 'InformationBox'
             and dialog.get('title') == 'DIALux' and dialog.get('class') == 'Window'
             and all(c.get('type') in {'Button', 'Image', 'Text', 'Edit'} for c in children)
-            and [c.get('text') for c in children if c.get('type') == 'Edit'] ==
-                ['The project has not been saved for 5 minutes.\r\nSave now?']
+            and [c.get('text') for c in children if c.get('type') == 'Edit'] in (
+                ['The project has not been saved for 5 minutes.\r\nSave now?'],
+                ['The project has not been saved for 10 minutes.\r\nSave now?'])
             and sorted(c.get('text', '') for c in children if c.get('type') == 'Button') == ['', 'No', 'Yes'])
 
 
@@ -848,7 +849,15 @@ def read_group_fixtures(app, main, process, expected_project, group_id, offset=0
         if not all(math.isfinite(v) for v in values):
             raise ValueError('Nonfinite native fixture parameter')
         if snapshot(app, main, process)['dialogs']:
-            raise ValueError('Dialog while inspecting fixtures; readback incomplete')
+            # A periodic reminder can arrive between page preparation and readback.
+            # Recheck project identity before dismissing only the known reminder,
+            # then reject any changed selection or parameter values.
+            prepare_project(app, main, process, expected_project)
+            if not matches[0].is_selected():
+                raise ValueError('Fixture selection changed while deferring reminder')
+            fresh = read_edit_values(main, fields + ['ArrangementObjectName'])
+            if fresh != displayed or snapshot(app, main, process)['dialogs']:
+                raise ValueError('Fixture readback changed after dialog; inspection incomplete')
         fixtures.append({'runtime_id': node['runtime_id'], 'tree_item_id': node['tree_item_id'],
                          'name': displayed['ArrangementObjectName'],
                          'position_m': values[:3], 'rotation_deg': values[3:]})

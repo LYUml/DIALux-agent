@@ -41,7 +41,9 @@ def test_wrong_project_never_dismisses_reminder(tmp_path, reminder, monkeypatch)
         windows_worker.prepare_project(None,None,None,str(path))
 
 
-def test_reminder_defers_without_saving_and_reads_fresh_state(reminder, monkeypatch):
+@pytest.mark.parametrize('minutes', [5, 10])
+def test_reminder_defers_without_saving_and_reads_fresh_state(reminder, monkeypatch, minutes):
+    reminder['children'][0]['text'] = f'The project has not been saved for {minutes} minutes.\r\nSave now?'
     actions = []
     controls = [SimpleNamespace(element_info=SimpleNamespace(control_type=c['type']),
         window_text=lambda c=c:c['text'], click=lambda c=c:actions.append(c['text'])) for c in reminder['children']]
@@ -54,6 +56,16 @@ def test_reminder_defers_without_saving_and_reads_fresh_state(reminder, monkeypa
     monkeypatch.setattr(windows_worker,'snapshot',lambda *a:after)
     assert windows_worker.defer_save_reminder(None,None,None,{'dialogs':[reminder]}) is after
     assert actions == ['No']
+
+
+@pytest.mark.parametrize('text', [
+    'The project has not been saved for 10 minutes.\r\nOverwrite now?',
+    'The project has not been saved for 15 minutes.\r\nSave now?',
+    'The project has not been saved for 10 minutes.\r\nSave now? Extra text',
+])
+def test_unobserved_save_prompts_are_not_dismissed(reminder, text):
+    reminder['children'][0]['text'] = text
+    assert not windows_worker.is_save_reminder(reminder)
 
 
 @pytest.mark.parametrize('name', ['', 'bad{ENTER}', 'bad^a', ' trailing ', 'x'*81, 12])
