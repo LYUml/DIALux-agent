@@ -263,3 +263,11 @@ wait, as closing already does, before invoking OpenProject. The explicit retry
 opened the saved project successfully; PDF/persistence comparison is continuing.
 93 desktop tests passed, including refusal without invocation when the menu is
 unavailable. No project-open command is automatically retried.
+
+Persistence comparison now passed: reopening and exporting the saved recovered
+project preserved all six report positions, the product record and all selected
+summary measurements; the saved native file hash remained unchanged. Reopened
+PDF SHA256: `5c14ddb858486ed07bd1e060b556425d1dd7241e471442c04b718f9573db133a`.
+The journal is `local/numeric-focus-persistence-v1/journal.json`. This accepts the
+specific inspected six-fixture recovery, not automatic rollback/resume, a general
+large-group recovery guarantee, or the failed four-candidate search.
