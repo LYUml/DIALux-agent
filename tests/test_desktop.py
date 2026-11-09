@@ -596,3 +596,19 @@ def test_lighting_tool_uses_native_goto_when_mode_tab_unrealized(monkeypatch):
     monkeypatch.setattr(windows_worker,'wait_control',lambda parent,kind,identity:command if kind=='MenuItem' else tool)
     windows_worker.select_lighting_tool(main,'LuminaireArrangementTool')
     assert actions==['expand','invoke','select']
+
+def test_open_waits_for_expanded_menu_before_invoking(tmp_path,monkeypatch):
+    target=tmp_path/'test.evo';target.write_bytes(b'fixture')
+    actions=[]
+    main=SimpleNamespace(set_focus=lambda:actions.append('focus'))
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:{'title':'DIALux evo test','dialogs':[]})
+    def unique(parent,kind,key):
+        assert key=='File'
+        return SimpleNamespace(iface_expand_collapse=SimpleNamespace(Expand=lambda:actions.append('expand')))
+    def wait(parent,kind,key):
+        assert actions==['focus','expand'] and key=='OpenProject'
+        raise ValueError('Menu unavailable; no invocation')
+    monkeypatch.setattr(windows_worker,'unique_control',unique)
+    monkeypatch.setattr(windows_worker,'wait_control',wait)
+    with pytest.raises(ValueError,match='no invocation'):
+        windows_worker.open_project(None,main,None,str(target))

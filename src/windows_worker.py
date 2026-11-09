@@ -423,7 +423,7 @@ def open_project(app, main, process, target_path, expected_current=None, save_cu
             raise ValueError('An existing project requires expected_current_project')
         main.set_focus()
     unique_control(main, 'MenuItem', 'File').iface_expand_collapse.Expand()
-    unique_control(main, 'MenuItem', 'OpenProject').iface_invoke.Invoke()
+    wait_control(main, 'MenuItem', 'OpenProject').iface_invoke.Invoke()
     deadline = time.monotonic() + 10
     dialog = None
     while time.monotonic() < deadline:

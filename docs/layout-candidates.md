@@ -247,3 +247,19 @@ fields in one UIA traversal, retaining unique visible runtime-control checks.
 This removes repeated full control-tree traversals without relaxing coordinate
 comparison or adding write retries. The 101 desktop/placement tests pass after
 this change. The already-running placement used the prior, unbatched version.
+
+The recovered six-fixture project completed a fresh native calculation and saved
+successfully. The PDF coordinates exactly matched the complete post-movement UI
+readings; WP1 mean was 496 lx and Uo 0.066, space LPD 6.5 W/m2. These are synthetic
+measurements, not satisfactory-design or compliance criteria. Fresh PDF SHA256:
+`fc427dd7f559a1a765bc70d265dd66563743c3b1d25a344e993aff07fa84b527`.
+Saved native SHA256:
+`0819a43ea4e9f29c8abc97a17d7b4c0cb80bb18d2b259c56d2652a38db3c0c88`.
+
+The first persistence attempt closed the project but failed to locate the
+OpenProject menu immediately after expanding File. Fresh status confirmed an
+empty workspace without dialogs. Opening now uses the existing bounded control
+wait, as closing already does, before invoking OpenProject. The explicit retry
+opened the saved project successfully; PDF/persistence comparison is continuing.
+93 desktop tests passed, including refusal without invocation when the menu is
+unavailable. No project-open command is automatically retried.
