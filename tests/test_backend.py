@@ -110,3 +110,13 @@ def test_cli_from_other_directory(tmp_path):
     second = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
     assert second.returncode != 0
     assert json.loads(second.stdout)['ok'] is False
+
+
+def test_concave_room_preserves_reentrant_vertices_in_upstream_exchange(tmp_path):
+    spec=json.loads((ROOT/'examples/synthetic-concave-room.json').read_text())
+    target=tmp_path/'concave.stf'
+    create_room(spec,str(target))
+    room=inspect_stf(str(target))['salas'][0]
+    assert room['area_m2']==20
+    assert room['vertices']==6
+    assert room['contorno_m']==[tuple(p) for p in spec['contour']]

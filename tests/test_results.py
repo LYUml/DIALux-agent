@@ -92,6 +92,11 @@ def test_room_header_wrap_before_light_scene(pages):
     assert parse_report_pages(wrapped)['measurements'][0]['value'] == 217
 
 
+def test_room_header_wrap_inside_light_scene(pages):
+    wrapped = [page.replace('Light scene', 'Light\nscene') for page in pages]
+    assert parse_report_pages(wrapped)['measurements'][0]['value'] == 217
+
+
 def test_full_document_preserves_original_page_numbers(pages):
     result = parse_report_pages(['Cover', 'Table of Contents\nSummary'] + pages + ['Glossary'])
     assert result['summary_pages'] == [3, 4]
@@ -156,3 +161,11 @@ def test_second_evo_export():
     assert result['area_m2'] == 24
     assert [r['value'] for r in result['measurements']] == [104, .22, 1.08]
     assert result['sha256'] == '25f4a51ecbf4a5a9187a2dd1fc354bdf98b2e3dc3149d6d8234d0fae3e7d0820'
+
+@pytest.mark.skipif(not (ROOT/'local/concave-report-v1.pdf').exists(), reason='Local native artifact is not distributed')
+def test_native_concave_report_geometry_and_results():
+    result=read_summary_pdf(str(ROOT/'local/concave-report-v1.pdf'))
+    assert result['sha256']=='1134b36263af8f5b26c70c512be2758ecd1e5d5f98bc6627842a5f58e20de04c'
+    assert result['area_m2']==20
+    assert result['summary_pages']==[14,15]
+    assert [m['value'] for m in result['measurements']]==[493,.55,6.5]

@@ -1,0 +1,39 @@
+{
+  "name": "Synthetic concave room",
+  "units": "m",
+  "contour": [
+    [
+      0,
+      0
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      6,
+      2
+    ],
+    [
+      4,
+      2
+    ],
+    [
+      4,
+      4
+    ],
+    [
+      0,
+      4
+    ]
+  ],
+  "height_m": 3,
+  "workplane_m": 0.8,
+  "maintenance_factor": 0.8,
+  "ceiling_reflectance_pct": 70,
+  "wall_reflectance_pct": 50,
+  "floor_reflectance_pct": 20,
+  "assumptions": [
+    "Synthetic software validation fixture only. Not measured assignment geometry or adopted design criteria."
+  ]
+}
