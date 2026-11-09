@@ -56,3 +56,11 @@ The separate [six-fixture native 5° test](native-array-rotation.md) subsequentl
 used this preflight before the low-level array editor. All positions/angles,
 calculation and save/reopen passed in that case. It does not turn this planner
 into a guarded native apply command.
+
+## Guarded commit building block
+
+`src/array_commit.py` supplies an internal callback-driven commit sequence for the forthcoming native bulk executor. It validates a complete native array display vector (X/Y counts, XYZ centre, Z rotation and name), accepts only finite XYZ/rotation targets, checks every field before each write and after its focus commit, and skips exact no-op targets. Counts and names must remain exactly unchanged. Numeric display comparison uses 0.00051 absolute tolerance.
+
+The caller must durably record `pending_field` before any write. A write or verification failure retains that pending intent; the helper does not claim no mutation or automatically retry. The native adapter must guard selected runtime identity, set the numeric value and move focus to the supplied known field. Full individual-fixture readback, save/reopen and calculation remain separate obligations.
+
+Fourteen tests cover commit ordering, no-op handling, stale initial values, unintended count/name/coordinate changes, nonfinite/boolean/invalid values and failed intent persistence. This internal module is **not yet connected to a public desktop operation** and does not add a native bulk acceptance claim.
