@@ -27,3 +27,11 @@ and transformed to a storey rotated 13 degrees. Tests check the resulting 10-deg
 0.6 by 0.3 m grid, omitted cells, unchanged source bytes and rejection paths.
 Both CLI invocation forms and a real stdio MCP call exercise the public interface.
 No assignment design or native DIALux placement is performed by this reader.
+
+Regression coverage also rewrites all eight start-vertex/winding combinations
+at three storey rotations, including axis-aligned quarter-turn boundaries.
+The original implementation failed three of these cases because floating-point
+noise changed the selected bottom-row anchor or canonical axes. The reader now
+treats bottom-row coordinates within its linear tolerance as one row and snaps
+quarter-turn angle round-off below 1e-12 radians. A synthetic 2800-tile layer
+checks complete handle-to-cell coverage. Full suite after this repair: 625 passed.

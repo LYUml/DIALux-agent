@@ -66,3 +66,42 @@ def test_hash_and_selection_required(tmp_path):
     with pytest.raises(ValueError, match='hash-pinned'):
         drawing_read_tile_grid(str(path), '0'*64, 'Tiles', [0, 0], 0)
     with pytest.raises(ValueError): read(path, layer='Missing')
+
+
+@pytest.mark.parametrize('rotation', [13, 23, 113])
+@pytest.mark.parametrize('start,reverse', [(i, r) for i in range(4) for r in (False, True)])
+def test_vertex_start_and_winding_do_not_change_grid(tmp_path, rotation, start, reverse):
+    path = fixture(tmp_path)
+    def extract():
+        return drawing_read_tile_grid(str(path), hashlib.sha256(path.read_bytes()).hexdigest(),
+                                      'Tiles', [10, 20], rotation)['grid']
+    expected = extract()
+    doc = ezdxf.readfile(path)
+    for entity in doc.modelspace():
+        points = list(entity.get_points())
+        points = points[start:]+points[:start]
+        entity.set_points(list(reversed(points)) if reverse else points)
+    doc.saveas(path)
+    actual = extract()
+    for key in expected:
+        assert actual[key] == pytest.approx(expected[key], abs=1e-8)
+
+
+def test_large_layer_has_unique_traceable_cells(tmp_path):
+    doc = ezdxf.new()
+    doc.units = 4
+    handles = set()
+    for iy in range(40):
+        for ix in range(70):
+            x, y = ix*600, iy*600
+            e = doc.modelspace().add_lwpolyline([(x,y),(x+600,y),(x+600,y+600),(x,y+600)],
+                                               close=True, dxfattribs={'layer':'Tiles'})
+            handles.add(e.dxf.handle)
+    path = tmp_path/'large.dxf'
+    doc.saveas(path)
+    result = drawing_read_tile_grid(str(path), hashlib.sha256(path.read_bytes()).hexdigest(),
+                                   'Tiles', [0,0], 0)
+    assert result['tile_count'] == 2800
+    assert {r['entity_handle'] for r in result['tiles']} == handles
+    assert {tuple(r['cell']) for r in result['tiles']} == {(x,y) for y in range(40) for x in range(70)}
+    assert result['grid']['origin_m'] == pytest.approx([.3,.3])

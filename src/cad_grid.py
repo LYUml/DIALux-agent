@@ -62,6 +62,10 @@ def drawing_read_tile_grid(path: str, expected_sha256: str, layer: str,
         if basis is None:
             dx, dy = points[1][0] - points[0][0], points[1][1] - points[0][1]
             angle = math.atan2(dy, dx) % (math.pi / 2)
+            # Floating point round-off at a quarter-turn must not swap axes
+            # when the identical polyline starts at a different vertex.
+            if min(angle, math.pi / 2 - angle) < 1e-12:
+                angle = 0.0
             basis = math.cos(angle), math.sin(angle)
         c, s = basis
         projected = [(x * c + y * s, -x * s + y * c) for x, y in points]
@@ -85,7 +89,9 @@ def drawing_read_tile_grid(path: str, expected_sha256: str, layer: str,
                       'elevation_m': number(entity.dxf.elevation, 'tile elevation') * scale})
     first = tiles[0]
     sx, sy = first['width'], first['depth']
-    anchor = min((t['center'] for t in tiles), key=lambda p: (p[1], p[0]))
+    bottom = min(t['center'][1] for t in tiles)
+    anchor = min((t['center'] for t in tiles if t['center'][1] <= bottom + tolerance),
+                 key=lambda p: p[0])
     occupied, records = set(), []
     for tile in tiles:
         if max(abs(tile['width']-sx), abs(tile['depth']-sy),
