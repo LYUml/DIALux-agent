@@ -46,6 +46,7 @@ def test_no_improvement_preserves_all_experiments_and_source(harness):
     assert actions == ['copy','layout','calculate']*4
     assert Path(request['expected_project']).read_bytes() == b'original'
     assert not result['winner_installed']
+    assert result['group_id'] == request['group_id']
 
 
 @pytest.mark.parametrize('status,reason', [('pass','selected_conditions_met'),('unverified','evidence_incomplete')])

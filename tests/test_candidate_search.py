@@ -47,6 +47,11 @@ def test_search_plan_is_preserved_before_native_call(tmp_path,monkeypatch,fail):
     directory=tmp_path/'search'
     def run(source,group,candidates,checks,objective,policy,evidence):
         plan=json.loads((directory/'generation.json').read_text())
+        request=json.loads((directory/'request.json').read_text())
+        assert request['group_id']==group
+        assert request['expected_project']==source
+        assert request['x_offsets_m']==[0,.1]
+        assert request['policy']==policy and request['objective']==objective
         assert candidates==plan['candidates']
         assert Path(evidence)==directory/'native'
         assert len(candidates)==2
@@ -61,5 +66,7 @@ def test_search_plan_is_preserved_before_native_call(tmp_path,monkeypatch,fail):
         result=run_offset_search(*args)
         import hashlib
         assert hashlib.sha256((directory/'generation.json').read_bytes()).hexdigest()==result['generation_sha256']
+        assert hashlib.sha256((directory/'request.json').read_bytes()).hexdigest()==result['request_sha256']
         assert not result['optimality_verified']
     assert (directory/'generation.json').is_file()
+    assert (directory/'request.json').is_file()

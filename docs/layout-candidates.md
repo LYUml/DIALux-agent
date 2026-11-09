@@ -155,3 +155,15 @@ original native files. Reopened PDF hashes: candidate 0
 `477eb869d32a6fcd6d604030f77aebeceb0e89149962b3dadeeeddaafb3a9fc9`.
 Documentation-session changes were saved to separate session copies before
 closing. This completes persistence evidence for the two-candidate synthetic case.
+
+## Replay inputs and target identity
+
+New offset-search runs write `request.json` before invoking native operations,
+including the source project, target group, base geometry, explicit offset domain,
+checks, objective and both budgets. The result hashes this request as well as
+`generation.json`. A failed native run retains these inputs and its available
+journals. Candidate journals now also record `group_id` directly. This supports
+inspection and reproduction on a new evidence directory; it does not authorize
+blind replay after partial mutation, supply the original native file, or make
+session-local fixture runtime IDs reusable. Existing running processes do not
+acquire these changes retroactively.

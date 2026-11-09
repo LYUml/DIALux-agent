@@ -81,14 +81,22 @@ def run_offset_search(expected_project: str, group_id: str, spec: dict,
     if source.suffix.lower() != '.evo':
         raise ValueError('Expected a native source project')
     generated = generate_offset_candidates(spec,x_offsets_m,y_offsets_m,max_candidates)
+    request = dict(expected_project=str(source), group_id=group_id, spec=spec,
+                   x_offsets_m=x_offsets_m, y_offsets_m=y_offsets_m, checks=checks,
+                   objective=objective, policy=policy, max_candidates=max_candidates)
+    request_payload = (json.dumps(request,indent=2,allow_nan=False)+'\n').encode('utf-8')
     directory = Path(evidence_directory).resolve()
     directory.mkdir(parents=True,exist_ok=False)
+    request_path = directory/'request.json'
+    request_path.write_bytes(request_payload)
     path = directory/'generation.json'
     payload = (json.dumps(generated,indent=2,allow_nan=False)+'\n').encode('utf-8')
     path.write_bytes(payload)
     result = run_layout_candidates(str(source),group_id,generated['candidates'],checks,
                                    objective,policy,str(directory/'native'))
     response = {'schema':'dialux-agent/offset-search-run/v1', 'generation':str(path),
+                'request':str(request_path),
+                'request_sha256':hashlib.sha256(request_payload).hexdigest(),
                 'generation_sha256':hashlib.sha256(payload).hexdigest(),
                 'run':result,'optimality_verified':False,'whole_project_assessed':False}
     (directory/'result.json').write_text(json.dumps(response,indent=2,allow_nan=False),encoding='utf-8')

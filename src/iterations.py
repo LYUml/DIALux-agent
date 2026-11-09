@@ -73,7 +73,7 @@ def run_layout_candidates(expected_project: str, group_id: str, candidates: list
     directory.mkdir(parents=True, exist_ok=False)
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
     journal = {'schema': 'dialux-agent/candidate-run/v1', 'source': str(source),
-               'source_sha256': digest, 'candidates': candidates, 'checks': checks,
+               'source_sha256': digest, 'group_id': group_id, 'candidates': candidates, 'checks': checks,
                'objective': objective, 'policy': policy, 'iterations': [],
                'state': 'prepared', 'best_candidate': None, 'best_feasible_candidate': None,
                'whole_project_assessed': False, 'winner_installed': False}
