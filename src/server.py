@@ -5,7 +5,7 @@ if __package__:
     from .placement import apply_grid_layout
     from .layout import plan_grid, verify_observed_layout
     from .cad_geometry import drawing_extract_boundary
-    from .cad import drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native, plot_layout_native
+    from .cad import export_observed_layout_dxf, drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native, plot_layout_native
     from .backend import create_rooms, create_room, inspect_stf
     from .dialux_agent import inventory, verify
     from .regulations import evaluate_profile
@@ -17,7 +17,7 @@ else:
     from placement import apply_grid_layout
     from layout import plan_grid, verify_observed_layout
     from cad_geometry import drawing_extract_boundary
-    from cad import drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native, plot_layout_native
+    from cad import export_observed_layout_dxf, drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native, plot_layout_native
     from backend import create_rooms, create_room, inspect_stf
     from dialux_agent import inventory, verify
     from regulations import evaluate_profile
@@ -36,6 +36,7 @@ server.tool()(drawing_convert)
 server.tool()(drawing_inspect)
 server.tool()(drawing_extract_boundary)
 server.tool()(export_layout_dxf)
+server.tool()(export_observed_layout_dxf)
 server.tool()(verify_layout_native)
 server.tool()(plot_layout_native)
 server.tool()(inspect_stf)

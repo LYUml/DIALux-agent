@@ -25,6 +25,26 @@ def export_layout_dxf(spec: dict, output: str, layout: dict | None = None) -> di
         layout = expected
     if layout != expected:
         raise ValueError('Layout does not match the supplied specification; regenerate or review the plan')
+    return _write_layout_dxf(spec, output, layout)
+
+
+def export_observed_layout_dxf(spec: dict, observed: dict, fixture_ids: list[str], output: str) -> dict:
+    """Export supplied native fixture positions, preserving explicit IDs and evidence hashes.
+
+    Requires boundary/fixture assumptions and validates envelopes. No grid regeneration
+    or native simulation proof. Produces a clearly labelled synthetic test drawing.
+    """
+    if __package__:
+        from .design_data import observed_layout
+    else:
+        from design_data import observed_layout
+    layout = observed_layout(spec, observed, fixture_ids)
+    result = _write_layout_dxf(spec, output, layout)
+    result['observed_layout'] = layout
+    return result
+
+
+def _write_layout_dxf(spec, output, layout):
     target = Path(output).resolve()
     if target.suffix.lower() != '.dxf' or target.exists():
         raise ValueError('Choose a new .dxf output path')
@@ -58,6 +78,9 @@ def export_layout_dxf(spec: dict, output: str, layout: dict | None = None) -> di
              'LUMINAIRES: fixtures; KEEP_OUT: no placement',
              'No simulated performance or compliance claimed',
              'Specification SHA256:', layout['input_sha256'][:32], layout['input_sha256'][32:]]
+    if layout.get('observations_sha256'):
+        notes += ['Native observation snapshot SHA256:', layout['observations_sha256'][:32],
+                  layout['observations_sha256'][32:], 'Product and envelope dimensions: supplied assumptions']
     for index, text in enumerate(notes):
         model.add_text(text, dxfattribs={'height':.18,'layer':'NOTES','insert':(tx,ty-index*.4)})
     target.parent.mkdir(parents=True, exist_ok=True)

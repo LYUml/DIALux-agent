@@ -122,3 +122,5 @@ Coordinates are now explicitly qualified as `active_storey`: native position fie
 `drawing-extract-boundary` / MCP `drawing_extract_boundary` extracts an explicitly selected closed straight DXF modelspace polyline, bound to the expected source hash and an explicit unit/coordinate transformation. It supports concave outlines but does not infer semantic room boundaries. See [input contract and validation](docs/cad-boundary-extraction.md).
 
 The [concave native validation](docs/concave-room-validation.md) exercises offset millimetre CAD extraction, six-vertex STF exchange, native import, five actual fixtures in a nominal 3×2 arrangement, footprint checks, calculation and a plotted 20 m² reentrant room. It is synthetic tool evidence, not assignment work.
+
+`drawing-export-observed` / MCP `export_observed_layout_dxf` exports actual supplied native fixture positions into editable CAD blocks, with explicit drawing-ID mapping and observation hashes. It reuses the native CAD reopen/plot gates; see [the five-fixture concave validation and limitations](docs/observed-layout-cad.md).
