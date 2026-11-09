@@ -80,8 +80,9 @@ def is_plain_tooltip(window):
 
 def snapshot(app, main, process):
     controls = {}
+    buttons = main.descendants(control_type='Button')
     for control_id in ('Save', 'CalculationButtonStart', 'DiscardResultsButton'):
-        matches = [c for c in main.descendants(control_type='Button') if c.element_info.automation_id == control_id]
+        matches = [c for c in buttons if c.element_info.automation_id == control_id]
         controls[control_id] = {'count': len(matches), 'enabled': len(matches) == 1 and matches[0].is_enabled()}
     dialogs = []
     for window in app.windows():
@@ -150,9 +151,17 @@ def is_saved_notification(dialog, expected_project):
 
 
 def wait_saved_notification(app, main, process, expected, state):
-    """Wait for an exact current-project save toast; never click its buttons."""
+    """Observe an exact save toast through its empty fade-out; never click it.
+
+    The empty phase is accepted only after recognizing this project's toast.
+    Both phases share one deadline, so transitions cannot reset the budget.
+    """
+    if len(state['dialogs']) != 1 or not is_saved_notification(state['dialogs'][0], expected):
+        return state
+    empty = {'title':'', 'automation_id':'', 'class':'Popup', 'children':[]}
     deadline = time.monotonic()+8
-    while (len(state['dialogs']) == 1 and is_saved_notification(state['dialogs'][0], expected)
+    while (len(state['dialogs']) == 1
+           and (is_saved_notification(state['dialogs'][0], expected) or state['dialogs'][0] == empty)
            and time.monotonic() < deadline):
         time.sleep(.2)
         state = snapshot(app, main, process)

@@ -11,6 +11,24 @@ import desktop
 import windows_worker
 
 
+def test_snapshot_batches_buttons_without_hiding_duplicates_or_disabled_controls():
+    calls = []
+    def button(key, enabled):
+        return SimpleNamespace(element_info=SimpleNamespace(automation_id=key), is_enabled=lambda:enabled)
+    buttons = [button('Save',True),button('Save',True),button('CalculationButtonStart',False),
+               button('DiscardResultsButton',True),button('Unrelated',True)]
+    def descendants(**criteria):
+        calls.append(criteria)
+        return buttons if criteria == {'control_type':'Button'} else []
+    main = SimpleNamespace(descendants=descendants, window_text=lambda:'Synthetic test')
+    state = windows_worker.snapshot(SimpleNamespace(windows=lambda:[]), main, {'pid':1,'exe':'test'})
+    assert calls.count({'control_type':'Button'}) == 1
+    assert state['controls'] == {'Save':{'count':2,'enabled':False},
+        'CalculationButtonStart':{'count':1,'enabled':False},
+        'DiscardResultsButton':{'count':1,'enabled':True}}
+    assert state['dialogs'] == []
+
+
 @pytest.fixture
 def reminder():
     return {'title':'DIALux','automation_id':'InformationBox','class':'Window',
@@ -95,6 +113,34 @@ def test_toast_wait_never_hides_an_additional_unknown_dialog(tmp_path,monkeypatc
     state={'dialogs':[saved_toast(path),{'class':'Window'}]}
     monkeypatch.setattr(windows_worker,'snapshot',lambda *a:pytest.fail('Waited through unknown dialog'))
     assert windows_worker.wait_saved_notification(None,None,None,path,state) is state
+
+
+@pytest.mark.parametrize('outcome', ['gone', 'persistent', 'unknown', 'additional', 'other_project'])
+def test_recognized_save_toast_empty_transition_has_one_deadline(tmp_path, monkeypatch, outcome):
+    path = tmp_path/'test.evo'
+    empty = {'title':'', 'automation_id':'', 'class':'Popup', 'children':[]}
+    initial = {'dialogs':[saved_toast(path)]}
+    faded = {'dialogs':[empty]}
+    final = {'dialogs': [] if outcome == 'gone' else [empty] if outcome == 'persistent'
+             else [{**empty, 'title':'Unknown'}] if outcome == 'unknown'
+             else [empty, {'class':'Window'}] if outcome == 'additional'
+             else [saved_toast(tmp_path/'other.evo')]}
+    clock = [0.]; polls = []
+    monkeypatch.setattr(windows_worker.time, 'monotonic', lambda:clock[0])
+    monkeypatch.setattr(windows_worker.time, 'sleep', lambda seconds:clock.__setitem__(0, clock[0]+seconds))
+    def snapshot(*args):
+        polls.append(True)
+        return faded if len(polls) == 1 else final
+    monkeypatch.setattr(windows_worker, 'snapshot', snapshot)
+    monkeypatch.setattr(windows_worker, 'unique_control', lambda *a:pytest.fail('Acted on popup'))
+    assert windows_worker.wait_saved_notification(None,None,None,path,initial) is final
+    assert len(polls) <= 41
+    assert (clock[0] >= 8) is (outcome == 'persistent')
+    if outcome != 'persistent': assert len(polls) == 2
+    # An initially unknown empty popup is not promoted to a recognized toast.
+    polls.clear()
+    assert windows_worker.wait_saved_notification(None,None,None,path,faded) is faded
+    assert not polls
 
 
 def test_toast_wait_is_bounded_and_project_is_rechecked(tmp_path,monkeypatch):

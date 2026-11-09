@@ -1,5 +1,12 @@
 # Bounded native candidate runs
 
+Current status (2026-11-09): explicit two-candidate execution and reopening passed.
+Generated four-candidate searches remain unaccepted: v3 completed three candidates
+but stopped before the fourth copy on an empty native Popup. The notification
+transition investigation and subsequent fix are recorded in
+`desktop-notification-transitions.md`. Earlier progress entries below are
+historical and do not supersede this status.
+
 ## Generate explicit offset candidates
 
 `layout-candidates-generate --request request.json` / MCP
