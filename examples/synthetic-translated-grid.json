@@ -1,0 +1,9 @@
+{
+  "units": "m",
+  "contour": [[0, 0], [6, 0], [6, 4], [0, 4]],
+  "exclusions": [],
+  "grid": {"origin_m": [1.7, 1.1], "spacing_x_m": 3, "spacing_y_m": 2, "rotation_deg": 0},
+  "fixture": {"product_id": "SYNTHETIC-GEOMETRY-TEST", "width_m": 0.597, "depth_m": 0.597, "mounting_height_m": 3.035},
+  "clearance_m": 0,
+  "assumptions": ["Synthetic 6 by 4 m tool-test room, not assignment geometry.", "Expected 2 by 2 native arrangement translated +0.2 m X and +0.1 m Y.", "Geometry-only matching does not verify the native photometry product."]
+}

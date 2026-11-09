@@ -23,6 +23,54 @@ def polygon(points, name):
     return shape
 
 
+def verify_observed_layout(layout: dict, observed: dict) -> dict:
+    """Match supplied native UI readings to a planned fixture set, not a whole project.
+
+    Position tolerance is 1 mm for native display rounding; rotation is 0.05 deg.
+    Ambiguous nearby fixtures are rejected instead of assigned by list order.
+    """
+    if layout.get('schema') != 'dialux-agent/layout/v1' or layout.get('units') != 'm':
+        raise ValueError('Expected metre-unit planned layout')
+    if observed.get('operation') != 'read_group_fixtures':
+        raise ValueError('Expected native group fixture observations')
+    planned, actual = layout.get('fixtures'), observed.get('fixtures')
+    if not isinstance(planned, list) or not isinstance(actual, list) or not planned or len(planned) != len(actual):
+        raise ValueError('Nonempty planned and observed fixture counts must match')
+    if len(planned) > 2000:
+        raise ValueError('Comparison is limited to 2000 fixtures')
+    if layout.get('fixture_count') != len(planned) or observed.get('observed_count') != len(actual):
+        raise ValueError('Declared fixture counts do not match records')
+    ids = [f.get('id') for f in planned]
+    if any(not isinstance(i, str) or not i for i in ids) or len(set(ids)) != len(ids):
+        raise ValueError('Planned fixture IDs must be unique')
+    def vector(value, label):
+        if not isinstance(value, list) or len(value) != 3:
+            raise ValueError(f'{label} requires XYZ')
+        return [number(x, label) for x in value]
+    positions = [vector(f.get('position_m'), 'observed position') for f in actual]
+    rotations = [vector(f.get('rotation_deg'), 'observed rotation') for f in actual]
+    used, matches = set(), []
+    for fixture in planned:
+        position = vector(fixture.get('position_m'), 'planned position')
+        angle = number(fixture.get('rotation_deg'), 'planned rotation')
+        candidates = [i for i, point in enumerate(positions) if max(abs(a-b) for a,b in zip(position, point)) <= .001]
+        if len(candidates) != 1 or candidates[0] in used:
+            raise ValueError(f'Unmatched or ambiguous fixture: {fixture["id"]}')
+        index = candidates[0]
+        if any(abs((a-b+180) % 360-180) > .05 for a,b in zip(rotations[index], [0,0,angle])):
+            raise ValueError(f'Rotation differs for fixture: {fixture["id"]}')
+        used.add(index)
+        matches.append({'fixture_id': fixture['id'], 'observed_index': index,
+                        'position_error_m': [b-a for a,b in zip(position, positions[index])]})
+    return {'schema': 'dialux-agent/layout-readback/v1', 'matched_count': len(matches), 'matches': matches,
+            'supplied_fixture_geometry_matches': True, 'whole_project_verified': False,
+            'photometry_identity_verified': False, 'simulation_verified': False,
+            'position_tolerance_m': .001, 'rotation_tolerance_deg': .05,
+            'layout_sha256': hashlib.sha256(json.dumps(layout, sort_keys=True, allow_nan=False).encode()).hexdigest(),
+            'observations_sha256': hashlib.sha256(json.dumps(observed, sort_keys=True, allow_nan=False).encode()).hexdigest(),
+            'warning': 'Matches supplied rounded observations only; does not authenticate their origin or prove no hidden fixtures exist.'}
+
+
 def plan_grid(spec: dict) -> dict:
     """Plan exact grid-aligned fixture footprints inside an explicit room and outside exclusions.
 
