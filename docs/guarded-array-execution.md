@@ -15,3 +15,9 @@ Failure retains the outer journal plus inspection pages and any pending field ev
 The full suite passed 539 tests after CLI/MCP integration. Five execution tests cover complete before/after checkpoints, rejected nonrigid input, a failed write, unchanged geometry and changed fixture identities. Fourteen field-commit tests cover intent ordering and unexpected field changes. Three additional adapter tests reject stale runtime IDs/counts and absent runtime evidence before results clearing.
 
 A separate real native test is in progress under `local/guarded-array-native-v1`: it requests a 0.1 m XY translation plus 5-degree rotation of the six-fixture synthetic obstacle room. The original source is preserved and a new copy is used. No native execution or persistence acceptance is claimed until the run and independent checks finish. This API is experimental while that gate is pending.
+
+## Initial native execution failure
+
+The first combined executor run (`local/guarded-array-native-v1`) stopped after clearing stored calculation results, before any `pending_field` event. It attempted to locate `FilterTreeListBox` after switching to the luminaire parameter tab, where that tree is no longer visible. This is a failed native gate, not successful array execution.
+
+The adapter now retains the uniquely selected native item reference obtained by `read_arrangement`, and continues checking its runtime ID and selection state through that reference. It does not switch panels or use a first-match fallback. A regression test simulates the hidden tree and fails if the adapter tries to query it; all 23 targeted array-execution/commit/adapter tests pass. The retained reference does not exclude external user changes, so every write still rechecks identity and the complete field vector.

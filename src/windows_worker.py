@@ -1159,7 +1159,7 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
             'warning': 'Selected native coordinate fields committed. Independently inspect all fixtures and save/reopen before accepting the layout.'}
 
 
-def read_arrangement(app, main, process, expected_project, tree_item_id):
+def read_arrangement(app, main, process, expected_project, tree_item_id, _selection=None):
     if not isinstance(tree_item_id,str) or tree_item_id.count('_Luminaires_') != 1:
         raise ValueError('Expected an explicit luminaire arrangement tree identity')
     parent = tree_item_id.split('_Luminaires_',1)[0]+'_Luminaires'
@@ -1185,6 +1185,8 @@ def read_arrangement(app, main, process, expected_project, tree_item_id):
     values = read_edit_values(main,sorted(available))
     if snapshot(app,main,process)['dialogs']:
         raise ValueError('Dialog during arrangement readback')
+    if _selection is not None:
+        _selection['item']=item
     return {'operation':'read_arrangement','path':inventory['path'],'tree_item_id':tree_item_id,
             'runtime_id':list(item.element_info.runtime_id),
             'display_values':values,'coordinate_frame':'active_storey',
@@ -1206,7 +1208,8 @@ def guarded_array_edit(app, main, process, expected_project, arrangement, reques
     if set(requested)!=set(MOTION_FIELDS) or any(type(v) not in (int,float) or not math.isfinite(v) for v in requested.values()):
         raise ValueError('Exact finite rigid transform targets required')
     identity=arrangement['tree_item_id']
-    current=read_arrangement(app,main,process,expected_project,identity)
+    selection={}
+    current=read_arrangement(app,main,process,expected_project,identity,_selection=selection)
     if current['runtime_id']!=runtime:
         raise ValueError('Native arrangement runtime identity changed')
     # Validate all expected fields before clearing cached results.
@@ -1218,12 +1221,11 @@ def guarded_array_edit(app, main, process, expected_project, arrangement, reques
         unique_control(main,'Button','DiscardResultsButton').click()
         time.sleep(.4)
         prepare_project(app,main,process,expected_project)
-        current=read_arrangement(app,main,process,expected_project,identity)
+        current=read_arrangement(app,main,process,expected_project,identity,_selection=selection)
         if current['runtime_id']!=runtime: raise ValueError('Array identity changed clearing results')
-    tree=wait_control(main,'List','FilterTreeListBox')
-    elements=[e for e in container_elements(tree) if list(e.GetRuntimeId())==runtime]
-    if len(elements)!=1: raise ValueError('Array runtime identity is absent or ambiguous')
-    item=materialize_tree_item(elements[0])
+    # The tree is hidden once the parameter tab is selected. Keep the verified
+    # native node reference from selection instead of querying the hidden panel.
+    item=selection['item']
     last={}
     def guard():
         if list(item.element_info.runtime_id)!=runtime or not item.is_selected():
