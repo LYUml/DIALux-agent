@@ -33,6 +33,8 @@ def verify_observed_layout(layout: dict, observed: dict) -> dict:
         raise ValueError('Expected metre-unit planned layout')
     if observed.get('operation') != 'read_group_fixtures':
         raise ValueError('Expected native group fixture observations')
+    if layout.get('coordinate_frame') != 'active_storey' or observed.get('coordinate_frame') != 'active_storey':
+        raise ValueError('Both layout and observations must declare active_storey coordinates')
     planned, actual = layout.get('fixtures'), observed.get('fixtures')
     if not isinstance(planned, list) or not isinstance(actual, list) or not planned or len(planned) != len(actual):
         raise ValueError('Nonempty planned and observed fixture counts must match')
@@ -79,6 +81,8 @@ def plan_grid(spec: dict) -> dict:
     """
     if not isinstance(spec, dict) or spec.get('units') != 'm':
         raise ValueError('Layout requires an object with explicit metre units')
+    if spec.get('coordinate_frame', 'active_storey') != 'active_storey':
+        raise ValueError('Grid coordinates must use the active_storey frame')
     assumptions = spec.get('assumptions')
     if not isinstance(assumptions, list) or not assumptions or any(not isinstance(a, str) or not a.strip() for a in assumptions):
         raise ValueError('Document sources or assumptions')
@@ -128,7 +132,7 @@ def plan_grid(spec: dict) -> dict:
             fixtures.append({'id': f'L{len(fixtures)+1:04d}', 'product_id': product,
                              'grid_index': [ix, iy], 'position_m': [center.x, center.y, z],
                              'rotation_deg': angle, 'footprint_m': [list(p) for p in list(footprint.exterior.coords)[:-1]]})
-    return {'schema': 'dialux-agent/layout/v1', 'units': 'm', 'fixtures': fixtures,
+    return {'schema': 'dialux-agent/layout/v1', 'units': 'm', 'coordinate_frame': 'active_storey', 'fixtures': fixtures,
             'fixture_count': len(fixtures), 'candidate_count': count, 'rejected': rejected,
             'room_area_m2': room.area, 'assumptions': assumptions,
             'input_sha256': hashlib.sha256(json.dumps(spec, sort_keys=True, allow_nan=False).encode()).hexdigest(),

@@ -19,7 +19,8 @@ def read_realized_group(project, group_id):
         if len(fixtures) >= 2000:
             raise ValueError('Realized group inspection exceeds 2000 fixtures')
         page = desktop_group_fixtures(project, group_id, offset=offset, inventory_token=first['inventory_token'])
-        if page['offset'] != offset or page['inventory_token'] != first['inventory_token']:
+        if (page['offset'] != offset or page['inventory_token'] != first['inventory_token']
+                or page.get('coordinate_frame') != first.get('coordinate_frame')):
             raise ValueError('Inconsistent inspection continuation')
         fixtures.extend(page['fixtures'])
         new_offset = page.get('next_offset')
@@ -56,6 +57,8 @@ def apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidence
     try:
         before = read_realized_group(str(project), group_id)
         journal['before'] = before
+        if before.get('coordinate_frame') != 'active_storey':
+            raise ValueError('Native observation coordinate frame is not active_storey; no movement attempted')
         if before.get('next_offset') is not None or before.get('offset', 0) != 0:
             raise ValueError('Paged group requires a complete inspection workflow before application; no movement attempted')
         current = before['fixtures']

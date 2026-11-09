@@ -11,6 +11,12 @@ import desktop
 import windows_worker
 
 
+def test_room_context_rejects_empty_label_before_ui(monkeypatch):
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
+    with pytest.raises(ValueError, match='Room name'):
+        windows_worker.room_context(None,None,None,'test.evo','')
+
+
 def test_close_project_refuses_unsaved_changes_before_menu_action(monkeypatch):
     monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: (Path('test.evo'),
                         {'title':'test.evo* - DIALux evo 14.1'}))
@@ -45,6 +51,7 @@ def test_fixture_edit_invalid_identity_or_geometry_never_touches_ui(runtime, pri
 
 
 def test_fixture_stale_position_rejected_before_clearing_results(monkeypatch):
+    monkeypatch.setattr(windows_worker, 'set_storey_context', lambda *a: None)
     node = SimpleNamespace(element_info=SimpleNamespace(runtime_id=(7,1,2)),
                            is_visible=lambda: True, select=lambda: None, is_selected=lambda: True)
     tree = SimpleNamespace(descendants=lambda **k: [node])

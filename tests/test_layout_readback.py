@@ -11,7 +11,7 @@ from layout import plan_grid, verify_observed_layout
 def fixture_pair():
     spec = json.loads((Path(__file__).resolve().parents[1] / 'examples/synthetic-translated-grid.json').read_text())
     plan = plan_grid(spec)
-    observed = {'operation': 'read_group_fixtures', 'observed_count': 4, 'fixtures': [
+    observed = {'operation': 'read_group_fixtures', 'coordinate_frame': 'active_storey', 'observed_count': 4, 'fixtures': [
         {'position_m': list(p), 'rotation_deg': [0, 0, 360]} for p in
         [(4.7, 3.1, 3.035), (1.7, 1.1, 3.035), (4.7, 1.1, 3.035), (1.7, 3.1, 3.035)]]}
     return plan, observed
@@ -24,6 +24,14 @@ def test_matching_ignores_order_but_preserves_geometry_and_scope():
     assert not result['whole_project_verified']
     assert not result['photometry_identity_verified']
     assert len({m['observed_index'] for m in result['matches']}) == 4
+
+
+@pytest.mark.parametrize('frame', [None, 'room', 'site'])
+def test_coordinate_frames_cannot_be_silently_mixed(frame):
+    plan, observed = fixture_pair()
+    observed['coordinate_frame'] = frame
+    with pytest.raises(ValueError, match='active_storey'):
+        verify_observed_layout(plan, observed)
 
 
 @pytest.mark.parametrize('mutation', ['position', 'tilt', 'duplicate', 'nan', 'count', 'id'])

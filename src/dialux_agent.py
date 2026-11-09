@@ -110,6 +110,9 @@ def main():
     tree = commands.add_parser('desktop-project-tree')
     tree.add_argument('--expected-project', required=True)
     tree.add_argument('--expand-id')
+    context_room = commands.add_parser('desktop-room-context')
+    context_room.add_argument('--expected-project', required=True)
+    context_room.add_argument('--room-name')
     space = commands.add_parser('desktop-read-space')
     space.add_argument('--expected-project', required=True)
     space.add_argument('--tree-item-id', required=True)
@@ -186,6 +189,8 @@ def main():
             result = _local_module('desktop').desktop_project_tree(args.expected_project, args.expand_id)
         elif args.command == 'rooms-create':
             result = _local_module('backend').create_rooms(json.loads(Path(args.spec).read_text(encoding='utf-8')), args.output)
+        elif args.command == 'desktop-room-context':
+            result = _local_module('desktop').desktop_room_context(args.expected_project, args.room_name)
         elif args.command == 'desktop-read-space':
             result = _local_module('desktop').desktop_read_space(args.expected_project, args.tree_item_id)
         elif args.command == 'desktop-close-project':

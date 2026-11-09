@@ -155,3 +155,8 @@ def desktop_read_space(expected_project: str, tree_item_id: str) -> dict:
     if not isinstance(tree_item_id, str) or not tree_item_id:
         raise ValueError('Explicit space tree_item_id is required')
     return _run('read-space', expected_project, parameters=tree_item_id)
+
+
+def desktop_room_context(expected_project: str, room_name: str | None = None) -> dict:
+    """List room context labels or invoke an exact unique label; active context remains unverified."""
+    return _run('room-context', expected_project, parameters=room_name)

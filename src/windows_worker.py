@@ -435,6 +435,7 @@ def arrange_space(app, main, process, expected_project, product_id):
             time.sleep(.2)
             continue
         return {'operation': 'arrange_space', 'status': 'arrangement_observed',
+                'coordinate_frame': 'active_view_context',
                 'path': str(expected), 'arrangement': values,
                 'native_project_saved': False, 'uses_codex_computer_use': False,
                 'evidence': 'Native automatic arrangement invoked in current space; selected arrangement parameters read back. No illuminance target guarantee.'}
@@ -482,6 +483,41 @@ def project_tree(app, main, process, expected_project, expand_id=None):
             'warning': 'Only realized UIA nodes are listed; collapsed, filtered or virtualized nodes may be absent. IDs can change after renaming or count edits.'}
 
 
+def room_context(app, main, process, expected_project, room_name=None):
+    if room_name is not None and (not isinstance(room_name, str) or not room_name.strip()):
+        raise ValueError('Room name must be a nonempty exact label')
+    expected, _ = prepare_project(app, main, process, expected_project)
+    menu = unique_control(main, 'Menu', 'Menu_RoomContextSelectionButton')
+    opener = unique_control(menu, 'MenuItem', '_menuItemControl')
+    opener.iface_expand_collapse.Expand()
+    time.sleep(.3)
+    choices = {}
+    for item in main.descendants(control_type='MenuItem'):
+        if item.element_info.automation_id.startswith('MenuItem_ToggleButton_RoomContextSelectionButton_') and item.is_visible():
+            labels = {t.window_text() for t in item.descendants(control_type='Text') if t.window_text()}
+            if len(labels) != 1:
+                opener.iface_expand_collapse.Collapse()
+                raise ValueError('Room context menu label is ambiguous')
+            choices[tuple(item.element_info.runtime_id)] = (next(iter(labels)), item)
+    labels = [name for name, _ in choices.values()]
+    if not labels:
+        opener.iface_expand_collapse.Collapse()
+        raise ValueError('No room context choices observed')
+    if room_name is None:
+        opener.iface_expand_collapse.Collapse()
+    else:
+        matches = [item for name, item in choices.values() if name == room_name]
+        if len(matches) != 1:
+            opener.iface_expand_collapse.Collapse()
+            raise ValueError('Expected one exact room context label')
+        matches[0].iface_invoke.Invoke()
+        time.sleep(.4)
+    return {'operation':'room_context', 'path':str(expected), 'available_room_names':labels,
+            'requested_room':room_name, 'selection_invoked':room_name is not None,
+            'active_room_verified':False, 'uses_codex_computer_use':False,
+            'warning':'Native menu exposes no selected-state readback. Verify resulting geometry before accepting a room-scoped edit.'}
+
+
 def read_space(app, main, process, expected_project, tree_item_id):
     expected, _ = prepare_project(app, main, process, expected_project)
     unique_control(main, 'TabItem', 'ProjectTreeTool').select()
@@ -515,6 +551,12 @@ def fixture_page(nodes, group_id, offset, limit, inventory_token):
     return nodes[offset:end], token, end if end < len(nodes) else None
 
 
+def set_storey_context(main):
+    """Numeric position controls are view-relative; normalize to active storey."""
+    unique_control(main, 'Button', 'ToggleButton_StoreyContextSelectionButton').click_input()
+    time.sleep(.3)
+
+
 def read_group_fixtures(app, main, process, expected_project, group_id, offset=0, limit=4, inventory_token=None):
     """Read visible individual fixture parameters from one exact expanded group."""
     import math
@@ -538,6 +580,7 @@ def read_group_fixtures(app, main, process, expected_project, group_id, offset=0
         if not matches[0].is_selected():
             raise ValueError('Native fixture selection was not confirmed')
         unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+        set_storey_context(main)
         values = [float(wait_control(main, 'Edit', key).get_value()) for key in fields]
         if not all(math.isfinite(v) for v in values):
             raise ValueError('Nonfinite native fixture parameter')
@@ -547,6 +590,7 @@ def read_group_fixtures(app, main, process, expected_project, group_id, offset=0
                          'name': unique_control(main, 'Edit', 'ArrangementObjectName').get_value(),
                          'position_m': values[:3], 'rotation_deg': values[3:]})
     return {'operation': 'read_group_fixtures', 'path': inventory['path'], 'group_id': group_id,
+            'coordinate_frame': 'active_storey',
             'offset': offset, 'next_offset': next_offset, 'inventory_token': token, 'realized_node_count': total,
             'fixtures': fixtures, 'observed_count': len(fixtures), 'complete_inventory': False,
             'uses_codex_computer_use': False,
@@ -579,6 +623,7 @@ def edit_fixture(app, main, process, expected_project, parameters):
         if not matches[0].is_selected():
             raise ValueError('Fixture selection failed')
         unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+        set_storey_context(main)
         current = [float(wait_control(main, 'Edit', key).get_value()) for key in fields]
         if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(current, parameters['expected_position_m'])):
             raise ValueError('Fixture position changed since inspection; no movement attempted')
@@ -605,6 +650,7 @@ def edit_fixture(app, main, process, expected_project, parameters):
     if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(after, parameters['position_m'])):
         raise ValueError('Fixture movement readback differs; partial movement possible')
     return {'operation': 'edit_fixture', 'path': str(expected), 'runtime_id': runtime,
+            'coordinate_frame': 'active_storey',
             'before_position_m': before, 'after_position_m': after, 'native_project_saved': False,
             'uses_codex_computer_use': False, 'other_fixtures_verified': False,
             'warning': 'Selected native coordinate fields committed. Independently inspect all fixtures and save/reopen before accepting the layout.'}
@@ -643,6 +689,7 @@ def edit_arrangement(app, main, process, expected_project, parameters):
         raise ValueError('Target tree item is collapsed or not visible; expand it before editing')
     item.select()
     unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+    set_storey_context(main)
     before = {key: wait_control(main, 'Edit', key).get_value() for key in values}
     name = unique_control(main, 'Edit', 'ArrangementObjectName').get_value()
     for key, value in values.items():
@@ -660,6 +707,7 @@ def edit_arrangement(app, main, process, expected_project, parameters):
     if any(not math.isclose(float(after[key]), value, rel_tol=0, abs_tol=.00051) for key, value in values.items()):
         raise ValueError('Final readback differs; dependent parameter adjustment possible')
     return {'operation': 'edit_arrangement', 'path': str(expected), 'tree_item_id': identity,
+            'coordinate_frame': 'active_storey',
             'name': name, 'before': before, 'after': after, 'native_project_saved': False,
             'fixture_positions_verified': False, 'uses_codex_computer_use': False,
             'evidence': 'Committed native arrangement parameters read back; individual fixture coordinates and calculation require separate verification.'}
@@ -720,7 +768,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -731,12 +779,14 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
         elif args.action == 'save':
             result = save(app, window, process, args.expected_project)
+        elif args.action == 'room-context':
+            result = room_context(app, window, process, args.expected_project, json.loads(args.parameters) if args.parameters else None)
         elif args.action == 'read-space':
             result = read_space(app, window, process, args.expected_project, json.loads(args.parameters))
         elif args.action == 'close-project':
