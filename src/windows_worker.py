@@ -1067,47 +1067,52 @@ def main():
     parser.add_argument('--save-current', action='store_true')
     args = parser.parse_args()
     try:
-        app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group'} and not args.expected_project:
-            raise ValueError('expected_project is required')
-        if args.action in {'status', 'launch'}:
-            result = snapshot(app, window, process)
-        elif args.action == 'save':
-            result = save(app, window, process, args.expected_project)
-        elif args.action == 'room-context':
-            result = room_context(app, window, process, args.expected_project, json.loads(args.parameters) if args.parameters else None)
-        elif args.action == 'read-space':
-            result = read_space(app, window, process, args.expected_project, json.loads(args.parameters))
-        elif args.action == 'close-project':
-            result = close_project(app, window, process, args.expected_project, args.save_current)
-        elif args.action == 'open':
-            result = open_project(app, window, process, args.path, args.expected_project, args.save_current)
-        elif args.action == 'import-stf':
-            result = import_stf(app, window, process, args.path)
-        elif args.action == 'save-as':
-            result = save_as(app, window, process, args.expected_project, args.path)
-        elif args.action == 'import-luminaire':
-            result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
-        elif args.action == 'arrange-room':
-            result = arrange_room(app, window, process, args.expected_project, json.loads(args.parameters))
-        elif args.action == 'arrange-space':
-            result = arrange_space(app, window, process, args.expected_project, args.product_id)
-        elif args.action == 'edit-fixture':
-            result = edit_fixture(app, window, process, args.expected_project, json.loads(args.parameters))
-        elif args.action == 'inspect-group':
-            result = inspect_group(app, window, process, args.expected_project, json.loads(args.parameters))
-        elif args.action == 'group-fixtures':
-            result = read_group_fixtures(app, window, process, args.expected_project, **json.loads(args.parameters))
-        elif args.action == 'project-tree':
-            result = project_tree(app, window, process, args.expected_project, json.loads(args.parameters) if args.parameters else None)
-        elif args.action == 'edit-arrangement':
-            result = edit_arrangement(app, window, process, args.expected_project, json.loads(args.parameters))
-        elif args.action == 'export-pdf':
-            result = export_pdf(app, window, process, args.expected_project, args.path)
+        if __package__:
+            from .desktop_lock import desktop_lease
         else:
-            result = calculate(app, window, process, args.expected_project, args.recalculate)
-        print(json.dumps(result, ensure_ascii=True))
-        return 0
+            from desktop_lock import desktop_lease
+        with desktop_lease():
+            app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
+            if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group'} and not args.expected_project:
+                raise ValueError('expected_project is required')
+            if args.action in {'status', 'launch'}:
+                result = snapshot(app, window, process)
+            elif args.action == 'save':
+                result = save(app, window, process, args.expected_project)
+            elif args.action == 'room-context':
+                result = room_context(app, window, process, args.expected_project, json.loads(args.parameters) if args.parameters else None)
+            elif args.action == 'read-space':
+                result = read_space(app, window, process, args.expected_project, json.loads(args.parameters))
+            elif args.action == 'close-project':
+                result = close_project(app, window, process, args.expected_project, args.save_current)
+            elif args.action == 'open':
+                result = open_project(app, window, process, args.path, args.expected_project, args.save_current)
+            elif args.action == 'import-stf':
+                result = import_stf(app, window, process, args.path)
+            elif args.action == 'save-as':
+                result = save_as(app, window, process, args.expected_project, args.path)
+            elif args.action == 'import-luminaire':
+                result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
+            elif args.action == 'arrange-room':
+                result = arrange_room(app, window, process, args.expected_project, json.loads(args.parameters))
+            elif args.action == 'arrange-space':
+                result = arrange_space(app, window, process, args.expected_project, args.product_id)
+            elif args.action == 'edit-fixture':
+                result = edit_fixture(app, window, process, args.expected_project, json.loads(args.parameters))
+            elif args.action == 'inspect-group':
+                result = inspect_group(app, window, process, args.expected_project, json.loads(args.parameters))
+            elif args.action == 'group-fixtures':
+                result = read_group_fixtures(app, window, process, args.expected_project, **json.loads(args.parameters))
+            elif args.action == 'project-tree':
+                result = project_tree(app, window, process, args.expected_project, json.loads(args.parameters) if args.parameters else None)
+            elif args.action == 'edit-arrangement':
+                result = edit_arrangement(app, window, process, args.expected_project, json.loads(args.parameters))
+            elif args.action == 'export-pdf':
+                result = export_pdf(app, window, process, args.expected_project, args.path)
+            else:
+                result = calculate(app, window, process, args.expected_project, args.recalculate)
+            print(json.dumps(result, ensure_ascii=True))
+            return 0
     except Exception as exc:
         print(json.dumps({'error': f'{type(exc).__name__}: {exc}'}))
         return 2

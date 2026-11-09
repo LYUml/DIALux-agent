@@ -131,3 +131,11 @@ Launched DIALux PID 2236 with that process-local directory and opened the unchan
 `desktop-launch` now scopes TEMP/TMP to resolved checkout/local/tmp when creating a new process, restoring the worker environment afterward. Optional `--runtime-temp` / MCP `runtime_temp` selects another ASCII directory (at most 70 characters). This conservative bound leaves room for IPC filenames; it is a prototype constraint, not a universal Windows rule. Existing running instances are reused without changing their inherited environment, so they do not receive this workaround. No system/user environment setting or installed DIALux DLL was changed.
 
 Export now expands the native Page Range group before selecting All; collapsed saved UI state had hidden that radio control. Summary parsing now accepts the observed line break immediately before `(Light scene ...)`. 102 tests passed. Still required: public launcher fresh-process replay, public arrangement command replay, save/reopen result comparison and final acceptance audit. One successful recovery is not a claim of universal stability.
+
+## Cooperating desktop worker exclusion
+
+Standalone worker entry points acquire a Windows session-local named mutex before connecting to DIALux and hold it through the entire native operation. Overlapping CLI/MCP desktop requests fail immediately with `DIALux desktop busy`; they do not wait indefinitely or act on the UI. This includes status reads, so a busy error is not evidence that DIALux stopped. The long group-inspection operation holds one lease across all pages.
+
+The lock excludes cooperating workers only. It does not provide a private mouse, block human input or prevent third-party automation. Multi-command workflows release the lease between worker calls and are not atomic transactions. An abandoned live mutex is rejected; a mutex is not a durable crash journal, so callers must still inspect the operation journal/native state after a timeout or crash. Already-running workers from an older implementation do not acquire this lock; do not overlap new calls with such a worker during rollout.
+
+Windows kernel tests use two real Python processes without GUI input: the second process is refused while the first owns the lease, and a new owner succeeds after release. Exception-path release and worker refusal before connection are also checked.
