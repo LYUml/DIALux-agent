@@ -58,3 +58,25 @@ Local evidence: `local/tile-grid-native-v1/evidence.json`, SHA-256
 This closes the bounded native serialization/readback check for this tile case.
 It does not prove visual plotting, arbitrary ceiling geometry, semantic layer
 selection or fixture placement. No assignment source was used in this test.
+
+## Fixture coverage against present cells
+
+`layout-verify-tile-coverage --request request.json` / MCP
+`verify_layout_tile_coverage` accept `{ "layout": ..., "grid_request": ... }`.
+The grid request is the source-pinned extraction request above; the tool rereads
+the DXF rather than trusting a supplied extracted grid. The layout is metre-unit
+`layout/v1` with unique fixture IDs, XYZ positions and explicit `footprint_m`
+polygons. Footprint centroids must match supplied XY positions.
+
+The tool reconstructs the verified canonical tile rectangles and checks each
+complete footprint against their union, allowing the reader's 0.01 mm geometric
+tolerance. Missing cells remain holes. Results retain uncovered area before
+tolerance, per-fixture coverage and a layout hash. `all_supplied_footprints_covered`
+is the decision field: CLI exit zero means the audit ran, not that every footprint
+passed. Invalid source or layout evidence is rejected.
+
+This is a separate, explicit check after planning. `plan_grid` still extends a
+lattice across the supplied room and does not silently apply this filter. The
+check does not authenticate product dimensions, ceiling suitability or native
+positions. Tests include missing cells, partial overhang, footprints spanning a
+hole, stale source hashes and both CLI forms plus real stdio MCP execution.

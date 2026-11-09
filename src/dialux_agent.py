@@ -59,6 +59,7 @@ def verify(manifest):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
+    commands.add_parser('layout-verify-tile-coverage').add_argument('--request', required=True)
     commands.add_parser('drawing-read-tile-grid').add_argument('--request', required=True)
     commands.add_parser('array-execution-verify').add_argument('--evidence-directory', required=True)
     commands.add_parser('pdf-bundle-build').add_argument('--request', required=True)
@@ -219,7 +220,9 @@ def main():
     report_check.add_argument('--context', help='JSON object of evidenced applicability facts')
     args = parser.parse_args()
     try:
-        if args.command == 'drawing-read-tile-grid':
+        if args.command == 'layout-verify-tile-coverage':
+            result = _local_module('tile_coverage').verify_layout_tile_coverage(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
+        elif args.command == 'drawing-read-tile-grid':
             result = _local_module('cad_grid').drawing_read_tile_grid(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'array-execution-verify':
             result = _local_module('array_audit').verify_array_execution(args.evidence_directory)

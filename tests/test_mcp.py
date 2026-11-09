@@ -23,6 +23,12 @@ def test_real_stdio_tools(tmp_path):
                     'layer': 'Tiles', 'storey_origin_m': [10, 20], 'storey_rotation_deg': 13})
                 assert not grid.is_error
                 assert json.loads(grid.content[0].text)['tile_count'] == 4
+                from test_tile_coverage import inputs
+                coverage_layout, coverage_request = inputs(tmp_path)
+                coverage = await session.call_tool('verify_layout_tile_coverage', {
+                    'layout': coverage_layout, 'grid_request': coverage_request})
+                assert not coverage.is_error
+                assert json.loads(coverage.content[0].text)['all_supplied_footprints_covered']
                 assert 'read_model_parameters' in {t.name for t in listing.tools}
                 assert {'verify_array_execution','build_pdf_bundle','verify_pdf_bundle'} <= {t.name for t in listing.tools}
                 source=tmp_path/'bundle-source.pdf';digest=fixture_pdf(source)

@@ -66,3 +66,15 @@ def test_tile_grid_cli(entry, tmp_path):
                          cwd=ROOT, capture_output=True, text=True)
     assert run.returncode == 0, run.stderr+run.stdout
     assert json.loads(run.stdout)['tile_count'] == 4
+
+
+@pytest.mark.parametrize('entry', [['src/dialux_agent.py'], ['-m', 'src.dialux_agent']])
+def test_tile_coverage_cli_reports_missing_cell(entry, tmp_path):
+    from test_tile_coverage import inputs
+    layout, grid_request = inputs(tmp_path, x=1.5)
+    request = tmp_path/'coverage.json'
+    request.write_text(json.dumps(dict(layout=layout, grid_request=grid_request)))
+    run = subprocess.run([sys.executable,*entry,'layout-verify-tile-coverage','--request',str(request)],
+                         cwd=ROOT,capture_output=True,text=True)
+    assert run.returncode == 0, run.stderr+run.stdout
+    assert not json.loads(run.stdout)['all_supplied_footprints_covered']
