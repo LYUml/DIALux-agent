@@ -104,6 +104,9 @@ def main():
     fixtures = commands.add_parser('desktop-group-fixtures')
     fixtures.add_argument('--expected-project', required=True)
     fixtures.add_argument('--group-id', required=True)
+    fixtures.add_argument('--offset', type=int, default=0)
+    fixtures.add_argument('--limit', type=int, default=4)
+    fixtures.add_argument('--inventory-token')
     tree = commands.add_parser('desktop-project-tree')
     tree.add_argument('--expected-project', required=True)
     tree.add_argument('--expand-id')
@@ -169,7 +172,7 @@ def main():
         elif args.command == 'desktop-edit-fixture':
             result = _local_module('desktop').desktop_edit_fixture(args.expected_project, **json.loads(Path(args.parameters).read_text(encoding='utf-8')))
         elif args.command == 'desktop-group-fixtures':
-            result = _local_module('desktop').desktop_group_fixtures(args.expected_project, args.group_id)
+            result = _local_module('desktop').desktop_group_fixtures(args.expected_project, args.group_id, args.offset, args.limit, args.inventory_token)
         elif args.command == 'desktop-project-tree':
             result = _local_module('desktop').desktop_project_tree(args.expected_project, args.expand_id)
         elif args.command == 'desktop-status':

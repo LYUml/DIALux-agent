@@ -11,6 +11,20 @@ import desktop
 import windows_worker
 
 
+def test_fixture_pages_reject_stale_order_and_require_continuation_token():
+    nodes = [{'runtime_id':[7,1,i]} for i in range(5)]
+    page, token, next_offset = windows_worker.fixture_page(nodes, 'group', 0, 2, None)
+    assert len(page) == 2 and next_offset == 2
+    last, _, tail = windows_worker.fixture_page(nodes, 'group', 4, 2, token)
+    assert len(last) == 1 and tail is None
+    with pytest.raises(ValueError, match='requires'):
+        windows_worker.fixture_page(nodes, 'group', 2, 2, None)
+    with pytest.raises(ValueError, match='changed'):
+        windows_worker.fixture_page(list(reversed(nodes)), 'group', 2, 2, token)
+    with pytest.raises(ValueError, match='limit'):
+        windows_worker.fixture_page(nodes, 'group', 0, 100, None)
+
+
 @pytest.mark.parametrize('runtime,prior,target', [
     ([], [1,2,3], [2,3,4]), ([True], [1,2,3], [2,3,4]),
     ([1], [1,2], [2,3,4]), ([1], [1,2,3], [2,3,float('inf')]),

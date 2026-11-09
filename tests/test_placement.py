@@ -8,6 +8,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 import placement
 
 
+def test_group_collection_consumes_all_identity_checked_pages(monkeypatch):
+    first = {'fixtures':[{'id':1}], 'observed_count':1, 'realized_node_count':2,
+             'next_offset':1, 'inventory_token':'same', 'offset':0}
+    second = {**first, 'fixtures':[{'id':2}], 'next_offset':None, 'offset':1}
+    def read(project, group, **kwargs):
+        if not kwargs: return first
+        assert kwargs == {'offset':1, 'inventory_token':'same'}
+        return second
+    monkeypatch.setattr(placement, 'desktop_group_fixtures', read)
+    result = placement.read_realized_group('test.evo','group')
+    assert result['observed_count'] == 2
+    assert [f['id'] for f in result['fixtures']] == [1,2]
+    assert result['next_offset'] is None
+
+
 def setup_run(tmp_path, monkeypatch):
     spec = json.loads((Path(__file__).resolve().parents[1] / 'examples/synthetic-apply-grid.json').read_text())
     plan = placement.plan_grid(spec)

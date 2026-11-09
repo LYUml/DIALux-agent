@@ -459,7 +459,21 @@ def project_tree(app, main, process, expected_project, expand_id=None):
             'warning': 'Only realized UIA nodes are listed; collapsed, filtered or virtualized nodes may be absent. IDs can change after renaming or count edits.'}
 
 
-def read_group_fixtures(app, main, process, expected_project, group_id):
+def fixture_page(nodes, group_id, offset, limit, inventory_token):
+    if type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 4:
+        raise ValueError('offset must be nonnegative; limit must be 1 to 4')
+    token = hashlib.sha256(json.dumps([group_id, [n['runtime_id'] for n in nodes]]).encode()).hexdigest()
+    if offset and inventory_token is None:
+        raise ValueError('Continuation requires inventory_token from the first page')
+    if inventory_token is not None and inventory_token != token:
+        raise ValueError('Tree inventory identity/order changed; restart inspection')
+    if not nodes or offset >= len(nodes):
+        raise ValueError('No fixture nodes at requested offset')
+    end = min(offset + limit, len(nodes))
+    return nodes[offset:end], token, end if end < len(nodes) else None
+
+
+def read_group_fixtures(app, main, process, expected_project, group_id, offset=0, limit=4, inventory_token=None):
     """Read visible individual fixture parameters from one exact expanded group."""
     import math
     if not isinstance(group_id, str) or not group_id.strip():
@@ -467,8 +481,8 @@ def read_group_fixtures(app, main, process, expected_project, group_id):
     inventory = project_tree(app, main, process, expected_project, group_id)
     nodes = [item for item in inventory['items'] if item['tree_item_id'].startswith(group_id + '_')
              and not item['expandable']]
-    if not nodes or len(nodes) > 100:
-        raise ValueError('Expected 1 to 100 realized fixture nodes; no complete-inventory claim')
+    total = len(nodes)
+    nodes, token, next_offset = fixture_page(nodes, group_id, offset, limit, inventory_token)
     fields = ['PositionVectorControl_' + axis for axis in 'XYZ'] + ['RotationVectorControl_' + axis for axis in 'XYZ']
     fixtures = []
     for node in nodes:
@@ -491,6 +505,7 @@ def read_group_fixtures(app, main, process, expected_project, group_id):
                          'name': unique_control(main, 'Edit', 'ArrangementObjectName').get_value(),
                          'position_m': values[:3], 'rotation_deg': values[3:]})
     return {'operation': 'read_group_fixtures', 'path': inventory['path'], 'group_id': group_id,
+            'offset': offset, 'next_offset': next_offset, 'inventory_token': token, 'realized_node_count': total,
             'fixtures': fixtures, 'observed_count': len(fixtures), 'complete_inventory': False,
             'uses_codex_computer_use': False,
             'warning': 'UI-displayed coordinates, rounded by DIALux. Runtime IDs are session-local, not persistent fixture IDs. Hidden/virtualized nodes may be absent.'}
@@ -693,7 +708,7 @@ def main():
         elif args.action == 'edit-fixture':
             result = edit_fixture(app, window, process, args.expected_project, json.loads(args.parameters))
         elif args.action == 'group-fixtures':
-            result = read_group_fixtures(app, window, process, args.expected_project, json.loads(args.parameters))
+            result = read_group_fixtures(app, window, process, args.expected_project, **json.loads(args.parameters))
         elif args.action == 'project-tree':
             result = project_tree(app, window, process, args.expected_project, json.loads(args.parameters) if args.parameters else None)
         elif args.action == 'edit-arrangement':

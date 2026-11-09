@@ -122,12 +122,15 @@ def desktop_export_pdf(expected_project: str, path: str) -> dict:
     return _run('export-pdf', expected_project, target=path)
 
 
-def desktop_group_fixtures(expected_project: str, group_id: str) -> dict:
+def desktop_group_fixtures(expected_project: str, group_id: str, offset: int = 0, limit: int = 4, inventory_token: str | None = None) -> dict:
     """Read individual position/rotation fields from realized children of an exact group.
 
+    Returns at most four fixtures per call. Follow next_offset with inventory_token.
+    The token guards node identity/order, not unchanged geometry between calls.
     Does not claim a complete inventory; runtime IDs are valid only in this session.
     """
-    return _run('group-fixtures', expected_project, parameters=group_id)
+    return _run('group-fixtures', expected_project, parameters={'group_id': group_id, 'offset': offset,
+                'limit': limit, 'inventory_token': inventory_token})
 
 
 def desktop_edit_fixture(expected_project: str, runtime_id: list[int], expected_position_m: list[float], position_m: list[float]) -> dict:

@@ -11,6 +11,26 @@ else:
     from desktop import desktop_group_fixtures, desktop_edit_fixture
 
 
+def read_realized_group(project, group_id):
+    first = desktop_group_fixtures(project, group_id)
+    fixtures = list(first['fixtures'])
+    offset = first.get('next_offset')
+    while offset is not None:
+        if len(fixtures) >= 2000:
+            raise ValueError('Realized group inspection exceeds 2000 fixtures')
+        page = desktop_group_fixtures(project, group_id, offset=offset, inventory_token=first['inventory_token'])
+        if page['offset'] != offset or page['inventory_token'] != first['inventory_token']:
+            raise ValueError('Inconsistent inspection continuation')
+        fixtures.extend(page['fixtures'])
+        new_offset = page.get('next_offset')
+        if new_offset is not None and new_offset <= offset:
+            raise ValueError('Inspection continuation did not advance')
+        offset = new_offset
+    if len(fixtures) != first.get('realized_node_count', first['observed_count']):
+        raise ValueError('Realized group count changed across pages')
+    return {**first, 'fixtures': fixtures, 'observed_count': len(fixtures), 'next_offset': None}
+
+
 def apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidence_directory: str) -> dict:
     """Move an existing equal-count group onto a zero-rotation validated grid.
 
@@ -34,8 +54,10 @@ def apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidence
         temporary.replace(directory / 'journal.json')
     record()
     try:
-        before = desktop_group_fixtures(str(project), group_id)
+        before = read_realized_group(str(project), group_id)
         journal['before'] = before
+        if before.get('next_offset') is not None or before.get('offset', 0) != 0:
+            raise ValueError('Paged group requires a complete inspection workflow before application; no movement attempted')
         current = before['fixtures']
         if len(current) != len(plan['fixtures']) or before['observed_count'] != len(current):
             raise ValueError('Existing realized fixture count must equal planned count; no creation/deletion attempted')
@@ -69,7 +91,9 @@ def apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidence
             record()
         journal['state'] = 'verifying'
         record()
-        after = desktop_group_fixtures(str(project), group_id)
+        after = read_realized_group(str(project), group_id)
+        if after.get('next_offset') is not None or after.get('offset', 0) != 0:
+            raise ValueError('Final inspection is partial; cannot verify placement')
         journal['after'] = after
         journal['verification'] = verify_observed_layout(plan, after)
         journal['state'] = 'verified'
