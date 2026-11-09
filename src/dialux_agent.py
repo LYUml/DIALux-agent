@@ -60,6 +60,7 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('schedule-build').add_argument('--request', required=True)
     commands.add_parser('drawing-export-scheduled').add_argument('--request', required=True)
+    commands.add_parser('layout-candidates-generate').add_argument('--request', required=True)
     array_read = commands.add_parser('desktop-read-arrangement')
     array_read.add_argument('--expected-project', required=True)
     array_read.add_argument('--tree-item-id', required=True)
@@ -257,6 +258,8 @@ def main():
             result = _local_module('schedule').build_luminaire_schedule(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'drawing-export-scheduled':
             result = _local_module('cad').export_scheduled_layout_dxf(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
+        elif args.command == 'layout-candidates-generate':
+            result = _local_module('candidate_search').generate_offset_candidates(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'desktop-read-arrangement':
             result = _local_module('desktop').desktop_read_arrangement(args.expected_project,args.tree_item_id)
         elif args.command == 'report-workplane-read':

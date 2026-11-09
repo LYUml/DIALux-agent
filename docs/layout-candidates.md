@@ -1,5 +1,26 @@
 # Bounded native candidate runs
 
+## Generate explicit offset candidates
+
+`layout-candidates-generate --request request.json` / MCP
+`generate_offset_candidates` accepts a baseline `spec`, `x_offsets_m`,
+`y_offsets_m`, and optional `max_candidates` (default 20). Each axis has 1–20
+unique finite offsets; the domain has at most 400 combinations. It reuses
+`plan_grid` for full-envelope/exclusion checking and only retains the baseline
+fixture count. Baselines must contain 1–2000 zero-rotation fixtures.
+
+It preserves caller order (X outer, Y inner), deduplicates physical XYZ grids to
+1e-9 m arithmetic precision, and records count exclusions, duplicate grids and
+budget exclusions. Returned `candidates` can be passed directly to the native
+runner. A truncated candidate budget is explicit, not a complete or optimal
+search. Products, fixture counts, room geometry and criteria are not generated.
+
+The public CLI was exercised on the six-fixture synthetic specification with
+X offsets [0, 0.1, 2] and Y offsets [0, 0.1]: four distinct candidates remained;
+the two one-spacing shifts were correctly identified as duplicates. This is
+geometric generation evidence only. The existing native two-candidate test used
+explicit grids; a new generated-domain native search is still pending.
+
 CLI: `layout-candidates-run --request request.json`. MCP: `run_layout_candidates`.
 The request has `expected_project`, `group_id`, `candidates`, `checks`, `objective`,
 `policy`, and a new `evidence_directory`. Use a synthetic test project already

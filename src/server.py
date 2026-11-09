@@ -72,6 +72,11 @@ if __package__:
 else:
     from iterations import run_layout_candidates
 server.tool()(run_layout_candidates)
+if __package__:
+    from .candidate_search import generate_offset_candidates
+else:
+    from candidate_search import generate_offset_candidates
+server.tool()(generate_offset_candidates)
 server.tool()(desktop_status)
 if __package__:
     from .desktop import desktop_read_arrangement
