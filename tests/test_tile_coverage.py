@@ -46,3 +46,31 @@ def test_rejects_invalid_evidence(tmp_path,kind):
         layout['fixtures'] *= 2; layout['fixture_count'] = 2
     if kind == 'units': layout['units'] = 'mm'
     with pytest.raises(ValueError): verify_layout_tile_coverage(layout,request)
+
+
+@pytest.mark.parametrize('x,expected', [(.5,True),(1.5,False)])
+def test_coverage_uses_explicit_rotated_storey_frame(tmp_path,x,expected):
+    import math
+    from pathlib import Path
+    layout, request = inputs(tmp_path,x=x)
+    path = Path(request['path'])
+    doc = ezdxf.readfile(path)
+    angle = math.radians(37)
+    def rotate(point,a):
+        x,y = point
+        return [x*math.cos(a)-y*math.sin(a),x*math.sin(a)+y*math.cos(a)]
+    # Drawing geometry is rotated 37 degrees and translated; storey axes are
+    # rotated 12 degrees, so independently transform footprints by 25 degrees.
+    for entity in doc.modelspace():
+        points = []
+        for px,py in entity.get_points('xy'):
+            rx,ry = rotate([px,py],angle)
+            points.append([rx+10,ry+20])
+        entity.set_points(points,format='xy')
+    doc.saveas(path)
+    request.update(expected_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                   storey_origin_m=[10,20],storey_rotation_deg=12)
+    fixture = layout['fixtures'][0]
+    fixture['footprint_m'] = [rotate(p,math.radians(25)) for p in fixture['footprint_m']]
+    fixture['position_m'] = rotate([x,.5],math.radians(25))+[3]
+    assert verify_layout_tile_coverage(layout,request)['all_supplied_footprints_covered'] is expected

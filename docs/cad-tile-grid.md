@@ -80,3 +80,14 @@ lattice across the supplied room and does not silently apply this filter. The
 check does not authenticate product dimensions, ceiling suitability or native
 positions. Tests include missing cells, partial overhang, footprints spanning a
 hole, stale source hashes and both CLI forms plus real stdio MCP execution.
+
+The coverage adapter was additionally exercised against the native round-trip
+DXF above: 168 synthetic 0.58 by 0.28 m footprints at known interior cell centers
+passed, while a deliberately overhanging 169th footprint failed with 0.028 m²
+uncovered area. The fixture geometry was independently constructed at 10 degrees
+in storey coordinates. Local `coverage-request.json` reproduces this check through
+the CLI; `coverage-audit.json` SHA-256 is
+`f8558b920b0e1a85fca814627e416614b8f15281be76cc28916d5508640c39de`.
+These are synthetic supplied envelopes, not observed DIALux fixtures. Two further
+regressions distinguish a present cell and a missing cell with a translated,
+37-degree drawing and 12-degree storey transform; all 11 coverage tests pass.
