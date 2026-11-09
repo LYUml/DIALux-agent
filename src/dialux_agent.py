@@ -66,6 +66,11 @@ def main():
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
     commands.add_parser('report-read').add_argument('--path', required=True)
     commands.add_parser('layout-plan').add_argument('--spec', required=True)
+    apply_layout = commands.add_parser('layout-apply-grid')
+    apply_layout.add_argument('--spec', required=True)
+    apply_layout.add_argument('--expected-project', required=True)
+    apply_layout.add_argument('--group-id', required=True)
+    apply_layout.add_argument('--evidence-directory', required=True)
     compare = commands.add_parser('layout-verify-observed')
     compare.add_argument('--layout', required=True)
     compare.add_argument('--observed', required=True)
@@ -141,6 +146,8 @@ def main():
             result = _local_module('cad').verify_layout_native(args.path, args.output_directory, args.executable)
         elif args.command == 'layout-verify-observed':
             result = _local_module('layout').verify_observed_layout(json.loads(Path(args.layout).read_text(encoding='utf-8')), json.loads(Path(args.observed).read_text(encoding='utf-8')))
+        elif args.command == 'layout-apply-grid':
+            result = _local_module('placement').apply_grid_layout(json.loads(Path(args.spec).read_text(encoding='utf-8')), args.expected_project, args.group_id, args.evidence_directory)
         elif args.command == 'layout-plan':
             result = _local_module('layout').plan_grid(json.loads(Path(args.spec).read_text(encoding='utf-8')))
         elif args.command == 'drawing-convert':

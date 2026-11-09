@@ -1,0 +1,42 @@
+{
+  "units": "m",
+  "contour": [
+    [
+      0,
+      0
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      6,
+      4
+    ],
+    [
+      0,
+      4
+    ]
+  ],
+  "exclusions": [],
+  "grid": {
+    "origin_m": [
+      1.5,
+      1
+    ],
+    "spacing_x_m": 3,
+    "spacing_y_m": 2,
+    "rotation_deg": 0
+  },
+  "fixture": {
+    "product_id": "SYNTHETIC-GEOMETRY-TEST",
+    "width_m": 0.597,
+    "depth_m": 0.597,
+    "mounting_height_m": 3.035
+  },
+  "clearance_m": 0,
+  "assumptions": [
+    "Synthetic 6 by 4 m room for journalled four-fixture application; not assignment work.",
+    "Target is a zero-rotation 2 by 2 grid. Product identity is not verified by geometry matching."
+  ]
+}
