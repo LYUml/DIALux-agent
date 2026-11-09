@@ -1068,7 +1068,8 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
                 raise ValueError('Partial movement differs after reminder; inspect before retry')
     after = [float(field_control(key,'final_readback').get_value()) for key in fields]
     if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(after, parameters['position_m'])):
-        raise ValueError('Fixture movement readback differs; partial movement possible')
+        raise ValueError(f'Fixture movement readback differs; expected={parameters["position_m"]}; '
+                         f'observed={after}; completed_axes={completed_axes}; partial movement possible')
     return {'operation': 'edit_fixture', 'path': str(expected), 'runtime_id': runtime,
             'coordinate_frame': 'active_storey',
             'before_position_m': before, 'after_position_m': after, 'native_project_saved': False,

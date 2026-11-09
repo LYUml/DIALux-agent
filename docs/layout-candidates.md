@@ -203,3 +203,15 @@ is not yet established, and no automatic retry was added. Tests include selectio
 loss without a dialog and a field disappearing after both coordinate commits.
 100 desktop/placement tests passed. A separate recovery copy is under native
 verification; it does not overwrite or turn the failed search into a successful run.
+
+The recovery worker also terminated, this time on final coordinate mismatch.
+It skipped five already-matching fixtures and attempted only the sixth. A fresh,
+read-only UIA snapshot showed XYZ = (5.200, 3.100, 1) m, whereas the requested
+position was (5.2, 3.1, 3.035) m. This is evidence of an unexpected displayed Z,
+not proof of its cause or of a successful recovery. No calculation was started.
+The state was saved separately as `local/offset-search-recovery-interrupted-v1.evo`,
+SHA256 `eabc60283044633b5cddf6114733a274ee62953f090975f8fdc7337342037a60`.
+`local/recovery-failure-readback-v1.json` preserves the fresh fields and status.
+Final mismatch errors now include expected/observed coordinates and completed
+axes. Investigating numeric commit/focus behavior remains necessary; neither
+failure is being relabelled as a transient refresh or an external-user action.
