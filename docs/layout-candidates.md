@@ -271,3 +271,10 @@ PDF SHA256: `5c14ddb858486ed07bd1e060b556425d1dd7241e471442c04b718f9573db133a`.
 The journal is `local/numeric-focus-persistence-v1/journal.json`. This accepts the
 specific inspected six-fixture recovery, not automatic rollback/resume, a general
 large-group recovery guarantee, or the failed four-candidate search.
+
+Coordinate readback now checks the selected runtime identity both before and
+after the batch of XYZ fields, in addition to the pre-write guard. A selection
+change during readback is rejected before another axis can be written. The test
+injects selection loss during the batch read and verifies only the first axis
+was submitted. 103 desktop/placement tests pass. This guard does not prevent
+external UI input or establish an atomic native snapshot.

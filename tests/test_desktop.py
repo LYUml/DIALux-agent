@@ -242,15 +242,16 @@ def test_fixture_stale_position_rejected_before_clearing_results(monkeypatch):
                                     {'runtime_id':[7,1,2], 'expected_position_m':[1,1,1], 'position_m':[3,3,3]})
 
 
-@pytest.mark.parametrize('failure', [None, 'selection', 'selection_without_dialog', 'position', 'unknown_dialog', 'missing_final_field', 'other_axis_changed'])
+@pytest.mark.parametrize('failure', [None, 'selection', 'selection_without_dialog', 'position', 'unknown_dialog', 'missing_final_field', 'other_axis_changed', 'selection_during_readback'])
 def test_movement_reminder_requires_identity_and_partial_coordinate_readback(monkeypatch, failure):
     values = [1., 1., 1.]
     pending = []
+    lost_selection = []
     actions = []
     prepared = []
     node = SimpleNamespace(element_info=SimpleNamespace(runtime_id=[7,1,2]),
                            is_visible=lambda:True, select=lambda:None,
-                           is_selected=lambda:not (failure in ('selection','selection_without_dialog') and actions))
+                           is_selected=lambda:not lost_selection and not (failure in ('selection','selection_without_dialog') and actions))
     def prepare(*args):
         prepared.append(True)
         if len(prepared)>1 and failure == 'unknown_dialog':
@@ -279,13 +280,17 @@ def test_movement_reminder_requires_identity_and_partial_coordinate_readback(mon
     monkeypatch.setattr(windows_worker,'prepare_project',prepare)
     monkeypatch.setattr(windows_worker,'unique_control',control)
     monkeypatch.setattr(windows_worker,'wait_control',control)
-    monkeypatch.setattr(windows_worker,'read_edit_values',lambda main,keys:{key:control(main,'Edit',key).get_value() for key in keys})
+    def batch(main,keys):
+        result={key:control(main,'Edit',key).get_value() for key in keys}
+        if failure=='selection_during_readback' and actions: lost_selection.append(True)
+        return result
+    monkeypatch.setattr(windows_worker,'read_edit_values',batch)
     monkeypatch.setattr(windows_worker,'container_elements',lambda *a:[SimpleNamespace(GetRuntimeId=lambda:[7,1,2])])
     monkeypatch.setattr(windows_worker,'materialize_tree_item',lambda *a:node)
     monkeypatch.setattr(windows_worker,'select_lighting_tool',lambda *a:None)
     monkeypatch.setattr(windows_worker,'set_storey_context',lambda *a:None)
     monkeypatch.setattr(windows_worker.time,'sleep',lambda *a:None)
-    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:{'dialogs':[] if failure in ('selection_without_dialog','missing_final_field','other_axis_changed') else [{}]})
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:{'dialogs':[] if failure in ('selection_without_dialog','missing_final_field','other_axis_changed','selection_during_readback') else [{}]})
     parameters = {'runtime_id':[7,1,2], 'expected_position_m':[1,1,1], 'position_m':[2,3,1]}
     if failure:
         with pytest.raises(ValueError) as caught:

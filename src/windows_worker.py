@@ -1013,7 +1013,12 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
                              f'completed_axes={completed_axes}; inspect native state before retry: {exc}') from exc
     def read_position(stage):
         try:
+            item = selected_item[0]
+            if list(item.element_info.runtime_id) != runtime or not item.is_selected():
+                raise ValueError('Fixture selection differs before coordinate readback')
             values = read_edit_values(main,fields)
+            if list(item.element_info.runtime_id) != runtime or not item.is_selected():
+                raise ValueError('Fixture selection changed during coordinate readback')
             return [float(values[key]) for key in fields]
         except ValueError as exc:
             raise ValueError(f'Fixture {stage}; runtime_id={runtime}; completed_axes={completed_axes}; '
