@@ -40,6 +40,12 @@ def test_complete_before_after_and_unsaved_scope(case):
  assert r['after_verification']['geometry']['matched_count']==6
  assert not r['persistence_verified'] and not r['calculation_verified'] and not r['native_project_saved']
  assert (root/'before/observed.json').exists() and (root/'after/observed.json').exists()
+ import hashlib
+ from src.array_transform import plan_array_transform
+ raw=(root/'arrangement.json').read_bytes()
+ assert hashlib.sha256(raw).hexdigest()==r['arrangement_sha256']
+ reconstructed=plan_array_transform(args['spec'],json.loads((root/'before/observed.json').read_text()),json.loads(raw))
+ assert reconstructed==json.loads((root/'preflight.json').read_text())
 
 @pytest.mark.parametrize('mode',['throw','no_move','identity'])
 def test_failed_or_unverified_mutation_never_reports_success(case,mode):

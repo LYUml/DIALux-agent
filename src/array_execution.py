@@ -38,6 +38,9 @@ def _apply_array_transform(expected_project, spec, group_id, evidence_directory,
         (root/'request.json').write_text(json.dumps({'spec':spec,'group_id':group_id},indent=2,allow_nan=False),encoding='utf-8')
         journal['request_sha256']=sha(root/'request.json');stage('reading_before')
         before=inspect('before');arrangement=array_reader(str(project),group_id)
+        (root/'arrangement.json').write_text(json.dumps(arrangement,indent=2,allow_nan=False),encoding='utf-8')
+        journal['arrangement_sha256']=sha(root/'arrangement.json')
+        persist()
         plan=plan_array_transform(spec,before,arrangement)
         baseline={'schema':'dialux-agent/layout/v1','units':'m','coordinate_frame':'active_storey','fixture_count':count,
                   'fixtures':[{'id':str(i),'position_m':f['position_m'],'rotation_deg':f['rotation_deg'][2]} for i,f in enumerate(before['fixtures'])]}
