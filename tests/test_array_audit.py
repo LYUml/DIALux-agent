@@ -26,6 +26,14 @@ def test_replays_complete_hash_bound_execution(evidence):
  assert r['fixture_count']==6 and r['preflight_replayed'] and r['field_sequence_verified']
  assert not r['source_authenticity_verified'] and not r['persistence_verified']
 
+@pytest.mark.parametrize('field',['ElementCountX','ElementCountY'])
+def test_count_snapshot_requires_exact_integer_not_position_tolerance(evidence,field):
+ p=evidence/'journal.json';j=json.loads(p.read_text())
+ j['commit']['after'][field]+=.0001
+ p.write_text(json.dumps(j))
+ with pytest.raises(ValueError,match='Committed field differs'):
+  verify_array_execution(str(evidence))
+
 @pytest.mark.parametrize('change',['incomplete','events','commit','request_hash','arrangement','page','group'])
 def test_corrupted_or_inconsistent_evidence_is_rejected(evidence,change):
  p=evidence/'journal.json';j=json.loads(p.read_text())

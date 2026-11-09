@@ -5,11 +5,11 @@ import math
 from pathlib import Path
 if __package__:
     from .array_transform import plan_array_transform
-    from .array_commit import MOTION_FIELDS, _display_values
+    from .array_commit import COUNT_FIELDS, MOTION_FIELDS, _display_values
     from .inspection import verify_group_checkpoint
 else:
     from array_transform import plan_array_transform
-    from array_commit import MOTION_FIELDS, _display_values
+    from array_commit import COUNT_FIELDS, MOTION_FIELDS, _display_values
     from inspection import verify_group_checkpoint
 
 
@@ -64,7 +64,13 @@ def verify_array_execution(evidence_directory: str) -> dict:
         raise ValueError('Commit snapshot differs')
     for key,value in wanted.items():
         actual=commit['after'][key]
-        if (actual!=value if isinstance(value,str) else type(actual) not in (int,float) or not math.isfinite(actual) or not math.isclose(actual,value,rel_tol=0,abs_tol=.00051)):
+        if isinstance(value,str):
+            same=actual==value
+        elif type(actual) not in (int,float) or not math.isfinite(actual):
+            same=False
+        else:
+            same=actual==value if key in COUNT_FIELDS else math.isclose(actual,value,rel_tol=0,abs_tol=.00051)
+        if not same:
             raise ValueError('Committed field differs: '+key)
     return {'schema':'dialux-agent/array-evidence-verification/v1','state':'verified',
             'journal_sha256':hashlib.sha256(raw).hexdigest(),'fixture_count':len(after['fixtures']),
