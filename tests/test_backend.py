@@ -120,3 +120,34 @@ def test_concave_room_preserves_reentrant_vertices_in_upstream_exchange(tmp_path
     assert room['area_m2']==20
     assert room['vertices']==6
     assert room['contorno_m']==[tuple(p) for p in spec['contour']]
+
+
+def test_obstacle_exchange_reuses_upstream_boxes(tmp_path):
+    spec=json.loads((ROOT/'examples/synthetic-obstacles-room.json').read_text())
+    target=tmp_path/'boxes.stf'
+    result=create_room(spec,str(target))
+    objects=inspect_stf(str(target))['salas'][0]['muebles']
+    assert result['obstacle_count']==2 and not result['dialux_import_verified']
+    assert objects==[
+        {'tipo':'objeto','nombre':'Test column','posicion_m':[3,2,1.5],'tamano_m':[.6,.6,3]},
+        {'tipo':'objeto','nombre':'Test desk box','posicion_m':[1,1,.375],'tamano_m':[1.2,.6,.75]}]
+    assert target.read_text(encoding='latin-1').count('Poly.Color=40 150 150 150')==2
+
+
+@pytest.mark.parametrize('change',['outside','overlap','high','negative','nan','reserved','duplicate','injection','material','elevated'])
+def test_obstacle_invalid_geometry_or_unsupported_material_never_writes(tmp_path,change):
+    spec=json.loads((ROOT/'examples/synthetic-obstacles-room.json').read_text())
+    first,second=spec['obstacles']
+    if change=='outside': first['center_m']=[0,0]
+    if change=='overlap': second['center_m']=[3,2]
+    if change=='high': first['size_m'][2]=4
+    if change=='negative': first['size_m'][0]=-1
+    if change=='nan': first['center_m'][0]=float('nan')
+    if change=='reserved': first['name']='WIN'
+    if change=='duplicate': second['name']='test COLUMN'
+    if change=='injection': first['name']='box\n[Room2]'
+    if change=='material': first['reflectance_pct']=50
+    if change=='elevated': first['base_height_m']=1
+    output=tmp_path/'invalid.stf'
+    with pytest.raises(ValueError): create_room(spec,str(output))
+    assert not output.exists()

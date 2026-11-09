@@ -1,0 +1,60 @@
+{
+  "name": "Synthetic obstacles",
+  "units": "m",
+  "contour": [
+    [
+      0,
+      0
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      6,
+      4
+    ],
+    [
+      0,
+      4
+    ]
+  ],
+  "height_m": 3,
+  "workplane_m": 0.8,
+  "maintenance_factor": 0.8,
+  "ceiling_reflectance_pct": 70,
+  "wall_reflectance_pct": 50,
+  "floor_reflectance_pct": 20,
+  "assumptions": [
+    "Synthetic software validation fixture only. Not measured assignment geometry or adopted design criteria.",
+    "Axis-aligned ground-supported boxes; explicit 40 percent upstream material reflectance. Native import and optical effect require separate validation."
+  ],
+  "obstacles": [
+    {
+      "name": "Test column",
+      "center_m": [
+        3,
+        2
+      ],
+      "size_m": [
+        0.6,
+        0.6,
+        3
+      ],
+      "reflectance_pct": 40
+    },
+    {
+      "name": "Test desk box",
+      "center_m": [
+        1,
+        1
+      ],
+      "size_m": [
+        1.2,
+        0.6,
+        0.75
+      ],
+      "reflectance_pct": 40
+    }
+  ]
+}

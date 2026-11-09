@@ -132,3 +132,5 @@ The [large-project checkpoint](docs/large-project-validation.md) exercises a syn
 `group-inspection-checkpoint` / MCP `inspect_group_checkpoint` collects one explicitly counted native fixture group in a single worker, with hashed page evidence and a durable failure journal. See [operation and limits](docs/group-inspection-checkpoints.md).
 
 `report-layout-read` / MCP `read_report_layout` reads an explicitly selected complete native PDF coordinate table, including product metadata and page evidence. It preserves unknown coordinate-frame and rotation status; see [parser boundaries and native 168-fixture regression](docs/report-layout-reading.md).
+
+`room-create` / `rooms-create` can include validated ground-supported obstacle boxes using the licensed upstream STF implementation. See [supported geometry, fixed material assumption and pending native gate](docs/obstacle-exchange.md).

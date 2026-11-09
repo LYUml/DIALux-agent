@@ -6,9 +6,9 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'vendor' / 'MCP_Dialux'))
-from dialux.stf import Estancia, escribir
+from dialux.stf import Estancia, Obstaculo, escribir
 from dialux.leer_stf import leer
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, box
 
 
 def _number(value, field):
@@ -45,6 +45,34 @@ def _validate_room(spec):
     if not 0 <= plane < height or not 0 < mf <= 1 or not all(0 <= x <= 100 for x in reflections):
         raise ValueError('Invalid height, workplane, maintenance factor or reflectances')
     room = Estancia(name, [tuple(map(float, p)) for p in contour], height, plane, *reflections, mf)
+    obstacles = spec.get('obstacles', [])
+    if not isinstance(obstacles, list) or len(obstacles)>1000:
+        raise ValueError('obstacles must be a list of at most 1000 ground-supported boxes')
+    shapes, names = [], set()
+    for obstacle in obstacles:
+        if not isinstance(obstacle,dict) or set(obstacle)!={'name','center_m','size_m','reflectance_pct'}:
+            raise ValueError('Obstacle requires name, center_m, size_m and reflectance_pct')
+        label=obstacle['name']
+        if (not isinstance(label,str) or not label.strip() or label!=label.strip()
+                or any(c in label for c in '\r\n[]=') or label.lower() in {'win','door','skylight'}
+                or label.casefold() in names):
+            raise ValueError('Invalid, reserved or duplicate obstacle name')
+        label.encode('latin-1',errors='strict')
+        names.add(label.casefold())
+        center,size=obstacle['center_m'],obstacle['size_m']
+        if not isinstance(center,list) or len(center)!=2 or not isinstance(size,list) or len(size)!=3:
+            raise ValueError('Obstacle requires XY centre and width/depth/height')
+        x,y=(_number(v,'obstacle centre') for v in center)
+        width,depth,box_height=(_number(v,'obstacle size') for v in size)
+        if min(width,depth,box_height)<=0 or box_height>height:
+            raise ValueError('Obstacle sizes must be positive and no higher than the room')
+        if _number(obstacle['reflectance_pct'],'obstacle reflectance')!=40:
+            raise ValueError('Upstream box serializer supports only explicit 40 percent reflectance')
+        footprint=box(x-width/2,y-depth/2,x+width/2,y+depth/2)
+        if not polygon.covers(footprint) or any(footprint.intersection(other).area>1e-9 for other in shapes):
+            raise ValueError('Obstacle footprint lies outside room or overlaps another box')
+        shapes.append(footprint)
+        room.obstaculos.append(Obstaculo(label,(x,y),width,depth,box_height))
     return room, polygon
 
 
@@ -67,7 +95,7 @@ def create_room(spec: dict, output: str) -> dict:
     with path.open('xb') as stream:
         stream.write(data)
     return {'path': str(path), 'area_m2': polygon.area, 'room_count': 1,
-            'assumptions': spec['assumptions'], 'dialux_import_verified': False,
+            'assumptions': spec['assumptions'], 'obstacle_count': len(room.obstaculos), 'dialux_import_verified': False,
             'warnings': ['Geometry exchange only; no photometry or simulation results.']}
 
 
@@ -105,7 +133,7 @@ def create_rooms(specs: list[dict], output: str) -> dict:
     with target.open('xb') as stream:
         stream.write(data)
     return {'path': str(target), 'room_count': len(specs),
-            'rooms': [{'name': room.nombre, 'area_m2': shape.area, 'assumptions': spec['assumptions']}
+            'rooms': [{'name': room.nombre, 'area_m2': shape.area, 'obstacle_count': len(room.obstaculos), 'assumptions': spec['assumptions']}
                       for (room, shape), spec in zip(validated, specs)],
             'dialux_import_verified': False,
             'warnings': ['Same-level geometry exchange only; native wall topology, openings, obstacles and photometry are not verified.']}
