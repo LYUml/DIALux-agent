@@ -143,4 +143,8 @@ Native plotting accepts an explicit ISO landscape paper (`--paper A3|A2|A1|A0`) 
 
 `schedule-build` / MCP `build_luminaire_schedule` links observed CAD fixture IDs to native PDF product records using unique coordinate correspondence and an explicit transform. See [schedule evidence, native regression and limits](docs/luminaire-schedule.md).
 
+`drawing-export-scheduled --request <request.json>` / MCP `export_scheduled_layout_dxf` rereads that evidence and exports an observed drawing with a single-product aggregate table. Native reopening checks table text/geometry as well as fixture records. Layout exports also support explicit [linear dimensions and bounded label placement](docs/cad-dimensions.md); these are tested synthetic drawing features, not complete engineering-sheet acceptance.
+
+`layout-candidates-run --request <request.json>` / MCP `run_layout_candidates` runs supplied same-count grid candidates on separate native copies with actual calculation checkpoints, scoped objective comparison and explicit stopping policies. See [request fields and limitations](docs/layout-candidates.md). Multi-iteration native acceptance is still pending; the interface does not generate an optimal design or install a winner automatically.
+
 The [current acceptance matrix and remaining gates](docs/current-acceptance.md) separates observed native capabilities from pending work and compares the reviewed pinned upstream modules without claiming complete agent acceptance.
