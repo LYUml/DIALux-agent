@@ -47,6 +47,13 @@ Before/after inspection pages are now saved separately as hashed `before-page-NN
 The 168-fixture native movement gate is running separately in `local/large-grid-run-v1` against the new copy `local/large-grid-probe-v1.evo` (initial SHA256 `525aef00ad8c4eca5fea46cf78cb836a78606d02f87e5f2fd9bc40806e92351f`). The explicit target shifts every centre by +0.1 m in X/Y, retaining the original grid spacing, height and zero rotation. The original large project hash was checked unchanged before launch. This gate is pending until the actual process terminates successfully and all evidence is reviewed. 311 tests passed before launch.
 # Mid-movement reminder guard
 
+The placement loop now records `no_write_required` for fixtures whose initial
+reported XYZ already equal the target within arithmetic noise (1e-10 m). It does
+not call the editor for those fixtures. Full initial and final group inspections
+remain mandatory, and a changed final position still fails verification. This
+avoids needless UI selection/edit work without treating rounded displayed values
+as an independent proof of exact internal coordinates.
+
 ## Observed interrupted mutation and recovery
 
 Large run v3 completed all 168 initial reads, then the old worker stopped during

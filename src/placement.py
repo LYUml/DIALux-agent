@@ -118,8 +118,13 @@ def _apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidenc
                     'state': 'pending', 'started_utc':datetime.now(timezone.utc).isoformat()}
             journal['steps'].append(step)
             record()  # Persist intent before a potentially partial native mutation.
-            step['result'] = editor(str(project), source['runtime_id'], source['position_m'], target['position_m'])
-            step['state'] = 'committed'
+            if all(math.isclose(a,b,rel_tol=0,abs_tol=1e-10)
+                   for a,b in zip(source['position_m'], target['position_m'])):
+                step['state'] = 'no_write_required'
+                step['reason'] = 'Reported initial coordinates already match target; final group inspection still required'
+            else:
+                step['result'] = editor(str(project), source['runtime_id'], source['position_m'], target['position_m'])
+                step['state'] = 'committed'
             step['finished_utc'] = datetime.now(timezone.utc).isoformat()
             record()
         journal['state'] = 'verifying'

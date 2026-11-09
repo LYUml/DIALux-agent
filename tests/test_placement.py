@@ -56,6 +56,29 @@ def test_journal_intent_precedes_each_mutation_and_verifies_all(tmp_path, monkey
     assert all(s['state'] == 'committed' for s in journal['steps'])
 
 
+@pytest.mark.parametrize('change_after', [False, True])
+def test_already_matching_positions_skip_writes_but_require_final_read(tmp_path,monkeypatch,change_after):
+    spec, project, directory, before = setup_run(tmp_path,monkeypatch)
+    for fixture in before['fixtures']: fixture['position_m'][0] -= .2
+    after = copy.deepcopy(before)
+    if change_after: after['fixtures'][0]['position_m'][0] += .1
+    observed = iter([before,after])
+    reads = []
+    def read(*args):
+        reads.append(True)
+        return next(observed)
+    monkeypatch.setattr(placement,'desktop_group_fixtures',read)
+    monkeypatch.setattr(placement,'desktop_edit_fixture',lambda *a:pytest.fail('Unnecessary native write'))
+    if change_after:
+        with pytest.raises(ValueError):
+            placement._apply_grid_layout(spec,str(project),'group',str(directory))
+    else:
+        assert placement._apply_grid_layout(spec,str(project),'group',str(directory))['state']=='verified'
+    assert len(reads)==2
+    journal=json.loads((directory/'journal.json').read_text())
+    assert all(s['state']=='no_write_required' for s in journal['steps'])
+
+
 def test_partial_failure_is_preserved_without_retry_or_rollback(tmp_path, monkeypatch):
     spec, project, directory, _ = setup_run(tmp_path, monkeypatch)
     calls = []
