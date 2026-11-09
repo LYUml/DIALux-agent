@@ -52,3 +52,17 @@ def test_array_main_cli_rejects_incomplete_evidence(tmp_path):
     result=subprocess.run([sys.executable,'-m','src.dialux_agent','array-execution-verify','--evidence-directory',str(tmp_path)],cwd=ROOT,capture_output=True,text=True)
     assert result.returncode==2 and not json.loads(result.stdout)['ok']
     assert not result.stderr
+
+
+@pytest.mark.parametrize('entry', [['src/dialux_agent.py'], ['-m', 'src.dialux_agent']])
+def test_tile_grid_cli(entry, tmp_path):
+    import hashlib
+    from test_cad_grid import fixture
+    path = fixture(tmp_path)
+    request = tmp_path/'request.json'
+    request.write_text(json.dumps(dict(path=str(path), expected_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                                      layer='Tiles', storey_origin_m=[10,20], storey_rotation_deg=13)))
+    run = subprocess.run([sys.executable, *entry, 'drawing-read-tile-grid', '--request', str(request)],
+                         cwd=ROOT, capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr+run.stdout
+    assert json.loads(run.stdout)['tile_count'] == 4

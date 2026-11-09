@@ -15,6 +15,14 @@ def test_real_stdio_tools(tmp_path):
             async with ClientSession(read,write,read_timeout_seconds=15) as session:
                 await session.initialize()
                 listing=await session.list_tools()
+                import hashlib
+                from test_cad_grid import fixture
+                tiles = fixture(tmp_path)
+                grid = await session.call_tool('drawing_read_tile_grid', {
+                    'path': str(tiles), 'expected_sha256': hashlib.sha256(tiles.read_bytes()).hexdigest(),
+                    'layer': 'Tiles', 'storey_origin_m': [10, 20], 'storey_rotation_deg': 13})
+                assert not grid.is_error
+                assert json.loads(grid.content[0].text)['tile_count'] == 4
                 assert 'read_model_parameters' in {t.name for t in listing.tools}
                 assert {'verify_array_execution','build_pdf_bundle','verify_pdf_bundle'} <= {t.name for t in listing.tools}
                 source=tmp_path/'bundle-source.pdf';digest=fixture_pdf(source)

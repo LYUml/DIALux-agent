@@ -13,6 +13,10 @@ Start with the [current acceptance matrix](docs/current-acceptance.md),
 [workflow skill](skills/dialux-agent/SKILL.md). Passing unit tests or exporting a
 file does not establish complete native engineering acceptance.
 
+Explicit DXF tile layers can now supply hash-bound lattice origin, spacing and
+rotation through CLI/MCP; see [CAD tile grid reading](docs/cad-tile-grid.md).
+This validates selected geometry without inferring a room or designing a layout.
+
 ## Verified capability and remaining limits
 
 | Area | Native evidence and present boundary |
