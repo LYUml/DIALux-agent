@@ -10,8 +10,10 @@ import math
 import ezdxf
 
 if __package__:
+    from .cad_labels import place_fixture_labels
     from .cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
 else:
+    from cad_labels import place_fixture_labels
     from cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
 
 
@@ -61,6 +63,7 @@ def _write_layout_dxf(spec, output, layout):
     note_height=annotations.get('note_height_m',.18)
     if any(type(v) not in (int,float) or not math.isfinite(v) or not .02<=v<=2 for v in (label_height,note_height)):
         raise ValueError('Drawing text heights must be finite metres between 0.02 and 2')
+    label_positions = place_fixture_labels(spec, layout, label_height)
     doc = ezdxf.new('R2018')
     doc.units = 6  # metres, matching shared layout coordinates
     doc.styles.get('Standard').dxf.font = 'arial.ttf'
@@ -81,6 +84,10 @@ def _write_layout_dxf(spec, output, layout):
         x, y, z = fixture['position_m']
         insert = model.add_blockref(symbol.name, (x,y,0), dxfattribs={'layer':'LUMINAIRES','rotation':fixture['rotation_deg']})
         insert.add_auto_attribs({'FIXTURE_ID':fixture['id']})
+        label = insert.get_attrib('FIXTURE_ID')
+        label.dxf.rotation = 0
+        label.set_placement(label_positions[fixture['id']]['center_m'],
+                            align=ezdxf.enums.TextEntityAlignment.MIDDLE_CENTER)
         handles[fixture['id']] = insert.dxf.handle
     xs, ys = zip(*spec['contour'])
     tx, ty = max(xs)+1, max(ys)
@@ -113,6 +120,7 @@ def _write_layout_dxf(spec, output, layout):
             raise ValueError('Exported CAD rotation readback failed')
     return {'schema':'dialux-agent/layout-cad/v1','path':str(target),'fixture_count':len(inserts),
             'fixture_handles':handles,'input_sha256':layout['input_sha256'],
+            'label_placement':label_positions, 'label_envelopes_verified':True,
             'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),
             'dxf_readback_verified':True,'native_dwg_verified':False,'print_verified':False,
             'warnings':['Synthetic tool-test drawing only. Native AutoCAD opening and plotting remain separate verification gates.']}
@@ -174,6 +182,13 @@ def _fixture_records(path: Path) -> dict:
         records[identity] = {'position': tuple(entity.dxf.insert), 'rotation': entity.dxf.rotation,
                              'scale': (entity.dxf.xscale, entity.dxf.yscale, entity.dxf.zscale),
                              'block': entity.dxf.name}
+        label = entity.get_attrib('FIXTURE_ID')
+        # AutoCAD recomputes the glyph-origin insert for aligned text. Compare
+        # the authoritative alignment anchor instead of that derived origin.
+        anchor = label.dxf.align_point if label.dxf.halign or label.dxf.valign else label.dxf.insert
+        records[identity]['label'] = (*anchor,
+                                     label.dxf.rotation, label.dxf.height,
+                                     label.dxf.halign, label.dxf.valign)
     if not records or doc.units != 6:
         raise ValueError('Expected nonempty metre-unit agent layout')
     return records
@@ -224,8 +239,8 @@ def verify_layout_native(path: str, output_directory: str,
         other = after[identity]
         if record['block'] != other['block'] or any(
             not math.isclose(a, b, rel_tol=0, abs_tol=1e-8)
-            for a, b in zip((*record['position'], record['rotation'], *record['scale']),
-                            (*other['position'], other['rotation'], *other['scale']))):
+            for a, b in zip((*record['position'], record['rotation'], *record['scale'], *record['label']),
+                            (*other['position'], other['rotation'], *other['scale'], *other['label']))):
             raise ValueError(f'Native fixture geometry changed: {identity}')
     if hashlib.sha256(source.read_bytes()).hexdigest() != digest:
         raise ValueError('Source DXF changed')

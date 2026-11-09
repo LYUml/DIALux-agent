@@ -39,3 +39,23 @@ Unit tests include changed endpoints, missing IDs, changed display factor,
 manual misleading labels, duplicate IDs and zero projected distances. Suite:
 343 passed. Mixed annotation collision handling, titleblocks and formatted
 evidence-linked schedules remain pending.
+
+## Fixture label placement follow-up
+
+The exporter now places horizontal ID attributes using conservative rectangular
+text envelopes, checking containment in the room and avoiding keep-out polygons,
+rotated fixture bodies and previously placed labels. It tries nearby positions
+below, above, beside and offset from each fixture; if none fit it refuses export.
+This is a bounded greedy placement, not a global annotation optimizer. Font
+rendering, dimensions, titleblocks and notes still require independent visual
+checks; envelope clearance alone does not prove every printed glyph is clear.
+
+The same synthetic case was regenerated as `local/labels-probe-v1.dxf`.
+Native A3 1:100 PDF `local/labels-plot-v1/layout.pdf` SHA256
+`bcc3ec3a6464358902cd9f72e30894a226e5830f703e46a3ce611018eb143cd8`
+was visually inspected: L0013 is now above its fixture and clear of the keep-out
+line. All 23 IDs remain visible. `local/labels-native-v3` independently verifies
+native fixture attributes' alignment anchor, height, rotation and justification,
+in addition to the previous fixture and dimension records. AutoCAD recomputes
+the glyph-origin insertion point for centered text; that derived origin is not
+compared as if it were the stable alignment anchor. Unit suite: 347 passed.

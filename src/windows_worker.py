@@ -109,12 +109,12 @@ def snapshot(app, main, process):
 def is_save_reminder(dialog):
     """Match only the observed English periodic reminder, not save/overwrite prompts."""
     children = dialog.get('children', [])
+    prompts = [c.get('text', '') for c in children if c.get('type') == 'Edit']
     return (dialog.get('automation_id') == 'InformationBox'
             and dialog.get('title') == 'DIALux' and dialog.get('class') == 'Window'
             and all(c.get('type') in {'Button', 'Image', 'Text', 'Edit'} for c in children)
-            and [c.get('text') for c in children if c.get('type') == 'Edit'] in (
-                ['The project has not been saved for 5 minutes.\r\nSave now?'],
-                ['The project has not been saved for 10 minutes.\r\nSave now?'])
+            and len(prompts) == 1 and isinstance(prompts[0], str)
+            and re.fullmatch(r'The project has not been saved for [1-9][0-9]* minutes\.\r\nSave now\?', prompts[0]) is not None
             and sorted(c.get('text', '') for c in children if c.get('type') == 'Button') == ['', 'No', 'Yes'])
 
 

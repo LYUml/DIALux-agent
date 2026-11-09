@@ -39,6 +39,14 @@ selection and displayed values before accepting evidence. Unit suite: 334 passed
 The independent CLI retry (`local/large-grid-run-v2`) has started; this is pending
 native acceptance, not a successful large movement claim.
 
+Retry v2 also terminated before movement, after 40 recorded fixtures. Native
+status showed the same reminder with 20 elapsed minutes. Recognition now accepts
+only a positive integer duration in the otherwise exact reminder text, retaining
+the window/control signature and project guard. Retry v3 is running with fresh
+evidence; no completed large mutation is claimed. CAD dimensions and bounded
+fixture-label collision avoidance have separate native evidence in
+`cad-dimensions.md`; drawing composition remains incomplete.
+
 1. Finish the currently running 168-fixture native movement gate from its actual process result; inspect before/after pages and every committed step, then independently calculate/export/save/reopen if geometry passes. Preserve any failure and do not restart from a stale progress file.
 2. Complete reusable engineering drawing composition: explicit dimensions, titleblock, legends and formatted evidence-linked schedule, tested on synthetic translated/concave/large cases with native plotting.
 3. Add bounded simulation iteration orchestration with explicit objectives/criteria, candidate budgets, no-improvement/failure stops and preserved source/evidence; verify multiple actual native iterations. Do not substitute a guessed illumination formula for DIALux simulation.

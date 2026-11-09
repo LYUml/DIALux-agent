@@ -41,7 +41,7 @@ def test_wrong_project_never_dismisses_reminder(tmp_path, reminder, monkeypatch)
         windows_worker.prepare_project(None,None,None,str(path))
 
 
-@pytest.mark.parametrize('minutes', [5, 10])
+@pytest.mark.parametrize('minutes', [5, 10, 20, 40])
 def test_reminder_defers_without_saving_and_reads_fresh_state(reminder, monkeypatch, minutes):
     reminder['children'][0]['text'] = f'The project has not been saved for {minutes} minutes.\r\nSave now?'
     actions = []
@@ -60,7 +60,7 @@ def test_reminder_defers_without_saving_and_reads_fresh_state(reminder, monkeypa
 
 @pytest.mark.parametrize('text', [
     'The project has not been saved for 10 minutes.\r\nOverwrite now?',
-    'The project has not been saved for 15 minutes.\r\nSave now?',
+    'The project has not been saved for 0 minutes.\r\nSave now?',
     'The project has not been saved for 10 minutes.\r\nSave now? Extra text',
 ])
 def test_unobserved_save_prompts_are_not_dismissed(reminder, text):
