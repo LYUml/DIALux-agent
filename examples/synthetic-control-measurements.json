@@ -1,0 +1,37 @@
+[
+  {
+    "metric": "automatic_control_remaining_power_percent",
+    "unit": "%",
+    "value": 50,
+    "calculation_surface": "selected_control_zone",
+    "evidence": "Synthetic control configuration, not a DIALux result"
+  },
+  {
+    "metric": "automatic_controlled_area",
+    "unit": "m2",
+    "value": 250,
+    "calculation_surface": "selected_control_zone",
+    "evidence": "Synthetic control configuration, not a DIALux result"
+  },
+  {
+    "metric": "occupancy_reduction_delay",
+    "unit": "min",
+    "value": 15,
+    "calculation_surface": "selected_control_zone",
+    "evidence": "Synthetic control configuration, not a DIALux result"
+  },
+  {
+    "metric": "manual_override_duration",
+    "unit": "min",
+    "value": 120,
+    "calculation_surface": "selected_control_zone",
+    "evidence": "Synthetic control configuration, not a DIALux result"
+  },
+  {
+    "metric": "manual_override_controlled_area",
+    "unit": "m2",
+    "value": 250,
+    "calculation_surface": "selected_control_zone",
+    "evidence": "Synthetic control configuration, not a DIALux result"
+  }
+]

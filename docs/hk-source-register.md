@@ -36,3 +36,13 @@ Rendered PDF pages 20, 21 and 23 were subsequently checked for scope, the 70 W e
 ## Labour Department extraction checkpoint
 
 The official OHB50 PDF was re-opened online and locally rendered at pages 8 and 11. Paragraph 8's normal-desk minimum recommendation is now isolated in `profiles/hk-labour-desk-lighting.json`, with explicit advisory classification and adoption/surface/condition evidence. Appendix optimum-average examples remain non-executable reference notes. See `docs/hk-desk-lighting.md`; a Summary average is not an acceptable substitute for the required task minimum.
+
+## Automatic-control numerical extraction, 2026-11-09
+
+BEC printed pages 18–19 / PDF pages 24–25 were checked as text and rendered images;
+a fresh official download matched the existing source hash. The optional
+`hk-bec2024-office-automatic-control.json` module checks five numerical conditions
+for one evidenced office control zone. See [input scope and omissions](hk-automatic-control.md).
+It preserves the 150 W and 24/7 occupancy boundaries and conditional sensor/override
+scope. Control-point counting, daylight control and whole-system acceptance are
+not implemented by this module; no assignment control scheme was created.

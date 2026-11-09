@@ -1,0 +1,344 @@
+{
+  "schema": "dialux-agent/criteria-profile/v1",
+  "jurisdiction": "HK",
+  "status": "verified",
+  "application": "Selected office automatic-control zone: numerical requirements only",
+  "criteria": [
+    {
+      "id": "hk-bec2024-office-auto-remaining-power",
+      "metric": "automatic_control_remaining_power_percent",
+      "unit": "%",
+      "calculation_surface": "selected_control_zone",
+      "operator": "<=",
+      "threshold": 50,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Code of Practice for Energy Efficiency of Building Services Installation",
+        "edition": "BEC 2024",
+        "page": "Printed 18-19; PDF 24-25",
+        "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+        "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
+        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_date": "2026-11-09",
+        "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
+        "clause_or_table": "5.6.1.1; scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
+      },
+      "applicable_when": [
+        {
+          "fact": "design_code",
+          "operator": "==",
+          "value": "BEC 2024"
+        },
+        {
+          "fact": "bec_section5_scope_confirmed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_use",
+          "operator": "==",
+          "value": "office"
+        },
+        {
+          "fact": "automatic_control_required_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "occupied_24_hours_7_days",
+          "operator": "==",
+          "value": false
+        },
+        {
+          "fact": "control_zone_mapping_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "control_zone_nonempty_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "complete_fixed_lighting_power",
+          "operator": ">",
+          "value": 150,
+          "unit": "W"
+        }
+      ]
+    },
+    {
+      "id": "hk-bec2024-office-auto-zone-area",
+      "metric": "automatic_controlled_area",
+      "unit": "m2",
+      "calculation_surface": "selected_control_zone",
+      "operator": "<=",
+      "threshold": 250,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Code of Practice for Energy Efficiency of Building Services Installation",
+        "edition": "BEC 2024",
+        "page": "Printed 18-19; PDF 24-25",
+        "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+        "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
+        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_date": "2026-11-09",
+        "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
+        "clause_or_table": "5.6.1.3(a); scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
+      },
+      "applicable_when": [
+        {
+          "fact": "design_code",
+          "operator": "==",
+          "value": "BEC 2024"
+        },
+        {
+          "fact": "bec_section5_scope_confirmed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_use",
+          "operator": "==",
+          "value": "office"
+        },
+        {
+          "fact": "automatic_control_required_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "occupied_24_hours_7_days",
+          "operator": "==",
+          "value": false
+        },
+        {
+          "fact": "control_zone_mapping_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "control_zone_nonempty_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "complete_fixed_lighting_power",
+          "operator": ">",
+          "value": 150,
+          "unit": "W"
+        }
+      ]
+    },
+    {
+      "id": "hk-bec2024-office-auto-occupancy-delay",
+      "metric": "occupancy_reduction_delay",
+      "unit": "min",
+      "calculation_surface": "selected_control_zone",
+      "operator": "<=",
+      "threshold": 15,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Code of Practice for Energy Efficiency of Building Services Installation",
+        "edition": "BEC 2024",
+        "page": "Printed 18-19; PDF 24-25",
+        "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+        "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
+        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_date": "2026-11-09",
+        "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
+        "clause_or_table": "5.6.1.5; scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
+      },
+      "applicable_when": [
+        {
+          "fact": "design_code",
+          "operator": "==",
+          "value": "BEC 2024"
+        },
+        {
+          "fact": "bec_section5_scope_confirmed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_use",
+          "operator": "==",
+          "value": "office"
+        },
+        {
+          "fact": "automatic_control_required_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "occupied_24_hours_7_days",
+          "operator": "==",
+          "value": false
+        },
+        {
+          "fact": "control_zone_mapping_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "control_zone_nonempty_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "complete_fixed_lighting_power",
+          "operator": ">",
+          "value": 150,
+          "unit": "W"
+        },
+        {
+          "fact": "occupant_sensors_deployed",
+          "operator": "==",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "hk-bec2024-office-auto-override-duration",
+      "metric": "manual_override_duration",
+      "unit": "min",
+      "calculation_surface": "selected_control_zone",
+      "operator": "<=",
+      "threshold": 120,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Code of Practice for Energy Efficiency of Building Services Installation",
+        "edition": "BEC 2024",
+        "page": "Printed 18-19; PDF 24-25",
+        "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+        "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
+        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_date": "2026-11-09",
+        "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
+        "clause_or_table": "5.6.1.4; scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
+      },
+      "applicable_when": [
+        {
+          "fact": "design_code",
+          "operator": "==",
+          "value": "BEC 2024"
+        },
+        {
+          "fact": "bec_section5_scope_confirmed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_use",
+          "operator": "==",
+          "value": "office"
+        },
+        {
+          "fact": "automatic_control_required_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "occupied_24_hours_7_days",
+          "operator": "==",
+          "value": false
+        },
+        {
+          "fact": "control_zone_mapping_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "control_zone_nonempty_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "complete_fixed_lighting_power",
+          "operator": ">",
+          "value": 150,
+          "unit": "W"
+        },
+        {
+          "fact": "manual_override_installed",
+          "operator": "==",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "hk-bec2024-office-auto-override-area",
+      "metric": "manual_override_controlled_area",
+      "unit": "m2",
+      "calculation_surface": "selected_control_zone",
+      "operator": "<=",
+      "threshold": 250,
+      "measurement_min": 0,
+      "source": {
+        "document_title": "Code of Practice for Energy Efficiency of Building Services Installation",
+        "edition": "BEC 2024",
+        "page": "Printed 18-19; PDF 24-25",
+        "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
+        "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
+        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_date": "2026-11-09",
+        "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
+        "clause_or_table": "5.6.1.4; scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
+      },
+      "applicable_when": [
+        {
+          "fact": "design_code",
+          "operator": "==",
+          "value": "BEC 2024"
+        },
+        {
+          "fact": "bec_section5_scope_confirmed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "space_use",
+          "operator": "==",
+          "value": "office"
+        },
+        {
+          "fact": "automatic_control_required_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "occupied_24_hours_7_days",
+          "operator": "==",
+          "value": false
+        },
+        {
+          "fact": "control_zone_mapping_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "control_zone_nonempty_reviewed",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "fact": "complete_fixed_lighting_power",
+          "operator": ">",
+          "value": 150,
+          "unit": "W"
+        },
+        {
+          "fact": "manual_override_installed",
+          "operator": "==",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Not a check of control existence, zone coverage, weekend/holiday logic, floor-sharing exceptions, manual control-point counts or daylight-responsive control.",
+    "Evaluate each explicitly mapped zone separately; missing optional-device facts remain unverified.",
+    "DIALux illuminance or LPD results do not prove actual control operation. Require control design, device configuration or commissioning evidence.",
+    "Scope exclusions are not findings that the entire installation is exempt or compliant."
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "design_code": {
+    "value": "BEC 2024",
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "bec_section5_scope_confirmed": {
+    "value": true,
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "space_use": {
+    "value": "office",
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "automatic_control_required_reviewed": {
+    "value": true,
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "occupied_24_hours_7_days": {
+    "value": false,
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "control_zone_mapping_reviewed": {
+    "value": true,
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "control_zone_nonempty_reviewed": {
+    "value": true,
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "occupant_sensors_deployed": {
+    "value": true,
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "manual_override_installed": {
+    "value": true,
+    "evidence": "Synthetic control-zone scope evidence"
+  },
+  "complete_fixed_lighting_power": {
+    "value": 151,
+    "unit": "W",
+    "evidence": "Synthetic complete fixed-load schedule"
+  }
+}

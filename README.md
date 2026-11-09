@@ -23,7 +23,7 @@ file does not establish complete native engineering acceptance.
 | Iteration | Two explicit candidates passed actual calculations, comparison and reopen checks. Generated four-candidate search remains under native verification; previous failures are retained. No global-optimum or automatic winner-installation claim. |
 | Drawing | Observed fixture coordinates, editable IDs, bounded label placement, linear dimensions, single-product schedule and fixed-paper frame/titleblock. Native DWG reopen and physical PDF scale checked on A3, A2 and 168-symbol A1 synthetic sheets. Mixed-product tables and general sheet composition remain unfinished. |
 | Results | Exact supported English room/scene summaries, direct working-plane minimum/maximum and explicitly scoped coordinate tables. Missing/ambiguous evidence is rejected; whole-project completeness is not inferred. |
-| Regulation | Replaceable source-bearing Hong Kong BEC office LPD and separately adopted Labour advisory modules. Project applicability remains explicit; these do not constitute comprehensive legal compliance. |
+| Regulation | Replaceable source-bearing Hong Kong BEC office LPD, selected-zone automatic-control numerical checks and separately adopted Labour advisory modules. Project applicability remains explicit; these do not constitute comprehensive legal compliance. |
 
 Detailed acceptance and retained failures are linked from the matrix. The latest
 notification-transition investigation is in
@@ -120,6 +120,8 @@ Regulation profiles remain separate from geometry and desktop control. Consult t
 [Hong Kong source register](docs/hk-source-register.md),
 [BEC office LPD scope](docs/hk-office-lpd.md) and
 [Labour desk-lighting advisory](docs/hk-desk-lighting.md).
+The separate [office automatic-control numerical module](docs/hk-automatic-control.md)
+requires control-zone evidence; illumination results cannot establish control operation.
 An empty or inapplicable evidence set does not pass. A supplied `verified` profile
 label is not independent verification of its authority or project applicability.
 Refresh cached official PDFs with `python scripts/cache_hk_sources.py`; downloading
