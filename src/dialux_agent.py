@@ -65,6 +65,7 @@ def main():
     room.add_argument('--output', required=True)
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
     commands.add_parser('report-read').add_argument('--path', required=True)
+    commands.add_parser('report-read-all').add_argument('--path', required=True)
     commands.add_parser('layout-plan').add_argument('--spec', required=True)
     apply_layout = commands.add_parser('layout-apply-grid')
     apply_layout.add_argument('--spec', required=True)
@@ -139,6 +140,7 @@ def main():
     report_check = commands.add_parser('report-check')
     report_check.add_argument('--path', required=True)
     report_check.add_argument('--profile', required=True)
+    report_check.add_argument('--summary-id', help='Exact room/scene ID from report-read-all')
     report_check.add_argument('--context', help='JSON object of evidenced applicability facts')
     args = parser.parse_args()
     try:
@@ -154,6 +156,8 @@ def main():
             result = _local_module('layout').verify_observed_layout(json.loads(Path(args.layout).read_text(encoding='utf-8')), json.loads(Path(args.observed).read_text(encoding='utf-8')))
         elif args.command == 'layout-apply-grid':
             result = _local_module('placement').apply_grid_layout(json.loads(Path(args.spec).read_text(encoding='utf-8')), args.expected_project, args.group_id, args.evidence_directory)
+        elif args.command == 'report-read-all':
+            result = _local_module('results').read_report_pdf(args.path)
         elif args.command == 'layout-plan':
             result = _local_module('layout').plan_grid(json.loads(Path(args.spec).read_text(encoding='utf-8')))
         elif args.command == 'drawing-convert':
@@ -198,9 +202,12 @@ def main():
             read_summary_pdf = _local_module('results').read_summary_pdf
             result = read_summary_pdf(args.path)
         elif args.command == 'report-check':
-            result = _local_module('workflow').check_report(
-                args.path, json.loads(Path(args.profile).read_text(encoding='utf-8-sig')),
-                json.loads(Path(args.context).read_text(encoding='utf-8-sig')) if args.context else None)
+            profile = json.loads(Path(args.profile).read_text(encoding='utf-8-sig'))
+            context = json.loads(Path(args.context).read_text(encoding='utf-8-sig')) if args.context else None
+            if args.summary_id:
+                result = _local_module('workflow').check_report_summary(args.path, args.summary_id, profile, context)
+            else:
+                result = _local_module('workflow').check_report(args.path, profile, context)
         elif args.command == 'criteria-check':
             evaluate_profile = _local_module('regulations').evaluate_profile
             result = evaluate_profile(

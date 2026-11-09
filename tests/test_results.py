@@ -4,7 +4,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-from results import parse_summary_pages, parse_report_pages, read_summary_pdf
+from results import parse_summary_pages, parse_report_pages, read_summary_pdf, parse_report_summaries, read_report_pdf
 
 
 @pytest.fixture
@@ -19,6 +19,29 @@ def test_actual_values_not_targets(pages):
     result = parse_summary_pages(pages)
     assert [r['value'] for r in result['measurements']] == [217, .41, 4.2]
     assert result['measurements'][0]['calculation_surface'] == 'WP7'
+
+
+def test_multi_room_scene_results_remain_separate_with_original_pages(pages):
+    other = [p.replace('Room R', 'Room X').replace('217 lx', '333 lx') for p in pages]
+    scene = [p.replace('scene\n2', 'scene\n3').replace('217 lx', '111 lx') for p in pages]
+    result = parse_report_summaries(['Cover']+pages+['Separator']+other+scene)
+    assert result['summary_count'] == 3
+    assert [r['summary_pages'] for r in result['summaries']] == [[2,3],[5,6],[7,8]]
+    assert [r['measurements'][0]['value'] for r in result['summaries']] == [217,333,111]
+    assert len({r['summary_id'] for r in result['summaries']}) == 3
+    for summary in result['summaries']:
+        assert all(r['summary_id']==summary['summary_id'] for r in summary['measurements'])
+    assert not result['complete_project_coverage_verified']
+
+
+@pytest.mark.parametrize('kind', ['duplicate', 'missing', 'mixed', 'separated'])
+def test_collection_rejects_ambiguous_pairing(pages, kind):
+    other = [p.replace('Room R', 'Room X') for p in pages]
+    if kind == 'duplicate': report = pages+pages
+    elif kind == 'missing': report = pages+[other[0]]
+    elif kind == 'mixed': report = [pages[0], other[1]]
+    else: report = pages+[other[0], 'interruption', other[1]]
+    with pytest.raises(ValueError): parse_report_summaries(report)
 
 
 def test_room_header_wrap_before_light_scene(pages):

@@ -11,6 +11,24 @@ import workflow
 from regulations import SOURCE_FIELDS
 
 
+def test_scoped_assessment_never_receives_other_room_measurements(monkeypatch):
+    first = {'summary_id':'one','measurements':[{'value':100}]}
+    second = {'summary_id':'two','measurements':[{'value':500}]}
+    report = {'source':'fixture.pdf','sha256':'fixture','summaries':[first,second]}
+    monkeypatch.setattr(workflow, 'read_report_pdf', lambda *a: report)
+    context = {'room_evidence':'only second room'}
+    def assess(profile, measurements, facts):
+        assert measurements is second['measurements']
+        assert facts is context
+        return {'status':'unverified'}
+    monkeypatch.setattr(workflow, 'evaluate_profile', assess)
+    result = workflow.check_report_summary('fixture.pdf', 'two', {}, context)
+    assert result['summary'] is second
+    assert not result['whole_project_assessed']
+    with pytest.raises(ValueError, match='not found'):
+        workflow.check_report_summary('fixture.pdf', 'missing', {}, context)
+
+
 @pytest.mark.parametrize('threshold,status', [(5, 'fail'), (10, 'pass')])
 def test_report_check_uses_profile_limits_and_retains_evidence(monkeypatch, threshold, status):
     measurement = {'metric': 'lighting_power_density', 'unit': 'W/m2',

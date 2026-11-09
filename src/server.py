@@ -7,8 +7,8 @@ if __package__:
     from .backend import create_room, inspect_stf
     from .dialux_agent import inventory, verify
     from .regulations import evaluate_profile
-    from .results import read_summary_pdf
-    from .workflow import check_report
+    from .results import read_summary_pdf, read_report_pdf
+    from .workflow import check_report, check_report_summary
     from .desktop import desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 else:
     from placement import apply_grid_layout
@@ -17,8 +17,8 @@ else:
     from backend import create_room, inspect_stf
     from dialux_agent import inventory, verify
     from regulations import evaluate_profile
-    from results import read_summary_pdf
-    from workflow import check_report
+    from results import read_summary_pdf, read_report_pdf
+    from workflow import check_report, check_report_summary
     from desktop import desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 
 server = MCPServer('DIALux-agent', instructions='Geometry tools do not run lighting calculations. Preserve source files; report unverified capabilities explicitly.')
@@ -36,7 +36,9 @@ server.tool()(inventory)
 server.tool()(verify)
 server.tool()(evaluate_profile)
 server.tool()(read_summary_pdf)
+server.tool()(read_report_pdf)
 server.tool()(check_report)
+server.tool()(check_report_summary)
 server.tool()(desktop_status)
 server.tool()(desktop_project_tree)
 server.tool()(desktop_group_fixtures)

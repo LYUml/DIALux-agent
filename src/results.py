@@ -68,6 +68,62 @@ def parse_report_pages(pages: list[str]) -> dict:
     return result
 
 
+def parse_report_summaries(pages: list[str]) -> dict:
+    """Keep recognized adjacent room/scene summaries separate; never aggregate them."""
+    selected = [(i, text) for i, text in enumerate(pages)
+                if re.search(SUMMARY_HEADER, text, re.MULTILINE)]
+    if not selected or len(selected) % 2:
+        raise ValueError('Expected complete adjacent two-page English room summaries')
+    summaries, seen = [], set()
+    for offset in range(0, len(selected), 2):
+        pair = selected[offset:offset+2]
+        if pair[1][0] != pair[0][0] + 1:
+            raise ValueError('Summary pages are not adjacent')
+        summary = parse_summary_pages([text for _, text in pair])
+        header = summary['room_scene_header']
+        if header in seen:
+            raise ValueError('Duplicate room/scene summary; report identity is ambiguous')
+        seen.add(header)
+        identity = hashlib.sha256(header.encode('utf-8')).hexdigest()
+        summary['summary_id'] = identity
+        summary['summary_pages'] = [i+1 for i,_ in pair]
+        for row in summary['measurements']:
+            row['page'] = pair[row['page']-1][0]+1
+            row['summary_id'] = identity
+            row['room_scene_header'] = header
+        summaries.append(summary)
+    return {'summaries': summaries, 'summary_count': len(summaries), 'document_pages': len(pages),
+            'complete_project_coverage_verified': False}
+
+
+def read_report_pdf(path: str) -> dict:
+    """Read supported room/scene summary pairs without mixing their measurements.
+
+    Recognized English summary pages only; not proof every room/scene is present.
+    Duplicate room/scene headers and incomplete pairs are rejected.
+    """
+    source = Path(path).resolve(strict=True)
+    if source.suffix.lower() != '.pdf':
+        raise ValueError('Expected a PDF report')
+    data = source.read_bytes()
+    digest = hashlib.sha256(data).hexdigest()
+    try:
+        with pdfplumber.open(BytesIO(data)) as pdf:
+            pages = [page.extract_text() or '' for page in pdf.pages]
+    except (PSException, PdfminerException) as exc:
+        raise ValueError(f'Unreadable or unsupported PDF: {type(exc).__name__}') from exc
+    result = parse_report_summaries(pages)
+    for summary in result['summaries']:
+        for row in summary['measurements']:
+            row['evidence'] = f'{source}#page={row["page"]};sha256={digest}'
+    result.update(schema='dialux-agent/report-results/v1', source=str(source), sha256=digest,
+                  compliance_status='not_evaluated', warnings=[
+                      'Only recognized English two-page summaries are parsed; project coverage is unverified.',
+                      'Room/scene identities are normalized report headers, not native project object IDs.',
+                      'Values are neither authenticated nor a compliance conclusion; no room or scene aggregation performed.'])
+    return result
+
+
 def read_summary_pdf(path: str) -> dict:
     """Extract one tested English room Summary, including inside a full PDF report."""
     source = Path(path).resolve(strict=True)
