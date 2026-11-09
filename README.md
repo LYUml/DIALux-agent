@@ -127,7 +127,7 @@ The [concave native validation](docs/concave-room-validation.md) exercises offse
 
 Native plotting optionally supports an explicit A3 fixed scale, verified against the exported PDF vector outline rather than its label alone. See [fixed-scale usage, Autodesk references and native 1:50 evidence](docs/fixed-scale-plots.md).
 
-The [large-project checkpoint](docs/large-project-validation.md) exercises a synthetic 1020 m² / 168-luminaire native calculation. Fixture inspection now uses UIA ItemContainer/VirtualizedItem patterns instead of assuming that visible WPF rows are the complete group. First/last/back reads passed; the full paginated scan is tracked separately and must not be inferred from those samples.
+The [large-project checkpoint](docs/large-project-validation.md) exercises a synthetic 1020 m² / 168-luminaire native calculation. Fixture inspection now uses UIA ItemContainer/VirtualizedItem patterns instead of assuming that visible WPF rows are the complete group. A complete persistent-worker scan subsequently collected all 168 fixtures in 42 hashed pages; public offline verification matched every position/rotation to the synthetic grid, and UI XYZ matched the independently parsed native PDF table. This remains one group, not whole-project acceptance.
 
 `group-inspection-checkpoint` / MCP `inspect_group_checkpoint` collects one explicitly counted native fixture group in a single worker, with hashed page evidence and a durable failure journal. See [operation and limits](docs/group-inspection-checkpoints.md).
 
