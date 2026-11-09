@@ -21,3 +21,8 @@ dwg2ifc — https://github.com/ZOdiaKTN/dwg2ifc. Experimental single-storey orth
 ## Live evidence, 2026-11-08
 
 Installed evo 14.1 reaches logged-in start screen. UI exposes StartRoomPlanning, StartImportPlan, StartNewProject and LoadProjectButton automation IDs. Subsequent real project/calculation gates are documented in `live-validation-2026-11-08.md` and `desktop-adapter.md`. Minimized windows must be activated before snapshot capture. Select target by executable, not title substring (browser titles may also include DIALux).
+
+
+## Explicit grid planner extension
+
+The vendored `dialux/luminarias.py` was reviewed before implementing `src/layout.py`. Its `reticula` places a requested count into bounding-box subdivisions and clips center points. It does not provide an externally anchored/rotated ceiling grid, full fixture footprint containment or polygonal keep-out regions. The new module addresses those distinct requirements using the already installed Shapely library, while leaving the upstream implementation and MIT notice unchanged. It does not replace the upstream STF serializer or claim photometric optimization. Synthetic tests cover footprint containment, exclusions, transform invariance and invalid inputs.

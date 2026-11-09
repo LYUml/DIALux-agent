@@ -1,0 +1,9 @@
+{
+  "units": "m",
+  "contour": [[0,0],[12,0],[12,6],[6,6],[6,9],[0,9]],
+  "exclusions": [[[2,2],[4,2],[4,4],[2,4]]],
+  "grid": {"origin_m": [0.9,0.9], "spacing_x_m": 1.8, "spacing_y_m": 1.8, "rotation_deg": 0},
+  "fixture": {"product_id": "SYNTHETIC-TEST-PANEL", "width_m": 0.6, "depth_m": 0.6, "mounting_height_m": 3.0},
+  "clearance_m": 0.15,
+  "assumptions": ["Synthetic L-shaped geometry and keep-out region for tool verification only; not an assignment design or a manufacturer product."]
+}

@@ -1,6 +1,7 @@
 """stdio MCP sharing the same validated backend as the CLI."""
 from mcp.server.mcpserver import MCPServer
 if __package__:
+    from .layout import plan_grid
     from .cad import drawing_convert, drawing_inspect
     from .backend import create_room, inspect_stf
     from .dialux_agent import inventory, verify
@@ -9,6 +10,7 @@ if __package__:
     from .workflow import check_report
     from .desktop import desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 else:
+    from layout import plan_grid
     from cad import drawing_convert, drawing_inspect
     from backend import create_room, inspect_stf
     from dialux_agent import inventory, verify
@@ -19,6 +21,7 @@ else:
 
 server = MCPServer('DIALux-agent', instructions='Geometry tools do not run lighting calculations. Preserve source files; report unverified capabilities explicitly.')
 server.tool()(create_room)
+server.tool()(plan_grid)
 server.tool()(drawing_convert)
 server.tool()(drawing_inspect)
 server.tool()(inspect_stf)

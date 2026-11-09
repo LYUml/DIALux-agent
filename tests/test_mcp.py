@@ -14,7 +14,7 @@ def test_real_stdio_tools(tmp_path):
             async with ClientSession(read,write,read_timeout_seconds=15) as session:
                 await session.initialize()
                 listing=await session.list_tools()
-                assert {'create_room','inspect_stf','inventory','evaluate_profile','read_summary_pdf','check_report','desktop_status','desktop_save','desktop_calculate','desktop_open','desktop_launch','desktop_import_stf','desktop_save_as','desktop_import_luminaire','desktop_arrange_space','desktop_export_pdf'} <= {t.name for t in listing.tools}
+                assert {'create_room','inspect_stf','inventory','evaluate_profile','read_summary_pdf','check_report','desktop_status','desktop_save','desktop_calculate','desktop_open','desktop_launch','desktop_import_stf','desktop_save_as','desktop_import_luminaire','desktop_arrange_space','desktop_export_pdf','drawing_convert','drawing_inspect','plan_grid'} <= {t.name for t in listing.tools}
                 spec=json.loads((ROOT/'examples/validation-room.json').read_text())
                 path=tmp_path/'mcp-room.stf'
                 result=await session.call_tool('create_room',{'spec':spec,'output':str(path)})

@@ -84,3 +84,9 @@ Commit convention: `YYYY-MM-DD English change description`, matching polyu_bse31
 ## Latest verification
 
 2026-11-09: 102 Python tests and 8 historical adapter tests passed; 21 local artifact/source hashes matched; both assignment originals were unchanged; the distributed skill passed validation. The final native fixture is `local/acceptance-project-v9.evo`, with report `local/acceptance-v9.pdf` and reopened comparison `local/acceptance-v9-reopened.pdf`. Read the acceptance document before applying the prototype to other projects or DIALux versions.
+
+## Agent-only capability expansion
+
+The current development phase is agent-only; assignment production requires a separate user instruction. See [scope](docs/agent-development-scope.md). `drawing-convert --path <source.dwg> --output-directory <new-directory>` uses installed AutoCAD Core Console on a copied input and verifies the original hash. `drawing-inspect --path <export.dxf>` inventories units, entities, text and candidate grid polygons without inferring room boundaries.
+
+`layout-plan --spec examples/synthetic-grid-layout.json` / MCP `plan_grid(spec)` generates explicit fixture positions and footprints on a rotated, anchored grid inside a supplied polygon, excluding keep-out regions. It reuses Shapely geometry operations. The example is a synthetic L-shaped tool test, not an assignment design. Output provides fixture IDs, grid indices, source-spec hash and rejection counts; it performs no lighting simulation. Applying this layout to DIALux and sharing it with native CAD output are subsequent tool-development gates.

@@ -65,6 +65,7 @@ def main():
     room.add_argument('--output', required=True)
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
     commands.add_parser('report-read').add_argument('--path', required=True)
+    commands.add_parser('layout-plan').add_argument('--spec', required=True)
     cad = commands.add_parser('drawing-convert')
     cad.add_argument('--path', required=True)
     cad.add_argument('--output-directory', required=True)
@@ -108,7 +109,9 @@ def main():
     report_check.add_argument('--context', help='JSON object of evidenced applicability facts')
     args = parser.parse_args()
     try:
-        if args.command == 'drawing-convert':
+        if args.command == 'layout-plan':
+            result = _local_module('layout').plan_grid(json.loads(Path(args.spec).read_text(encoding='utf-8')))
+        elif args.command == 'drawing-convert':
             result = _local_module('cad').drawing_convert(args.path, args.output_directory, args.executable)
         elif args.command == 'drawing-inspect':
             result = _local_module('cad').drawing_inspect(args.path, args.grid_layer)
