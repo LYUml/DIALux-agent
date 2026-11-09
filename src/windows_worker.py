@@ -574,7 +574,13 @@ def arrange_room(app, main, process, expected_project, parameters):
         temporary.replace(directory / 'journal.json')
     record()
     try:
-        journal['room_selection'] = room_context(app, main, process, str(expected), parameters['room_name'])
+        menus = [c for c in main.descendants(control_type='Menu')
+                 if c.element_info.automation_id == 'Menu_RoomContextSelectionButton' and c.is_visible()]
+        if menus:
+            journal['room_selection'] = room_context(app, main, process, str(expected), parameters['room_name'])
+        else:
+            journal['room_selection'] = singleton_room_context(
+                app, main, process, str(expected), parent, parameters['room_name'])
         select_lighting_tool(main, 'LuminaireArrangementTool')
         if parameters['product_id'] not in [c.window_text() for c in main.descendants(control_type='Text') if c.is_visible()]:
             raise ValueError('Expected active product is not visible')
@@ -715,6 +721,41 @@ def project_tree(app, main, process, expected_project, expand_id=None):
     return {'operation': 'project_tree', 'path': str(expected), 'items': records,
             'search_text': search, 'complete_inventory': False, 'uses_codex_computer_use': False,
             'warning': 'Only realized UIA nodes are listed; collapsed, filtered or virtualized nodes may be absent. IDs can change after renaming or count edits.'}
+
+
+def singleton_room_context(app, main, process, expected_project, luminaire_parent, room_name):
+    """Select the sole enumerated room when DIALux exposes no room menu.
+
+    This is selection evidence, not proof of placement scope. The caller must
+    still verify every new fixture and preservation of previous groups.
+    """
+    if not luminaire_parent.endswith('_Luminaires'):
+        raise ValueError('Expected storey Luminaires parent')
+    parent = luminaire_parent[:-len('_Luminaires')] + '_Rooms and spaces'
+    inventory = project_tree(app, main, process, expected_project, parent)
+    if inventory['search_text']:
+        raise ValueError('Cannot select a room from a filtered tree')
+    tree = wait_control(main, 'List', 'FilterTreeListBox')
+    rooms = [e for e in container_elements(tree) if e.CurrentAutomationId.startswith(parent + '_')]
+    if len(rooms) != 1:
+        raise ValueError('Menu absent and expanded room container is not a singleton')
+    element = rooms[0]
+    identity, runtime = element.CurrentAutomationId, list(element.GetRuntimeId())
+    item = materialize_tree_item(element)
+    labels = [c.window_text() for c in item.descendants(control_type='Text')
+              if c.element_info.automation_id == '_textBlock']
+    if labels != [room_name] or item.element_info.automation_id != identity or list(item.element_info.runtime_id) != runtime:
+        raise ValueError('Singleton room identity or exact label differs')
+    item.select()
+    if not item.is_selected():
+        raise ValueError('Singleton room selection not observed')
+    unique_control(main, 'Button', 'ToggleButton_RoomContextSelectionButton').click_input()
+    prepare_project(app, main, process, expected_project)
+    return {'operation': 'room_context', 'selection_method': 'singleton_native_container',
+            'path': str(Path(expected_project).resolve()), 'tree_item_id': identity,
+            'runtime_id': runtime, 'requested_room': room_name, 'selection_invoked': True,
+            'active_room_verified': False, 'uses_codex_computer_use': False,
+            'warning': 'Sole room in the expanded storey container selected; verify resulting geometry separately.'}
 
 
 def room_context(app, main, process, expected_project, room_name=None):

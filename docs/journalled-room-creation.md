@@ -4,7 +4,7 @@
 
 Request fields:
 
-- `room_name`: exact label in the native room context menu.
+- `room_name`: exact label in the native room context menu or verified singleton room container.
 - `group_name`: new name, 1–40 plain ASCII letters/digits/spaces/._-.
 - `product_id`: expected visible active luminaire product identifier; import photometry separately.
 - `parent_id`: exact native storey `_Luminaires` tree node.
@@ -15,7 +15,9 @@ The worker recovers Lighting mode, expands the parent, rejects filtered or unexp
 
 A successful return is `created_unverified`. Read the new group's fixture coordinates in active-storey context and compare against the intended room geometry. Reinspect previous groups for unwanted geometry changes. Save, reopen and calculate separately. The room menu has no verified selected-state readback; realized UI nodes are not a complete native inventory. Neither room containment, fixture photometry identity nor existing-group geometry is proved by the creation return.
 
-Failures retain the journal, including `failed_at` when the worker catches the exception. Worker termination can leave a pending state. Never automatically retry creation after failure or timeout, even with a different evidence directory; inspect the live project and journal first. An existing evidence directory is rejected before UI access. This is not automatic rollback, resume or cross-process locking. Do not run desktop mutations concurrently.
+When the native room menu is absent, the worker expands the same storey's `Rooms and spaces` container and enumerates its native ItemContainer. It proceeds only with exactly one descendant, an exact requested room label and matching runtime identity. It selects that item, checks native selection, activates the room-context button, and rechecks the project guard. Filtered trees, multiple descendants and mismatched identities fail before activation. This fallback does not infer that a missing menu proves a single-room project, and does not claim active-room readback or complete project geometry. Expanded child nodes can conservatively prevent the singleton fallback.
+
+Failures retain the journal, including `failed_at` when the worker catches the exception. Worker termination can leave a pending state. Never automatically retry creation after failure or timeout, even with a different evidence directory; inspect the live project and journal first. An existing evidence directory is rejected before UI access. There is no automatic rollback or resume. The worker holds the shared desktop mutex, which excludes cooperating workers but cannot prevent human input or other automation.
 
 The original `desktop-arrange-space` keeps its conservative existing-content guard. The new command is an explicit, journalled multi-room alternative, not a relaxation of that guard.
 
