@@ -11,6 +11,36 @@ import desktop
 import windows_worker
 
 
+@pytest.mark.parametrize('runtime,prior,target', [
+    ([], [1,2,3], [2,3,4]), ([True], [1,2,3], [2,3,4]),
+    ([1], [1,2], [2,3,4]), ([1], [1,2,3], [2,3,float('inf')]),
+    ([1], [1,2,3], [2,3,True])])
+def test_fixture_edit_invalid_identity_or_geometry_never_touches_ui(runtime, prior, target, monkeypatch):
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
+    with pytest.raises(ValueError):
+        windows_worker.edit_fixture(None, None, None, 'test.evo',
+                                    {'runtime_id':runtime, 'expected_position_m':prior, 'position_m':target})
+
+
+def test_fixture_stale_position_rejected_before_clearing_results(monkeypatch):
+    node = SimpleNamespace(element_info=SimpleNamespace(runtime_id=(7,1,2)),
+                           is_visible=lambda: True, select=lambda: None, is_selected=lambda: True)
+    tree = SimpleNamespace(descendants=lambda **k: [node])
+    def control(parent, kind, identity):
+        if identity == 'DiscardResultsButton': pytest.fail('Cleared results before validating position')
+        if kind == 'TabItem': return SimpleNamespace(select=lambda: None)
+        if kind == 'List': return tree
+        if kind == 'Edit': return SimpleNamespace(get_value=lambda: '2.0')
+        pytest.fail('Unexpected control')
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: (Path('test.evo'),
+                        {'controls': {'DiscardResultsButton': {'enabled': True}}}))
+    monkeypatch.setattr(windows_worker, 'unique_control', control)
+    monkeypatch.setattr(windows_worker, 'wait_control', control)
+    with pytest.raises(ValueError, match='changed since inspection'):
+        windows_worker.edit_fixture(None, None, None, 'test.evo',
+                                    {'runtime_id':[7,1,2], 'expected_position_m':[1,1,1], 'position_m':[3,3,3]})
+
+
 def test_tree_identity_with_quotes_survives_worker_transport(monkeypatch):
     identity = 'Building_"Test"_Luminaires'
     monkeypatch.setattr(desktop.sys, 'platform', 'win32')

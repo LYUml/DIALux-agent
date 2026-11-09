@@ -8,7 +8,7 @@ if __package__:
     from .regulations import evaluate_profile
     from .results import read_summary_pdf
     from .workflow import check_report
-    from .desktop import desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
+    from .desktop import desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 else:
     from layout import plan_grid, verify_observed_layout
     from cad import drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native
@@ -17,7 +17,7 @@ else:
     from regulations import evaluate_profile
     from results import read_summary_pdf
     from workflow import check_report
-    from desktop import desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
+    from desktop import desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 
 server = MCPServer('DIALux-agent', instructions='Geometry tools do not run lighting calculations. Preserve source files; report unverified capabilities explicitly.')
 server.tool()(create_room)
@@ -36,6 +36,7 @@ server.tool()(check_report)
 server.tool()(desktop_status)
 server.tool()(desktop_project_tree)
 server.tool()(desktop_group_fixtures)
+server.tool()(desktop_edit_fixture)
 server.tool()(desktop_edit_arrangement)
 server.tool()(desktop_save)
 server.tool()(desktop_calculate)

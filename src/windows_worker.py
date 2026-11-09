@@ -496,6 +496,63 @@ def read_group_fixtures(app, main, process, expected_project, group_id):
             'warning': 'UI-displayed coordinates, rounded by DIALux. Runtime IDs are session-local, not persistent fixture IDs. Hidden/virtualized nodes may be absent.'}
 
 
+def edit_fixture(app, main, process, expected_project, parameters):
+    """Move one realized fixture with session identity and prior-position guards."""
+    import math
+    if not isinstance(parameters, dict) or set(parameters) != {'runtime_id', 'expected_position_m', 'position_m'}:
+        raise ValueError('Expected runtime_id, expected_position_m and position_m')
+    runtime = parameters['runtime_id']
+    if not isinstance(runtime, list) or not runtime or any(type(n) is not int for n in runtime):
+        raise ValueError('runtime_id must be a nonempty integer list from current inspection')
+    for key in ('expected_position_m', 'position_m'):
+        vector = parameters[key]
+        if not isinstance(vector, list) or len(vector) != 3 or any(
+                isinstance(n, bool) or not isinstance(n, (float, int)) or not math.isfinite(n) for n in vector):
+            raise ValueError('Positions require three finite numbers in metres')
+    expected, state = prepare_project(app, main, process, expected_project)
+    fields = ['PositionVectorControl_' + axis for axis in 'XYZ']
+    def select_and_read():
+        unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+        tree = wait_control(main, 'List', 'FilterTreeListBox')
+        matches = [c for c in tree.descendants(control_type='ListItem')
+                   if list(c.element_info.runtime_id) == runtime]
+        if len(matches) != 1 or not matches[0].is_visible():
+            raise ValueError('Fixture runtime identity is stale, ambiguous or not visible')
+        matches[0].select()
+        if not matches[0].is_selected():
+            raise ValueError('Fixture selection failed')
+        unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+        current = [float(wait_control(main, 'Edit', key).get_value()) for key in fields]
+        if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(current, parameters['expected_position_m'])):
+            raise ValueError('Fixture position changed since inspection; no movement attempted')
+        return current
+    before = select_and_read()
+    if state['controls']['DiscardResultsButton']['enabled']:
+        unique_control(main, 'Button', 'DiscardResultsButton').click()
+        time.sleep(.4)
+        if snapshot(app, main, process)['dialogs']:
+            raise ValueError('Dialog clearing results; movement not attempted')
+        select_and_read()
+    for key, value, old in zip(fields, parameters['position_m'], before):
+        if math.isclose(value, old, rel_tol=0, abs_tol=1e-10):
+            continue
+        control = unique_control(main, 'Edit', key)
+        if not control.is_enabled() or control.iface_value.CurrentIsReadOnly:
+            raise ValueError('Fixture position is not editable; partial movement possible')
+        control.set_focus()
+        control.type_keys('^a' + format(value, '.12g') + '{TAB}', set_foreground=False)
+        time.sleep(1)
+        if snapshot(app, main, process)['dialogs']:
+            raise ValueError('Dialog during fixture movement; inspect before retry')
+    after = [float(unique_control(main, 'Edit', key).get_value()) for key in fields]
+    if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(after, parameters['position_m'])):
+        raise ValueError('Fixture movement readback differs; partial movement possible')
+    return {'operation': 'edit_fixture', 'path': str(expected), 'runtime_id': runtime,
+            'before_position_m': before, 'after_position_m': after, 'native_project_saved': False,
+            'uses_codex_computer_use': False, 'other_fixtures_verified': False,
+            'warning': 'Selected native coordinate fields committed. Independently inspect all fixtures and save/reopen before accepting the layout.'}
+
+
 def edit_arrangement(app, main, process, expected_project, parameters):
     """Edit an exact visible tree item, then read committed native parameters."""
     import math
@@ -606,7 +663,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -617,7 +674,7 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
@@ -633,6 +690,8 @@ def main():
             result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
         elif args.action == 'arrange-space':
             result = arrange_space(app, window, process, args.expected_project, args.product_id)
+        elif args.action == 'edit-fixture':
+            result = edit_fixture(app, window, process, args.expected_project, json.loads(args.parameters))
         elif args.action == 'group-fixtures':
             result = read_group_fixtures(app, window, process, args.expected_project, json.loads(args.parameters))
         elif args.action == 'project-tree':

@@ -25,7 +25,7 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--parameters', json.dumps(parameters, allow_nan=False)]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=75 if action in {'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
+                             timeout=75 if action in {'edit-fixture', 'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -128,3 +128,13 @@ def desktop_group_fixtures(expected_project: str, group_id: str) -> dict:
     Does not claim a complete inventory; runtime IDs are valid only in this session.
     """
     return _run('group-fixtures', expected_project, parameters=group_id)
+
+
+def desktop_edit_fixture(expected_project: str, runtime_id: list[int], expected_position_m: list[float], position_m: list[float]) -> dict:
+    """Move one inspected native fixture. Requires current session ID and prior XYZ.
+
+    Clears cached results. Failure may leave partial movement; inspect before retry.
+    Does not save, verify other fixtures, or guarantee boundary containment.
+    """
+    return _run('edit-fixture', expected_project, parameters={'runtime_id': runtime_id,
+                'expected_position_m': expected_position_m, 'position_m': position_m})

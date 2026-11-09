@@ -88,6 +88,9 @@ def main():
     edit_arrangement.add_argument('--expected-project', required=True)
     edit_arrangement.add_argument('--tree-item-id', required=True)
     edit_arrangement.add_argument('--values', required=True, help='Path to JSON parameter object')
+    fixture_edit = commands.add_parser('desktop-edit-fixture')
+    fixture_edit.add_argument('--expected-project', required=True)
+    fixture_edit.add_argument('--parameters', required=True, help='JSON file with runtime_id, expected_position_m and position_m')
     fixtures = commands.add_parser('desktop-group-fixtures')
     fixtures.add_argument('--expected-project', required=True)
     fixtures.add_argument('--group-id', required=True)
@@ -146,6 +149,8 @@ def main():
             result = _local_module('cad').drawing_inspect(args.path, args.grid_layer)
         elif args.command == 'desktop-edit-arrangement':
             result = _local_module('desktop').desktop_edit_arrangement(args.expected_project, args.tree_item_id, json.loads(Path(args.values).read_text(encoding='utf-8')))
+        elif args.command == 'desktop-edit-fixture':
+            result = _local_module('desktop').desktop_edit_fixture(args.expected_project, **json.loads(Path(args.parameters).read_text(encoding='utf-8')))
         elif args.command == 'desktop-group-fixtures':
             result = _local_module('desktop').desktop_group_fixtures(args.expected_project, args.group_id)
         elif args.command == 'desktop-project-tree':
