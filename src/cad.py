@@ -11,10 +11,12 @@ import ezdxf
 from ezdxf import bbox
 
 if __package__:
+    from .cad_symbols import fixture_block_records, compare_fixture_blocks
     from .cad_schedule import schedule_records
     from .cad_labels import place_fixture_labels
     from .cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
 else:
+    from cad_symbols import fixture_block_records, compare_fixture_blocks
     from cad_schedule import schedule_records
     from cad_labels import place_fixture_labels
     from cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
@@ -235,8 +237,8 @@ def verify_layout_native(path: str, output_directory: str,
                          executable: str = 'C:/Program Files/Autodesk/AutoCAD 2027/accoreconsole.exe') -> dict:
     """Save a synthetic DXF as native DWG, reopen it and compare fixture records.
 
-    This verifies identity, insertion coordinates, rotation and scale, not plotting
-    or block-shape fidelity. All writes stay in a new output directory.
+    This verifies insertion records and supported LINE/LWPOLYLINE block shapes,
+    not plotting. All writes stay in a new output directory.
     """
     source = Path(path).resolve(strict=True)
     core = Path(executable).resolve(strict=True)
@@ -244,6 +246,7 @@ def verify_layout_native(path: str, output_directory: str,
     if source.suffix.lower() != '.dxf' or core.name.lower() != 'accoreconsole.exe':
         raise ValueError('Expected DXF and installed accoreconsole.exe')
     before = _fixture_records(source)
+    blocks_before = fixture_block_records(source)
     dimensions_before = dimension_records(source)
     schedule_before = schedule_records(source)
     sheet_before = schedule_records(source,'SHEET')
@@ -270,6 +273,8 @@ def verify_layout_native(path: str, output_directory: str,
         raise ValueError('Native save failed; inspect save.log')
     reopened = drawing_convert(str(native), str(destination / 'reopened'), str(core))
     after = _fixture_records(Path(reopened['dxf']))
+    blocks_after = fixture_block_records(Path(reopened['dxf']))
+    compare_fixture_blocks(blocks_before, blocks_after)
     dimensions_after = dimension_records(Path(reopened['dxf']))
     compare_dimensions(dimensions_before, dimensions_after)
     if schedule_records(Path(reopened['dxf'])) != schedule_before:
@@ -294,7 +299,9 @@ def verify_layout_native(path: str, output_directory: str,
                 'dimension_count': len(dimensions_after), 'dimension_records_verified': True,
                 'schedule_entity_count': len(schedule_before), 'schedule_records_verified': True,
                 'sheet_entity_count':len(sheet_before), 'sheet_records_verified':True,
-                'native_reopen_verified': True, 'block_shapes_verified': False,
+                'native_reopen_verified': True, 'block_shapes_verified': True,
+                'verified_block_names': sorted(blocks_before),
+                'source_block_records': blocks_before, 'reopened_block_records': blocks_after,
                 'print_verified': False, 'reopen_evidence': reopened}
     (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
     return evidence
