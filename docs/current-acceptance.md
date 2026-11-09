@@ -17,6 +17,18 @@ Updated 2026-11-09. **Agent development only**: no BSE3125 design/submission wor
 | Failure handling / long operations | `grid-application.md`, `src/desktop_lock.py`, `src/inspection.py` | Unknown dialogs, stale identities, duplicate/partial evidence and overlapping cooperating workers rejected; journals retained. A separately inspected six-fixture partial-write recovery passed full geometry readback, fresh calculation and save/reopen report comparison after explicit-focus commits. No general automatic resume/rollback. Large interrupted-mutation recovery is not yet accepted. |
 | Reuse and upstream improvement | `upstream-review.md`, vendored pinned MIT sources | STF geometry, box serialization, reading and shared-wall splitting reused unchanged. Added independent native execution, guarded movements and stronger output evidence. The comparison below is scoped to reviewed pinned sources, not an assertion about every upstream branch or future release. |
 
+## Static report packaging gate
+
+The independent `src.pdf_bundle` module reuses installed PDFium page import and
+rendering. A synthetic native CAD sheet plus two pages from its matching DIALux
+report passed source/output page text, size and 72-dpi rendering comparisons and
+visual review. Source-pinned selections, main-page/byte limits, wrong-page import,
+source changes during assembly and real-form refusal are covered; see
+[pdf-bundles.md](pdf-bundles.md). This does not author a report, verify engineering
+content or accept interactive document features. Main CLI/MCP registration remains
+pending. The complete offline suite passed 566 tests after this addition; that
+result does not close any remaining native acceptance gate.
+
 ## Comparison with reviewed pinned upstream modules
 
 The baseline is MCP_Dialux commit `4489032e67cabe0d409819fad24f091128620a9d`, with MIT license retained. This is not a timed head-to-head benchmark or a claim to dominate every upstream capability.

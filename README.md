@@ -21,7 +21,7 @@ file does not establish complete native engineering acceptance.
 | Geometry | Concave and adjacent synthetic rooms, ground-supported box obstacles, source-preserving DWG survey and explicitly selected DXF boundary extraction. General CAD room inference and arbitrary object topology are not established. |
 | Fixture control | Six-fixture explicit grid movement and 168-fixture regular-array translation passed full position checks, calculation and persistence. A six-fixture 5° native rotation also passed those gates. Arbitrary large individual movement and general recovery remain unaccepted. |
 | Iteration | Two explicit candidates passed actual calculations, comparison and reopen checks. A generated four-candidate domain also passed calculation, comparison and reopen checks; previous failures are retained. No global-optimum or automatic winner-installation claim. |
-| Drawing | Observed fixture coordinates, editable IDs, bounded label placement, linear dimensions, single-product schedule and fixed-paper frame/titleblock. Native DWG reopen and physical PDF scale checked on A3, A2 and 168-symbol A1 synthetic sheets. Mixed-product tables and general sheet composition remain unfinished. |
+| Drawing | Observed fixture coordinates, editable IDs, bounded label placement, linear dimensions, single-product schedule and fixed-paper frame/titleblock. Native DWG reopen and physical PDF scale checked on A3, A2 and 168-symbol A1 synthetic sheets. Mixed-product symbols/tables passed one five-fixture native A3 case; general sheet composition remains unfinished. |
 | Results | Exact supported English room/scene summaries, direct working-plane minimum/maximum and explicitly scoped coordinate tables. Missing/ambiguous evidence is rejected; whole-project completeness is not inferred. |
 | Regulation | Replaceable source-bearing Hong Kong BEC office LPD, selected-zone automatic-control numerical checks and separately adopted Labour advisory modules. Project applicability remains explicit; these do not constitute comprehensive legal compliance. |
 
@@ -85,6 +85,22 @@ a complete observed array can reach a target grid by one translation/rotation.
 It does not execute that movement. The separate
 [native 5° rotation test](docs/native-array-rotation.md) has scoped readback,
 calculation and reopen evidence.
+
+## Offline evidence and PDF packaging
+
+Two standalone module commands are available in addition to the main CLI:
+
+```powershell
+.\.venv\Scripts\python.exe -m src.array_audit --evidence-directory local/completed-array/execution
+.\.venv\Scripts\python.exe -m src.pdf_bundle --request local/bundle-request.json
+```
+
+Use an actual completed execution folder and an explicit bundle request; these
+paths are placeholders. [Array replay](docs/guarded-array-execution.md) verifies
+retained evidence without accessing the desktop. [PDF bundles](docs/pdf-bundles.md)
+preserve explicitly selected static pages, enforce page/byte limits and compare
+source/output page text, dimensions and 72-dpi rendering. Neither tool validates
+engineering conclusions. Registration in the main CLI/MCP remains pending.
 
 ## MCP and AI skill
 
