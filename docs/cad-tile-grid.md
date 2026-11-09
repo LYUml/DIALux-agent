@@ -35,3 +35,26 @@ noise changed the selected bottom-row anchor or canonical axes. The reader now
 treats bottom-row coordinates within its linear tolerance as one row and snaps
 quarter-turn angle round-off below 1e-12 radians. A synthetic 2800-tile layer
 checks complete handle-to-cell coverage. Full suite after this repair: 625 passed.
+
+## Native AutoCAD round trip
+
+On 2026-11-09, AutoCAD 2027 Core Console saved a synthetic 70 by 40 tile DXF
+as a native DWG. The existing `drawing_convert` tool reopened a copy of that DWG
+and exported DXF. Each tile was 600 by 300 mm, rotated 23 degrees in drawing WCS;
+the explicit storey transform used origin (10,20) m and rotation 13 degrees.
+Both extracted grids had the same 2800 integer cells, metre spacing and origin,
+and 10-degree rotation (numeric comparisons within 1e-8). Native INSUNITS was 4.
+The original DXF hash remained unchanged. Core Console used no desktop pointer.
+
+Local evidence: `local/tile-grid-native-v1/evidence.json`, SHA-256
+`ed01f42409293a99570c4ac0b3073bc76fe5224b30041a28cb76147bbbb19815`.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Original synthetic DXF | `ee9ef63067d7974ed08424888e4c5a48c276413ba9cd939bae110b196c222e62` |
+| Native DWG | `70bcc63bb9c151230daa4270b4e3d41fda59adb4249065b8f34cc98d9c2061b6` |
+| Reopened/exported DXF | `b534c66c134fda7b63ce3126329e39b79dfa1e1509d5518be6e09fe48c773550` |
+
+This closes the bounded native serialization/readback check for this tile case.
+It does not prove visual plotting, arbitrary ceiling geometry, semantic layer
+selection or fixture placement. No assignment source was used in this test.
