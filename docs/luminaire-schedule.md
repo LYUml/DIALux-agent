@@ -42,3 +42,11 @@ room, without clipping. PDF SHA256:
 `6ab49dd4e745a0c1f01e200162c28b8f4d34d446d6ea2a738cceeb8b4367ad72`.
 This is a tool-test sheet, not an assignment or complete electrical load schedule.
 
+Numeric table columns now expand using ezdxf font measurements with padding,
+preserving the full supplied numeric text. Unknown CAD text escapes and control
+characters are refused rather than silently interpreted. Font measurements are
+not a substitute for native plotting or proof of all sheet-layout clearances.
+The updated six-fixture output again passed native reopen and A3 1:50 checks;
+`local/scheduled-plot-v2/layout.pdf` was visually inspected, with SHA256
+`0264fcdcb03a49f2e7da37becd6b845f1335c5f9c5fa5cdb6afd6e1a01810855`.
+
