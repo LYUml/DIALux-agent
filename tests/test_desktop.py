@@ -51,6 +51,50 @@ def test_unknown_dialog_identity_is_retained_for_diagnosis(tmp_path, monkeypatch
         windows_worker.prepare_project(None,None,None,str(path))
 
 
+def saved_toast(path):
+    return {'title':'','automation_id':'','class':'Popup','children':[
+        {'type':'Text','text':f'The project has been saved at {path}.'},
+        {'type':'Text','text':'Show in the Explorer'},
+        *[{'type':'Button','text':v} for v in ('','Delete','Show in the Explorer')]]}
+
+
+def test_save_toast_waits_without_clicking_and_rejects_other_project(tmp_path,monkeypatch):
+    path=tmp_path/'test.evo'
+    toast=saved_toast(path)
+    assert windows_worker.is_saved_notification(toast,path)
+    assert not windows_worker.is_saved_notification(toast,tmp_path/'other.evo')
+    state={'dialogs':[toast]}
+    after={'dialogs':[]}
+    calls=[]
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:calls.append(True) or after)
+    monkeypatch.setattr(windows_worker.time,'sleep',lambda *a:None)
+    monkeypatch.setattr(windows_worker,'unique_control',lambda *a:pytest.fail('Clicked notification'))
+    assert windows_worker.wait_saved_notification(None,None,None,path,state) is after
+    assert calls==[True]
+    calls.clear()
+    assert windows_worker.wait_saved_notification(None,None,None,tmp_path/'other.evo',state) is state
+    assert not calls
+
+
+def test_toast_wait_never_hides_an_additional_unknown_dialog(tmp_path,monkeypatch):
+    path=tmp_path/'test.evo'
+    state={'dialogs':[saved_toast(path),{'class':'Window'}]}
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:pytest.fail('Waited through unknown dialog'))
+    assert windows_worker.wait_saved_notification(None,None,None,path,state) is state
+
+
+def test_toast_wait_is_bounded_and_project_is_rechecked(tmp_path,monkeypatch):
+    path=tmp_path/'test.evo'; path.write_bytes(b'fixture')
+    state={'title':str(path)+' - DIALux evo 14.1','dialogs':[saved_toast(path)]}
+    clock=iter([0,9])
+    monkeypatch.setattr(windows_worker.time,'monotonic',lambda:next(clock))
+    assert windows_worker.wait_saved_notification(None,None,None,path,state) is state
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:state)
+    monkeypatch.setattr(windows_worker,'wait_saved_notification',lambda *a:{'title':'other.evo - DIALux evo 14.1','dialogs':[]})
+    with pytest.raises(ValueError,match='does not match'):
+        windows_worker.prepare_project(None,None,None,str(path))
+
+
 @pytest.mark.parametrize('minutes', [5, 10, 20, 40])
 def test_reminder_defers_without_saving_and_reads_fresh_state(reminder, monkeypatch, minutes):
     reminder['children'][0]['text'] = f'The project has not been saved for {minutes} minutes.\r\nSave now?'

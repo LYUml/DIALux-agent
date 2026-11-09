@@ -81,3 +81,11 @@ Preparation errors now retain observed dialog details. After verifying the activ
 project and absence of dialogs, a separate v2 run was started from the saved
 candidate-000 copy with new evidence paths; the failed v1 remains preserved.
 This is a diagnosed manual retry, not automatic resume or a passed two-round gate.
+
+Run v2 completed its first candidate and captured the repeated transition failure:
+the secondary window was the native save-success Popup, with the exact current
+project path plus Show in the Explorer / Delete buttons. No button was clicked.
+Preparation now waits at most eight seconds for that narrowly matched current-
+project notification to disappear, rechecks the project title, and still rejects
+other or additional dialogs. A persistent notification remains a failure. Run v3
+has started with new copies/evidence to test the repaired transition end to end.

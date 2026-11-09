@@ -135,14 +135,42 @@ def defer_save_reminder(app, main, process, state):
     return snapshot(app, main, process)
 
 
+def is_saved_notification(dialog, expected_project):
+    children = dialog.get('children', [])
+    texts = [c.get('text', '') for c in children if c.get('type') == 'Text' and c.get('text', '').strip()]
+    prefix = 'The project has been saved at '
+    messages = [t for t in texts if t.startswith(prefix) and t.endswith('.')]
+    if len(messages) != 1 or sorted(texts) != sorted(['Show in the Explorer', messages[0]]):
+        return False
+    return (dialog.get('class') == 'Popup' and dialog.get('title') == ''
+            and dialog.get('automation_id') == ''
+            and all(c.get('type') in {'Custom','Image','Text','Button'} for c in children)
+            and sorted(c.get('text', '') for c in children if c.get('type') == 'Button') == ['', 'Delete', 'Show in the Explorer']
+            and Path(messages[0][len(prefix):-1]).resolve() == Path(expected_project).resolve())
+
+
+def wait_saved_notification(app, main, process, expected, state):
+    """Wait for an exact current-project save toast; never click its buttons."""
+    deadline = time.monotonic()+8
+    while (len(state['dialogs']) == 1 and is_saved_notification(state['dialogs'][0], expected)
+           and time.monotonic() < deadline):
+        time.sleep(.2)
+        state = snapshot(app, main, process)
+    return state
+
+
 def prepare_project(app, main, process, expected_project, must_exist=True):
     expected = Path(expected_project).resolve(strict=must_exist)
     if expected.suffix.lower() != '.evo':
         raise ValueError('Expected an existing native .evo project')
+    def verify_title(state):
+        prefix, separator, version = state['title'].rpartition(' - DIALux evo ')
+        if not separator or Path(prefix.rstrip('* ')).resolve() != expected:
+            raise ValueError('Active project does not match expected_project')
     state = snapshot(app, main, process)
-    prefix, separator, version = state['title'].rpartition(' - DIALux evo ')
-    if not separator or Path(prefix.rstrip('* ')).resolve() != expected:
-        raise ValueError('Active project does not match expected_project')
+    verify_title(state)
+    state = wait_saved_notification(app, main, process, expected, state)
+    verify_title(state)
     state = defer_save_reminder(app, main, process, state)
     if state['dialogs']:
         raise ValueError('A DIALux secondary window/dialog is open; inspect before acting: '
@@ -152,6 +180,8 @@ def prepare_project(app, main, process, expected_project, must_exist=True):
     main.set_focus()
     time.sleep(.3)
     state = snapshot(app, main, process)
+    state = wait_saved_notification(app, main, process, expected, state)
+    verify_title(state)
     state = defer_save_reminder(app, main, process, state)
     if state['dialogs']:
         raise ValueError('A dialog appeared after activation; operation was not invoked: '
