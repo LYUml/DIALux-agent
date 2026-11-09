@@ -1,6 +1,9 @@
 """Bounded lattice-offset candidates; optical ranking belongs to native runs."""
 import copy
 import math
+import hashlib
+import json
+from pathlib import Path
 
 if __package__:
     from .layout import plan_grid
@@ -53,8 +56,40 @@ def generate_offset_candidates(spec: dict, x_offsets_m: list[float], y_offsets_m
     if not selected:
         raise ValueError('No same-count candidates in the supplied offset domain')
     return {'schema':'dialux-agent/offset-candidates/v1', 'candidates':selected,
+            'baseline_spec_sha256':base['input_sha256'],
             'baseline_fixture_count':base['fixture_count'], 'decisions':decisions,
             'max_candidates':max_candidates, 'domain_evaluated':True,
             'all_distinct_same_count_candidates_included':not any(d['status']=='excluded_candidate_budget' for d in decisions),
             'simulation_verified':False,'optimality_verified':False,
             'warning':'Geometry-only candidates from explicit bounds. Run actual native calculations before comparing lighting performance; no fixture-count or product search.'}
+
+
+def run_offset_search(expected_project: str, group_id: str, spec: dict,
+                      x_offsets_m: list[float], y_offsets_m: list[float], checks: list[dict],
+                      objective: dict, policy: dict, evidence_directory: str,
+                      max_candidates: int = 20) -> dict:
+    """Persist a bounded geometry search plan, then run its actual native candidates.
+
+    Reuses the candidate runner. Operational failures preserve the plan and its
+    native journals; no retries, extrapolated performance or global optimum claim.
+    """
+    if __package__:
+        from .iterations import run_layout_candidates
+    else:
+        from iterations import run_layout_candidates
+    source = Path(expected_project).resolve(strict=True)
+    if source.suffix.lower() != '.evo':
+        raise ValueError('Expected a native source project')
+    generated = generate_offset_candidates(spec,x_offsets_m,y_offsets_m,max_candidates)
+    directory = Path(evidence_directory).resolve()
+    directory.mkdir(parents=True,exist_ok=False)
+    path = directory/'generation.json'
+    payload = (json.dumps(generated,indent=2,allow_nan=False)+'\n').encode('utf-8')
+    path.write_bytes(payload)
+    result = run_layout_candidates(str(source),group_id,generated['candidates'],checks,
+                                   objective,policy,str(directory/'native'))
+    response = {'schema':'dialux-agent/offset-search-run/v1', 'generation':str(path),
+                'generation_sha256':hashlib.sha256(payload).hexdigest(),
+                'run':result,'optimality_verified':False,'whole_project_assessed':False}
+    (directory/'result.json').write_text(json.dumps(response,indent=2,allow_nan=False),encoding='utf-8')
+    return response

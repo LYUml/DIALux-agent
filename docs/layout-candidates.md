@@ -21,6 +21,18 @@ the two one-spacing shifts were correctly identified as duplicates. This is
 geometric generation evidence only. The existing native two-candidate test used
 explicit grids; a new generated-domain native search is still pending.
 
+`layout-offset-search --request request.json` / MCP `run_offset_search` joins
+generation and native execution without duplicating either implementation.
+Supply `expected_project`, `group_id`, baseline `spec`, both offset axes, `checks`,
+`objective`, `policy`, a new `evidence_directory` and optional `max_candidates`.
+It writes `generation.json` before the native call, then uses a `native/` child
+directory for candidate evidence. Successful completion writes `result.json`
+with the generation-file hash and runner result. Failures retain the generation
+plan and whatever native journal exists, without retry. Generation and iteration
+budgets remain distinct and may explore fewer candidates than the supplied domain.
+The joined interface is covered by transport/order/failure tests; its own native
+generated-domain acceptance is pending.
+
 CLI: `layout-candidates-run --request request.json`. MCP: `run_layout_candidates`.
 The request has `expected_project`, `group_id`, `candidates`, `checks`, `objective`,
 `policy`, and a new `evidence_directory`. Use a synthetic test project already
