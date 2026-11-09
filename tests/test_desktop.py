@@ -41,6 +41,16 @@ def test_wrong_project_never_dismisses_reminder(tmp_path, reminder, monkeypatch)
         windows_worker.prepare_project(None,None,None,str(path))
 
 
+def test_unknown_dialog_identity_is_retained_for_diagnosis(tmp_path, monkeypatch):
+    path = tmp_path/'test.evo'
+    path.write_bytes(b'fixture')
+    state = {'title':str(path)+' - DIALux evo 14.1',
+             'dialogs':[{'title':'Transient fixture','automation_id':'UnknownWindow','class':'Window','children':[]}]}
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:state)
+    with pytest.raises(ValueError, match='UnknownWindow'):
+        windows_worker.prepare_project(None,None,None,str(path))
+
+
 @pytest.mark.parametrize('minutes', [5, 10, 20, 40])
 def test_reminder_defers_without_saving_and_reads_fresh_state(reminder, monkeypatch, minutes):
     reminder['children'][0]['text'] = f'The project has not been saved for {minutes} minutes.\r\nSave now?'

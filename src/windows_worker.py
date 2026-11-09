@@ -145,7 +145,8 @@ def prepare_project(app, main, process, expected_project, must_exist=True):
         raise ValueError('Active project does not match expected_project')
     state = defer_save_reminder(app, main, process, state)
     if state['dialogs']:
-        raise ValueError('A DIALux secondary window/dialog is open; inspect before acting')
+        raise ValueError('A DIALux secondary window/dialog is open; inspect before acting: '
+                         + json.dumps(state['dialogs'], ensure_ascii=True))
     # WPF commands can report disabled while DIALux is inactive. Activation is
     # explicit and affects foreground focus, though Invoke does not move the mouse.
     main.set_focus()
@@ -153,7 +154,8 @@ def prepare_project(app, main, process, expected_project, must_exist=True):
     state = snapshot(app, main, process)
     state = defer_save_reminder(app, main, process, state)
     if state['dialogs']:
-        raise ValueError('A dialog appeared after activation; operation was not invoked')
+        raise ValueError('A dialog appeared after activation; operation was not invoked: '
+                         + json.dumps(state['dialogs'], ensure_ascii=True))
     return expected, state
 
 

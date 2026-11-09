@@ -66,3 +66,18 @@ return successfully. `native_outcome_verified` remains false on failure. Tests
 inject each failure stage, replaced report hashes and external source changes,
 and verify no later candidate starts. These are failure-path tests, not evidence
 of native interruption recovery or automatic resume.
+
+## First native run
+
+`local/candidate-native-v1` completed candidate 0: six-fixture geometry verified,
+real calculation/report/save completed, reported average 496 lx and Uo 0.060.
+Report SHA256: `ccc94e479819e792ffdb0e875c750405548f63f7fff43e003974f3b9b02c202a`.
+The positive-illuminance smoke criterion passed; this is not design acceptance.
+Candidate 1 stopped before copying because preparation observed an unknown
+secondary window. The old error did not retain window details, and a fresh status
+call found no dialog. Its identity/cause therefore remains unknown.
+
+Preparation errors now retain observed dialog details. After verifying the active
+project and absence of dialogs, a separate v2 run was started from the saved
+candidate-000 copy with new evidence paths; the failed v1 remains preserved.
+This is a diagnosed manual retry, not automatic resume or a passed two-round gate.
