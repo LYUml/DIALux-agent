@@ -444,12 +444,27 @@ def arrange_space(app, main, process, expected_project, product_id):
     raise ValueError('Arrangement was invoked but readback failed; inspect before retry')
 
 
+def select_lighting_tool(main, tool_id):
+    """Recover construction tools after native report output changes the mode."""
+    matches = [c for c in main.descendants(control_type='TabItem')
+               if c.element_info.automation_id == tool_id]
+    if not matches:
+        modes = [c for c in main.descendants(control_type='TabItem')
+                 if c.window_text() == 'Dial.Dialux.InteractionModes.LightingDesignMode']
+        if len(modes) != 1:
+            raise ValueError('Expected one native lighting-design mode')
+        modes[0].select()
+        wait_control(main, 'TabItem', tool_id).select()
+    else:
+        unique_control(main, 'TabItem', tool_id).select()
+
+
 def project_tree(app, main, process, expected_project, expand_id=None):
     """Inventory realized tree nodes, optionally expand one exact visible node."""
     if expand_id is not None and (not isinstance(expand_id, str) or not expand_id.strip()):
         raise ValueError('expand_id must be a nonempty string')
     expected, _ = prepare_project(app, main, process, expected_project)
-    unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+    select_lighting_tool(main, 'ProjectTreeTool')
     tree = wait_control(main, 'List', 'FilterTreeListBox')
     search = unique_control(main, 'Edit', 'ProjectTreeToolSearch').get_value()
     if expand_id:
@@ -522,7 +537,7 @@ def room_context(app, main, process, expected_project, room_name=None):
 
 def read_space(app, main, process, expected_project, tree_item_id):
     expected, _ = prepare_project(app, main, process, expected_project)
-    unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+    select_lighting_tool(main, 'ProjectTreeTool')
     item = wait_control(main, 'ListItem', tree_item_id)
     if not item.is_visible():
         raise ValueError('Space node must be visible')
@@ -662,22 +677,35 @@ def edit_arrangement(app, main, process, expected_project, parameters):
     """Edit an exact visible tree item, then read committed native parameters."""
     import math
     allowed = {'ElementCountX', 'ElementCountY', 'PolygonPosition_X', 'PolygonPosition_Y',
-               'PolygonPosition_Z', 'ArrangementRotation_Z'}
+               'PolygonPosition_Z', 'ArrangementRotation_Z', 'ArrangementObjectName'}
     if not isinstance(parameters, dict) or set(parameters) != {'tree_item_id', 'values'}:
         raise ValueError('Expected tree_item_id and values')
     identity, values = parameters['tree_item_id'], parameters['values']
     if not isinstance(identity, str) or not identity or not isinstance(values, dict) or not values or not set(values) <= allowed:
         raise ValueError('Invalid arrangement identity or parameter keys')
     for key, value in values.items():
+        if key == 'ArrangementObjectName':
+            if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9 ._-]{0,79}', value) or value != value.strip():
+                raise ValueError('Arrangement name must be 1 to 80 plain ASCII letters, digits, spaces, dots, underscores or hyphens')
+            continue
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
             raise ValueError('Arrangement values must be finite numbers')
         if key.startswith('ElementCount') and (value != int(value) or not 1 <= value <= 1000):
             raise ValueError('Element counts must be integers from 1 to 1000')
     expected, state = prepare_project(app, main, process, expected_project)
-    unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+    select_lighting_tool(main, 'ProjectTreeTool')
     candidate = wait_control(main, 'ListItem', identity)
     if not candidate.is_visible():
         raise ValueError('Target tree item is not visible')
+    if 'ArrangementObjectName' in values:
+        new_name = values['ArrangementObjectName']
+        for other in main.descendants(control_type='ListItem'):
+            if other.element_info.runtime_id == candidate.element_info.runtime_id:
+                continue
+            labels = [c.window_text() for c in other.descendants(control_type='Text')
+                      if c.element_info.automation_id == '_textBlock']
+            if new_name in labels:
+                raise ValueError('Requested name already appears in realized project tree')
     # Existing results must be explicitly cleared before changing geometry;
     # otherwise an edit can display a pending value behind a confirmation dialog.
     if state['controls']['DiscardResultsButton']['enabled']:
@@ -696,21 +724,30 @@ def edit_arrangement(app, main, process, expected_project, parameters):
     name = unique_control(main, 'Edit', 'ArrangementObjectName').get_value()
     for key, value in values.items():
         control = unique_control(main, 'Edit', key)
-        control.set_focus()
-        control.type_keys('^a' + format(value, '.12g') + '{TAB}', set_foreground=False)
+        if key == 'ArrangementObjectName':
+            # This native name field commits on each keystroke; fast input lost
+            # characters in the live probe. Focus and pace literal safe text.
+            control.click_input()
+            control.type_keys('^a', pause=.1)
+            control.type_keys(value, pause=.2, with_spaces=True)
+            control.type_keys('{TAB}', pause=.1)
+        else:
+            control.set_focus()
+            control.type_keys('^a' + format(value, '.12g') + '{TAB}', set_foreground=False)
         time.sleep(1)
         edit_state = snapshot(app, main, process)
         if edit_state['dialogs']:
             raise ValueError('Dialog during edit; pending values are not verified: ' + json.dumps(edit_state['dialogs']))
         actual = unique_control(main, 'Edit', key).get_value()
-        if not math.isclose(float(actual), value, rel_tol=0, abs_tol=.00051):
+        if (actual != value if key == 'ArrangementObjectName' else not math.isclose(float(actual), value, rel_tol=0, abs_tol=.00051)):
             raise ValueError(f'Parameter {key} did not commit; partial edit possible, inspect before retry')
     after = {key: unique_control(main, 'Edit', key).get_value() for key in values}
-    if any(not math.isclose(float(after[key]), value, rel_tol=0, abs_tol=.00051) for key, value in values.items()):
+    if any((after[key] != value if key == 'ArrangementObjectName' else not math.isclose(float(after[key]), value, rel_tol=0, abs_tol=.00051)) for key, value in values.items()):
         raise ValueError('Final readback differs; dependent parameter adjustment possible')
     return {'operation': 'edit_arrangement', 'path': str(expected), 'tree_item_id': identity,
             'coordinate_frame': 'active_storey',
-            'name': name, 'before': before, 'after': after, 'native_project_saved': False,
+            'name': after.get('ArrangementObjectName', name), 'previous_name': name,
+            'before': before, 'after': after, 'native_project_saved': False,
             'fixture_positions_verified': False, 'uses_codex_computer_use': False,
             'evidence': 'Committed native arrangement parameters read back; individual fixture coordinates and calculation require separate verification.'}
 

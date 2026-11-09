@@ -49,9 +49,11 @@ def desktop_project_tree(expected_project: str, expand_id: str | None = None) ->
 
 
 def desktop_edit_arrangement(expected_project: str, tree_item_id: str, values: dict) -> dict:
-    """Edit an exact visible native arrangement's counts, centre XYZ or Z rotation.
+    """Edit an exact visible native arrangement's name, counts, centre XYZ or Z rotation.
 
     Tree item must already be expanded. Clears cached results before editing.
+    ArrangementObjectName accepts 1–80 plain ASCII letters/digits/spaces/._-.
+    Renaming changes the tree ID; obtain a fresh tree afterward.
     Does not save or verify individual fixtures.
     Failure may leave a partial edit; inspect before retrying.
     """

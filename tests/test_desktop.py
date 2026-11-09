@@ -11,6 +11,50 @@ import desktop
 import windows_worker
 
 
+@pytest.mark.parametrize('name', ['', 'bad{ENTER}', 'bad^a', ' trailing ', 'x'*81, 12])
+def test_arrangement_name_rejects_unsafe_or_invalid_input_before_ui(name, monkeypatch):
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
+    with pytest.raises(ValueError, match='name'):
+        windows_worker.edit_arrangement(None,None,None,'test.evo',
+            {'tree_item_id':'group','values':{'ArrangementObjectName':name}})
+
+
+def test_project_tool_recovers_from_output_mode(monkeypatch):
+    actions = []
+    mode = SimpleNamespace(element_info=SimpleNamespace(automation_id=''),
+        window_text=lambda: 'Dial.Dialux.InteractionModes.LightingDesignMode',
+        select=lambda: actions.append('lighting'))
+    main = SimpleNamespace(descendants=lambda **k:[mode])
+    def wait(parent, kind, identity):
+        assert identity == 'ProjectTreeTool'
+        assert actions == ['lighting']
+        return SimpleNamespace(select=lambda: actions.append('tree'))
+    monkeypatch.setattr(windows_worker, 'wait_control', wait)
+    windows_worker.select_lighting_tool(main,'ProjectTreeTool')
+    assert actions == ['lighting','tree']
+
+
+def test_missing_or_ambiguous_lighting_mode_refuses_tool_fallback(monkeypatch):
+    main = SimpleNamespace(descendants=lambda **k:[])
+    monkeypatch.setattr(windows_worker, 'wait_control', lambda *a: pytest.fail('Tool accessed'))
+    with pytest.raises(ValueError, match='lighting-design'):
+        windows_worker.select_lighting_tool(main,'ProjectTreeTool')
+
+
+def test_rename_rejects_realized_duplicate_before_clearing_results(monkeypatch):
+    candidate = SimpleNamespace(element_info=SimpleNamespace(runtime_id=[1]), is_visible=lambda:True)
+    label = SimpleNamespace(element_info=SimpleNamespace(automation_id='_textBlock'), window_text=lambda:'Existing')
+    other = SimpleNamespace(element_info=SimpleNamespace(runtime_id=[2]), descendants=lambda **k:[label])
+    main = SimpleNamespace(descendants=lambda **k:[other])
+    monkeypatch.setattr(windows_worker,'prepare_project',lambda *a:(Path('test.evo'),{}))
+    monkeypatch.setattr(windows_worker,'select_lighting_tool',lambda *a:None)
+    monkeypatch.setattr(windows_worker,'wait_control',lambda *a:candidate)
+    monkeypatch.setattr(windows_worker,'unique_control',lambda *a:pytest.fail('Mutation attempted'))
+    with pytest.raises(ValueError,match='already appears'):
+        windows_worker.edit_arrangement(None,main,None,'test.evo',
+            {'tree_item_id':'group','values':{'ArrangementObjectName':'Existing'}})
+
+
 def test_room_context_rejects_empty_label_before_ui(monkeypatch):
     monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
     with pytest.raises(ValueError, match='Room name'):
