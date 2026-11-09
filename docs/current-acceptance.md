@@ -25,8 +25,8 @@ report passed source/output page text, size and 72-dpi rendering comparisons and
 visual review. Source-pinned selections, main-page/byte limits, wrong-page import,
 source changes during assembly and real-form refusal are covered; see
 [pdf-bundles.md](pdf-bundles.md). This does not author a report, verify engineering
-content or accept interactive document features. Main CLI/MCP registration remains
-pending. The complete offline suite passed 566 tests after this addition; that
+content or accept interactive document features. Main CLI and real stdio MCP build/replay calls now pass synthetic integration
+tests. The complete offline suite passed 566 tests after this addition; that
 result does not close any remaining native acceptance gate.
 
 ## Comparison with reviewed pinned upstream modules

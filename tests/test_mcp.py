@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from test_pdf_bundle import fixture_pdf
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -14,6 +15,16 @@ def test_real_stdio_tools(tmp_path):
             async with ClientSession(read,write,read_timeout_seconds=15) as session:
                 await session.initialize()
                 listing=await session.list_tools()
+                assert {'verify_array_execution','build_pdf_bundle','verify_pdf_bundle'} <= {t.name for t in listing.tools}
+                source=tmp_path/'bundle-source.pdf';digest=fixture_pdf(source)
+                bundle_args={'sections':[{'path':str(source),'sha256':digest,'pages':[2,1],'role':'main'}],
+                             'output_directory':str(tmp_path/'bundle'),'max_main_pages':2,'max_bytes':1000000}
+                bundle=await session.call_tool('build_pdf_bundle',bundle_args)
+                assert not bundle.is_error
+                replay=await session.call_tool('verify_pdf_bundle',{'evidence_directory':str(tmp_path/'bundle')})
+                assert not replay.is_error and json.loads(replay.content[0].text)['page_count']==2
+                rejected=await session.call_tool('verify_array_execution',{'evidence_directory':str(tmp_path/'bundle')})
+                assert rejected.is_error
                 assert 'run_layout_candidates' in {t.name for t in listing.tools}
                 assert 'export_scheduled_layout_dxf' in {t.name for t in listing.tools}
                 assert 'desktop_read_arrangement' in {t.name for t in listing.tools}

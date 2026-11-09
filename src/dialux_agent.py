@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+from pypdfium2 import PdfiumError
 
 
 def _local_module(name):
@@ -58,6 +59,9 @@ def verify(manifest):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
+    commands.add_parser('array-execution-verify').add_argument('--evidence-directory', required=True)
+    commands.add_parser('pdf-bundle-build').add_argument('--request', required=True)
+    commands.add_parser('pdf-bundle-verify').add_argument('--evidence-directory', required=True)
     commands.add_parser('layout-apply-array').add_argument('--request', required=True)
     commands.add_parser('schedule-build').add_argument('--request', required=True)
     commands.add_parser('schedule-build-mixed').add_argument('--request', required=True)
@@ -213,7 +217,13 @@ def main():
     report_check.add_argument('--context', help='JSON object of evidenced applicability facts')
     args = parser.parse_args()
     try:
-        if args.command == 'layout-export-dxf':
+        if args.command == 'array-execution-verify':
+            result = _local_module('array_audit').verify_array_execution(args.evidence_directory)
+        elif args.command == 'pdf-bundle-build':
+            result = _local_module('pdf_bundle').build_pdf_bundle(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
+        elif args.command == 'pdf-bundle-verify':
+            result = _local_module('pdf_bundle').verify_pdf_bundle(args.evidence_directory)
+        elif args.command == 'layout-export-dxf':
             spec = json.loads(Path(args.spec).read_text(encoding='utf-8'))
             layout = json.loads(Path(args.layout).read_text(encoding='utf-8')) if args.layout else None
             result = _local_module('cad').export_layout_dxf(spec, args.output, layout)
@@ -342,7 +352,7 @@ def main():
         if args.command in {'criteria-check', 'report-check', 'calculation-checkpoint'}:
             return {'pass': 0, 'fail': 1, 'unverified': 3}[result['status']]
         return 0 if result.get('ok', True) else 1
-    except (OSError, ValueError, KeyError, TypeError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, PdfiumError) as exc:
         print(json.dumps({'ok': False, 'error': str(exc)}))
         return 2
 

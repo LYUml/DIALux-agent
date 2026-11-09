@@ -88,11 +88,11 @@ calculation and reopen evidence.
 
 ## Offline evidence and PDF packaging
 
-Two standalone module commands are available in addition to the main CLI:
+The main CLI exposes offline evidence and packaging commands:
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.array_audit --evidence-directory local/completed-array/execution
-.\.venv\Scripts\python.exe -m src.pdf_bundle --request local/bundle-request.json
+.\.venv\Scripts\python.exe -m src.dialux_agent array-execution-verify --evidence-directory local/completed-array/execution
+.\.venv\Scripts\python.exe -m src.dialux_agent pdf-bundle-build --request local/bundle-request.json
 ```
 
 Use an actual completed execution folder and an explicit bundle request; these
@@ -100,7 +100,10 @@ paths are placeholders. [Array replay](docs/guarded-array-execution.md) verifies
 retained evidence without accessing the desktop. [PDF bundles](docs/pdf-bundles.md)
 preserve explicitly selected static pages, enforce page/byte limits and compare
 source/output page text, dimensions and 72-dpi rendering. Neither tool validates
-engineering conclusions. Registration in the main CLI/MCP remains pending.
+engineering conclusions. Use `pdf-bundle-verify --evidence-directory <folder>`
+for independent PDF replay. MCP exposes `verify_array_execution`,
+`build_pdf_bundle` and `verify_pdf_bundle`; the standalone module commands remain
+available.
 
 ## MCP and AI skill
 
