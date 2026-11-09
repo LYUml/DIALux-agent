@@ -9,6 +9,11 @@ import math
 
 import ezdxf
 
+if __package__:
+    from .cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
+else:
+    from cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
+
 
 def export_layout_dxf(spec: dict, output: str, layout: dict | None = None) -> dict:
     """Export the shared planned fixtures as editable CAD blocks, with ID readback.
@@ -45,6 +50,7 @@ def export_observed_layout_dxf(spec: dict, observed: dict, fixture_ids: list[str
 
 
 def _write_layout_dxf(spec, output, layout):
+    dimensions = validate_dimensions(spec.get('dimensions', []))
     target = Path(output).resolve()
     if target.suffix.lower() != '.dxf' or target.exists():
         raise ValueError('Choose a new .dxf output path')
@@ -61,6 +67,7 @@ def _write_layout_dxf(spec, output, layout):
     for layer, color in [('ROOM', 7), ('KEEP_OUT', 1), ('LUMINAIRES', 3), ('LABELS', 7), ('NOTES', 7)]:
         doc.layers.new(layer, dxfattribs={'color': color})
     model = doc.modelspace()
+    add_dimensions(doc, dimensions, label_height)
     model.add_lwpolyline(spec['contour'], close=True, dxfattribs={'layer': 'ROOM'})
     for region in spec.get('exclusions', []):
         model.add_lwpolyline(region, close=True, dxfattribs={'layer': 'KEEP_OUT'})
@@ -185,6 +192,7 @@ def verify_layout_native(path: str, output_directory: str,
     if source.suffix.lower() != '.dxf' or core.name.lower() != 'accoreconsole.exe':
         raise ValueError('Expected DXF and installed accoreconsole.exe')
     before = _fixture_records(source)
+    dimensions_before = dimension_records(source)
     if destination.exists() or not str(destination).isascii():
         raise ValueError('Choose a new ASCII output directory')
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
@@ -208,6 +216,8 @@ def verify_layout_native(path: str, output_directory: str,
         raise ValueError('Native save failed; inspect save.log')
     reopened = drawing_convert(str(native), str(destination / 'reopened'), str(core))
     after = _fixture_records(Path(reopened['dxf']))
+    dimensions_after = dimension_records(Path(reopened['dxf']))
+    compare_dimensions(dimensions_before, dimensions_after)
     if set(before) != set(after):
         raise ValueError('Native fixture IDs changed')
     for identity, record in before.items():
@@ -223,6 +233,7 @@ def verify_layout_native(path: str, output_directory: str,
                 'source_sha256': digest, 'original_unchanged': True, 'dwg': str(native),
                 'dwg_sha256': hashlib.sha256(native.read_bytes()).hexdigest(),
                 'fixture_count': len(after), 'fixture_records_verified': True,
+                'dimension_count': len(dimensions_after), 'dimension_records_verified': True,
                 'native_reopen_verified': True, 'block_shapes_verified': False,
                 'print_verified': False, 'reopen_evidence': reopened}
     (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
