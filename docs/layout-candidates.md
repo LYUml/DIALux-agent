@@ -1,20 +1,19 @@
 # Bounded native candidate runs
 
-Current status (2026-11-09): explicit two-candidate execution and reopening passed.
-Generated four-candidate searches remain unaccepted: v3 completed three candidates
-but stopped before the fourth copy on an empty native Popup. The notification
-transition investigation and subsequent fix are recorded in
-`desktop-notification-transitions.md`. Earlier progress entries below are
-historical and do not supersede this status.
+Current status (2026-11-09): explicit two-candidate execution and generated
+four-candidate execution both passed actual native calculations and independent
+reopen comparisons on synthetic six-fixture tests. See
+[generated-domain acceptance](generated-search-acceptance.md). Earlier failed
+runs and progress entries below remain historical evidence, not current blockers.
 
 ## Generate explicit offset candidates
 
 `layout-candidates-generate --request request.json` / MCP
 `generate_offset_candidates` accepts a baseline `spec`, `x_offsets_m`,
-`y_offsets_m`, and optional `max_candidates` (default 20). Each axis has 1–20
+`y_offsets_m`, and optional `max_candidates` (default 20). Each axis has 1â€“20
 unique finite offsets; the domain has at most 400 combinations. It reuses
 `plan_grid` for full-envelope/exclusion checking and only retains the baseline
-fixture count. Baselines must contain 1–2000 zero-rotation fixtures.
+fixture count. Baselines must contain 1â€“2000 zero-rotation fixtures.
 
 It preserves caller order (X outer, Y inner), deduplicates physical XYZ grids to
 1e-9 m arithmetic precision, and records count exclusions, duplicate grids and
@@ -26,7 +25,7 @@ The public CLI was exercised on the six-fixture synthetic specification with
 X offsets [0, 0.1, 2] and Y offsets [0, 0.1]: four distinct candidates remained;
 the two one-spacing shifts were correctly identified as duplicates. This is
 geometric generation evidence only. The existing native two-candidate test used
-explicit grids; a new generated-domain native search is still pending.
+explicit grids; the later generated-domain native run is recorded in the acceptance link above.
 
 `layout-offset-search --request request.json` / MCP `run_offset_search` joins
 generation and native execution without duplicating either implementation.
@@ -37,16 +36,16 @@ directory for candidate evidence. Successful completion writes `result.json`
 with the generation-file hash and runner result. Failures retain the generation
 plan and whatever native journal exists, without retry. Generation and iteration
 budgets remain distinct and may explore fewer candidates than the supplied domain.
-The joined interface is covered by transport/order/failure tests; its own native
-generated-domain acceptance is pending.
+The joined interface is covered by transport/order/failure tests and the scoped
+four-candidate native acceptance linked above.
 
 CLI: `layout-candidates-run --request request.json`. MCP: `run_layout_candidates`.
 The request has `expected_project`, `group_id`, `candidates`, `checks`, `objective`,
 `policy`, and a new `evidence_directory`. Use a synthetic test project already
-open in DIALux. This interface is implemented and unit-tested; multi-iteration
-native acceptance is pending. It is not an accepted autonomous lighting designer.
+open in DIALux. This interface is implemented and unit-tested, with the scoped multi-iteration
+native evidence linked above. It is not an accepted autonomous lighting designer.
 
-`candidates` contains 1–20 complete grid specifications. Only `grid` may differ;
+`candidates` contains 1â€“20 complete grid specifications. Only `grid` may differ;
 room, product assumptions, fixture count and all other inputs remain fixed.
 Native movement currently requires zero fixture rotation. Candidate generation,
 fixture-count/product changes and semantic room validation are not supplied by
@@ -60,8 +59,8 @@ the calculation checkpoint; missing or ambiguous evidence stops the run.
 
 `policy` contains:
 
-- `max_iterations`: integer 1–20; never exceeds the supplied candidate count.
-- `no_improvement_limit`: integer 1–20 consecutive candidates.
+- `max_iterations`: integer 1â€“20; never exceeds the supplied candidate count.
+- `no_improvement_limit`: integer 1â€“20 consecutive candidates.
 - `minimum_improvement`: finite nonnegative threshold in the objective's units;
   improvement must strictly exceed it to reset the stopping counter. Smaller
   cumulative improvements are compared to the last value that reset this counter.
@@ -84,6 +83,8 @@ without retry or rollback. Desktop locks protect individual native operations,
 not the entire multi-command run; external edits are not excluded. Do not run
 another desktop workflow concurrently. A completed runner means its stopping
 policy executed, not that a feasible design was found.
+
+## Historical development checkpoints
 
 Tests cover budget, minimization, passing/incomplete stops, no-improvement,
 source preservation, unsupported changes and missing objective evidence. Full

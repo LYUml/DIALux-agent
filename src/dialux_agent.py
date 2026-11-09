@@ -62,6 +62,7 @@ def main():
     commands.add_parser('drawing-export-scheduled').add_argument('--request', required=True)
     commands.add_parser('layout-candidates-generate').add_argument('--request', required=True)
     commands.add_parser('layout-offset-search').add_argument('--request', required=True)
+    commands.add_parser('layout-array-transform-plan').add_argument('--request', required=True)
     array_read = commands.add_parser('desktop-read-arrangement')
     array_read.add_argument('--expected-project', required=True)
     array_read.add_argument('--tree-item-id', required=True)
@@ -263,6 +264,8 @@ def main():
             result = _local_module('candidate_search').generate_offset_candidates(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'layout-offset-search':
             result = _local_module('candidate_search').run_offset_search(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
+        elif args.command == 'layout-array-transform-plan':
+            result = _local_module('array_transform').plan_array_transform(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'desktop-read-arrangement':
             result = _local_module('desktop').desktop_read_arrangement(args.expected_project,args.tree_item_id)
         elif args.command == 'report-workplane-read':

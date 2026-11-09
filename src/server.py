@@ -78,6 +78,11 @@ else:
     from candidate_search import generate_offset_candidates, run_offset_search
 server.tool()(generate_offset_candidates)
 server.tool()(run_offset_search)
+if __package__:
+    from .array_transform import plan_array_transform
+else:
+    from array_transform import plan_array_transform
+server.tool()(plan_array_transform)
 server.tool()(desktop_status)
 if __package__:
     from .desktop import desktop_read_arrangement

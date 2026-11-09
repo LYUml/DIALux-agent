@@ -43,7 +43,8 @@ outer operation timeout.
 
 Tests cover disappearance, persistent emptiness, named unknown content, additional
 windows and another project's notification. The full suite passed 414 tests.
-Full generated-search acceptance remains pending after this change.
+The subsequent four-candidate native run and reopening passed; see
+[scoped generated-search acceptance](generated-search-acceptance.md).
 
 A subsequent standalone native Save As, save and preparation sequence completed
 without errors (`local/save-popup-trace-v2.json`), preserving its source. This

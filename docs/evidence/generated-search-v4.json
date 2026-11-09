@@ -1,0 +1,60 @@
+{
+  "scope": "Synthetic six-fixture same-count generated offset domain only",
+  "native_execution_commit": "f5f5019db5f494a58c3d2a4504e53af39174671e",
+  "source_sha256": "e6572c6e59219e3a751ae997da10d5bafb5d1c319c9cdda3801964981384e648",
+  "request_sha256": "7af3b9037a18a96dc9aaa6e5565fa23a7afd0e78b3be2f7020bdb27b5ff45c3d",
+  "generation_sha256": "e2b527e1d88a331dc437270b89d72a3ec797c634d7923fd6ea1b1cd8f86799ab",
+  "candidates": [
+    {
+      "index": 0,
+      "offset_m": [
+        0,
+        0
+      ],
+      "uniformity": 0.06,
+      "native_sha256": "522ff46f0466ad35a6292c4210a3c2a119376e8fa21a746c4d0a81155d8f1772",
+      "fresh_report_sha256": "3f1cf042da3a6966be4f5ef202fd94d9c9a070b63eab45bbffa17f81c1e35a25",
+      "reopened_report_sha256": "04874b0ba09fe28c55c5a0c591c9a8f01474b11b26baa68fa2d78eb408cd19dc"
+    },
+    {
+      "index": 1,
+      "offset_m": [
+        0,
+        0.1
+      ],
+      "uniformity": 0.06,
+      "native_sha256": "687d04420beea7e78f1bf92a4164a28ccd9e909de5c26cc4dadebaa1d66c098a",
+      "fresh_report_sha256": "c8739d8c7996c89975d6b6ee0121fb3f194b2ba8498a1ed577639fc3b9e64902",
+      "reopened_report_sha256": "839911705f75ecf5badcb9d07498e4826fb0cadd647f0957cf28e894aa41d029"
+    },
+    {
+      "index": 2,
+      "offset_m": [
+        0.1,
+        0
+      ],
+      "uniformity": 0.066,
+      "native_sha256": "7a109ad77e65484829050fb3de36c9640f49b401b5685460828823f25def6daf",
+      "fresh_report_sha256": "97190247bb94f910b2c7bbd45694581a8b634ae5175ddd47600b721efac69b86",
+      "reopened_report_sha256": "d7e3248380a2ac75a3a30032f0c325764a6b7f68a48a7404aac54d8559ab3bc5"
+    },
+    {
+      "index": 3,
+      "offset_m": [
+        0.1,
+        0.1
+      ],
+      "uniformity": 0.062,
+      "native_sha256": "7aaa1eabe8ee9438299328ed9b00a8010260c7f59573dd7b59be75613c0ce158",
+      "fresh_report_sha256": "9c956558d7d27a5e2b9b8cafbe0289c90d097145b9453398c2b9f59c4cbad67a",
+      "reopened_report_sha256": "c9fb5b71765b48b55270049d0cd635fb017a37157a7aa5676cd3d76df3a2532c"
+    }
+  ],
+  "best_candidate": 2,
+  "all_four_calculated_and_reopened": true,
+  "whole_project_assessed": false,
+  "global_optimum_verified": false,
+  "winner_installed": false,
+  "audit_sha256": "4996e5c7c5a7477358f218ac798686ad3ffdaf01990969e6cfaf3447a70b076d",
+  "reopen_journal_sha256": "8d7ded3cdf8a82ef5389ee12c78bf80efb8fe16f78ff95cb9b776327b340d9a3"
+}

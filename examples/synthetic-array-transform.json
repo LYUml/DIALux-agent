@@ -1,0 +1,164 @@
+{
+  "spec": {
+    "units": "m",
+    "contour": [
+      [
+        0,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        0,
+        4
+      ]
+    ],
+    "assumptions": [
+      "Synthetic rigid-array test"
+    ],
+    "grid": {
+      "origin_m": [
+        1.1,
+        1.2
+      ],
+      "spacing_x_m": 2,
+      "spacing_y_m": 2,
+      "rotation_deg": 0
+    },
+    "fixture": {
+      "product_id": "SYNTHETIC",
+      "width_m": 0.5,
+      "depth_m": 0.5,
+      "mounting_height_m": 3.135
+    }
+  },
+  "observed": {
+    "operation": "read_group_fixtures",
+    "coordinate_frame": "active_storey",
+    "path": "synthetic.evo",
+    "group_id": "group",
+    "offset": 0,
+    "next_offset": null,
+    "inventory_token": "synthetic-token",
+    "container_node_count": 6,
+    "observed_count": 6,
+    "fixtures": [
+      {
+        "position_m": [
+          1.0,
+          1.0,
+          3.035
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          0
+        ],
+        "runtime_id": [
+          7,
+          0
+        ]
+      },
+      {
+        "position_m": [
+          3.0,
+          1.0,
+          3.035
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          0
+        ],
+        "runtime_id": [
+          7,
+          1
+        ]
+      },
+      {
+        "position_m": [
+          5.0,
+          1.0,
+          3.035
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          0
+        ],
+        "runtime_id": [
+          7,
+          2
+        ]
+      },
+      {
+        "position_m": [
+          1.0,
+          3.0,
+          3.035
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          0
+        ],
+        "runtime_id": [
+          7,
+          3
+        ]
+      },
+      {
+        "position_m": [
+          3.0,
+          3.0,
+          3.035
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          0
+        ],
+        "runtime_id": [
+          7,
+          4
+        ]
+      },
+      {
+        "position_m": [
+          5.0,
+          3.0,
+          3.035
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          0
+        ],
+        "runtime_id": [
+          7,
+          5
+        ]
+      }
+    ]
+  },
+  "arrangement": {
+    "operation": "read_arrangement",
+    "coordinate_frame": "active_storey",
+    "path": "synthetic.evo",
+    "tree_item_id": "group",
+    "display_values": {
+      "ElementCountX": "3",
+      "ElementCountY": "2",
+      "PolygonPosition_X": "3",
+      "PolygonPosition_Y": "2",
+      "PolygonPosition_Z": "3.035",
+      "ArrangementRotation_Z": "0"
+    }
+  }
+}

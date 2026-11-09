@@ -20,12 +20,13 @@ file does not establish complete native engineering acceptance.
 | Independent desktop control | STF/ULD import, arrangement, actual calculation, save, PDF export and reopen through standalone workers. Requires an interactive Windows session; no private mouse. |
 | Geometry | Concave and adjacent synthetic rooms, ground-supported box obstacles, source-preserving DWG survey and explicitly selected DXF boundary extraction. General CAD room inference and arbitrary object topology are not established. |
 | Fixture control | Six-fixture explicit grid movement and 168-fixture regular-array translation passed full position checks, calculation and persistence. Arbitrary large individual movement, native rotation and general recovery remain unaccepted. |
-| Iteration | Two explicit candidates passed actual calculations, comparison and reopen checks. Generated four-candidate search remains under native verification; previous failures are retained. No global-optimum or automatic winner-installation claim. |
+| Iteration | Two explicit candidates passed actual calculations, comparison and reopen checks. A generated four-candidate domain also passed calculation, comparison and reopen checks; previous failures are retained. No global-optimum or automatic winner-installation claim. |
 | Drawing | Observed fixture coordinates, editable IDs, bounded label placement, linear dimensions, single-product schedule and fixed-paper frame/titleblock. Native DWG reopen and physical PDF scale checked on A3, A2 and 168-symbol A1 synthetic sheets. Mixed-product tables and general sheet composition remain unfinished. |
 | Results | Exact supported English room/scene summaries, direct working-plane minimum/maximum and explicitly scoped coordinate tables. Missing/ambiguous evidence is rejected; whole-project completeness is not inferred. |
 | Regulation | Replaceable source-bearing Hong Kong BEC office LPD, selected-zone automatic-control numerical checks and separately adopted Labour advisory modules. Project applicability remains explicit; these do not constitute comprehensive legal compliance. |
 
-Detailed acceptance and retained failures are linked from the matrix. The latest
+Detailed acceptance and retained failures are linked from the matrix. See the
+[generated four-candidate acceptance](docs/generated-search-acceptance.md). The latest
 notification-transition investigation is in
 [desktop notification transitions](docs/desktop-notification-transitions.md).
 
@@ -78,6 +79,10 @@ session-local and must be rediscovered after reopening. Operation journals retai
 pending actions and partial failures. A timeout does not prove that no write
 occurred; inspect fresh state before deciding what to do next. There is no generic
 automatic resume or rollback.
+
+The offline [rigid-array preflight](docs/array-transform-preflight.md) checks whether
+a complete observed array can reach a target grid by one translation/rotation.
+It does not execute that movement.
 
 ## MCP and AI skill
 
