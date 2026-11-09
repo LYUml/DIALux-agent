@@ -73,3 +73,21 @@ native copy. Between inventories it invokes the guarded field adapter with targe
 equal to the current values. It requires exactly a cached-results-clear event and
 zero submitted motion fields. This separates result-cache clearing from coordinate
 writes; the experiment is still running and no causal conclusion is claimed.
+
+## Cache-clear isolation result
+
+That experiment completed with exactly one `pending_results_clear` event and an
+empty `completed_fields` list. Array counts, centre, rotation and name read back
+unchanged. Nevertheless, the two 168-node inventories differed by 150 lost and
+150 new runtime IDs; the four sampled fixtures retained matching geometry/names.
+Evidence SHA-256:
+`29cb857ee7ba65e8867f008a28e17c9346b078e9327db39aa2685a765ef6aca3`.
+The source stayed unchanged and the cleared-cache UI session was saved separately
+and closed. Thus cache clearing alone reproduced runtime-ID discontinuity in this
+bounded experiment. This does not prove that it is the only possible cause.
+
+An isolated follow-up now uses a copy of that already-cleared session and submits
+only the guarded X/Y centre increments, requiring no results-clear event. It is
+under `local/motion-only-identity-probe-v1`. Its outcome will inform whether a
+post-cache-clear baseline can preserve identity checks across subsequent movement;
+the full executor has not yet been changed or accepted on a large array.
