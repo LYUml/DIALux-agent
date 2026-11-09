@@ -124,3 +124,5 @@ Coordinates are now explicitly qualified as `active_storey`: native position fie
 The [concave native validation](docs/concave-room-validation.md) exercises offset millimetre CAD extraction, six-vertex STF exchange, native import, five actual fixtures in a nominal 3×2 arrangement, footprint checks, calculation and a plotted 20 m² reentrant room. It is synthetic tool evidence, not assignment work.
 
 `drawing-export-observed` / MCP `export_observed_layout_dxf` exports actual supplied native fixture positions into editable CAD blocks, with explicit drawing-ID mapping and observation hashes. It reuses the native CAD reopen/plot gates; see [the five-fixture concave validation and limitations](docs/observed-layout-cad.md).
+
+Native plotting optionally supports an explicit A3 fixed scale, verified against the exported PDF vector outline rather than its label alone. See [fixed-scale usage, Autodesk references and native 1:50 evidence](docs/fixed-scale-plots.md).

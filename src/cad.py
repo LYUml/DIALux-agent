@@ -223,11 +223,13 @@ def verify_layout_native(path: str, output_directory: str,
 
 
 def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: list[str],
-                       executable: str = 'C:/Program Files/Autodesk/AutoCAD 2027/accoreconsole.exe') -> dict:
+                       executable: str = 'C:/Program Files/Autodesk/AutoCAD 2027/accoreconsole.exe',
+                       scale_denominator: int | None = None, scale_outline_m: list | None = None) -> dict:
     """Plot a copied agent test DWG to A3 PDF with text and rendered-content checks.
 
-    Fit-to-page is not an engineering scale. Visual review remains separate.
-    Requires generated test labels and the caller's expected fixture IDs.
+    Defaults to fit-to-page. Optional fixed scale requires an explicit metre
+    outline and verifies its PDF vector dimensions; copied drawing must use metres.
+    Visual review remains separate. Requires generated test labels and fixture IDs.
     """
     import re
     import pdfplumber
@@ -236,6 +238,16 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
             or any(not isinstance(i, str) or not re.fullmatch(r'L\d+', i) for i in expected_fixture_ids)
             or len(set(expected_fixture_ids)) != len(expected_fixture_ids)):
         raise ValueError('Expected unique generated fixture IDs')
+    if (scale_denominator is None) != (scale_outline_m is None):
+        raise ValueError('Fixed scale requires both denominator and explicit outline in metres')
+    if scale_denominator is not None:
+        if type(scale_denominator) is not int or scale_denominator not in {25,50,100,200,500}:
+            raise ValueError('Supported fixed scale denominators: 25, 50, 100, 200, 500')
+        if __package__:
+            from .layout import polygon
+        else:
+            from layout import polygon
+        polygon(scale_outline_m, 'scale reference outline')
     source = Path(path).resolve(strict=True)
     core = Path(executable).resolve(strict=True)
     destination = Path(output_directory).resolve()
@@ -250,9 +262,16 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
     output = destination / 'layout.pdf'
     script = destination / 'plot.scr'
     arguments = ['_.-PLOT', '_Y', 'Model', 'DWG To PDF.pc3', 'ISO A3 (420.00 x 297.00 MM)',
-                 '_M', '_L', '_N', '_E', '_F', '_C', '_Y', 'monochrome.ctb', '_Y', '_A',
+                 '_M', '_L', '_N', '_E', f'1000={scale_denominator}' if scale_denominator else '_F', '_C', '_Y', 'monochrome.ctb', '_Y', '_A',
                  output.as_posix(), '_N', '_Y']
-    script.write_text('(setvar "FILEDIA" 0)\n(setvar "BACKGROUNDPLOT" 0)\n'
+    preparation = ''
+    if scale_denominator:
+        preparation = ('(if (/= (getvar "INSUNITS") 6) (error "Fixed plot requires metre drawing units"))\n'
+            '(setq daScaleNotes (ssget "_X" (list (cons 0 "TEXT") (cons 1 "Plot scale: fit to page (not to scale)"))))\n'
+            '(if (or (null daScaleNotes) (/= (sslength daScaleNotes) 1)) (error "Expected one original scale note"))\n'
+            '(setq daScaleEntity (ssname daScaleNotes 0) daScaleData (entget daScaleEntity))\n'
+            f'(entmod (subst (cons 1 "Plot scale: 1:{scale_denominator} at A3 (print 100%)") (assoc 1 daScaleData) daScaleData))\n')
+    script.write_text('(setvar "FILEDIA" 0)\n(setvar "BACKGROUNDPLOT" 0)\n' + preparation
                       + '(command ' + ' '.join(json.dumps(a) for a in arguments) + ')\n'
                       + '(princ "NATIVE_PLOT_COMPLETE")\n(princ)\n', encoding='ascii')
     try:
@@ -277,6 +296,11 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
             raise ValueError('Expected plot labels/fixture IDs missing or duplicated; inspect PDF')
         if abs(page.width - 1190.55) > 2 or abs(page.height - 841.89) > 2:
             raise ValueError('Unexpected PDF paper dimensions')
+        scale_evidence = None
+        if scale_denominator:
+            scale_evidence = verify_pdf_outline_scale(page.curves, scale_outline_m, scale_denominator)
+            if f'1:{scale_denominator}' not in text or 'not to scale' in text:
+                raise ValueError('Fixed scale annotation missing or contradictory')
         rendered = page.to_image(resolution=120, antialias=True).original.convert('RGB')
         bounds = ImageChops.difference(rendered, Image.new('RGB', rendered.size, 'white')).convert('L').point(lambda v: 255 if v > 20 else 0).getbbox()
         if not bounds or bounds[0] < 5 or bounds[1] < 5 or bounds[2] > rendered.width-5 or bounds[3] > rendered.height-5:
@@ -285,7 +309,8 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
         evidence = {'schema': 'dialux-agent/native-plot/v1', 'source': str(source), 'source_sha256': digest,
                     'original_unchanged': True, 'pdf': str(output), 'pdf_sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
                     'pages': 1, 'fixture_ids': ids, 'text_labels_verified': True, 'rendered_content_bounds_px': bounds,
-                    'preview': str(destination / 'preview.png'), 'plot_scale': 'fit_to_page',
+                    'preview': str(destination / 'preview.png'), 'plot_scale': f'1:{scale_denominator}' if scale_denominator else 'fit_to_page',
+                    'scale_evidence': scale_evidence,
                     'visual_review_verified': False, 'warning': 'Synthetic tool-test plot; visual review and engineering drawing acceptance are separate.'}
     (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
     return evidence
@@ -316,3 +341,41 @@ def drawing_inspect(path: str, grid_layer: str = 'Ceiling Grid') -> dict:
             'room_boundary_verified': False,
             'warnings': ['INSUNITS and annotations need scale cross-checks. Grid candidates are not validated ceiling tiles or room boundaries.',
                          'DXF inventory does not replace native DWG and plotted visual review.']}
+
+
+def verify_pdf_outline_scale(curves: list, outline_m: list, denominator: int) -> dict:
+    """Require one straight PDF path matching the supplied outline at physical scale."""
+    if type(denominator) is not int or denominator<=0:
+        raise ValueError('Positive scale denominator required')
+    if __package__:
+        from .layout import polygon
+    else:
+        from layout import polygon
+    polygon(outline_m,'scale reference outline')
+    outline=[tuple(p) for p in outline_m]
+    if outline[0]==outline[-1]: outline.pop()
+    factor=1000/denominator*72/25.4
+    def normalize(points):
+        minx=min(p[0] for p in points); miny=min(p[1] for p in points)
+        return [(p[0]-minx,p[1]-miny) for p in points]
+    expected=normalize([(x*factor,-y*factor) for x,y in outline])
+    matches=[]
+    for index,curve in enumerate(curves):
+        if any(command[0] not in {'m','l','h'} for command in curve.get('path',[])): continue
+        points=curve.get('pts',[])
+        if len(points)!=len(outline)+1: continue
+        if any(not math.isfinite(v) for point in points for v in point): continue
+        if max(abs(a-b) for a,b in zip(points[0],points[-1]))>.25: continue
+        actual=normalize(points[:-1])
+        errors=[]
+        for direction in (actual,list(reversed(actual))):
+            for offset in range(len(direction)):
+                rotated=direction[offset:]+direction[:offset]
+                errors.append(max(abs(a-b) for p,q in zip(expected,rotated) for a,b in zip(p,q)))
+        error=min(errors)
+        if error<=.25: matches.append({'pdf_curve_index':index,'maximum_coordinate_error_pt':error})
+    if len(matches)!=1:
+        raise ValueError('Expected one PDF outline at the requested physical scale; found '+str(len(matches)))
+    return {**matches[0],'verified':True,'denominator':denominator,'pdf_points_per_model_metre':factor,
+            'coordinate_tolerance_pt':.25,'outline_sha256':hashlib.sha256(json.dumps(outline_m,sort_keys=True).encode()).hexdigest(),
+            'warning':'Verifies this PDF vector outline at original page size, not downstream print scaling or all drawing dimensions.'}

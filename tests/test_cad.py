@@ -120,3 +120,27 @@ def test_native_plot_preserves_existing_output_directory(tmp_path, monkeypatch):
 def test_native_plot_requires_unambiguous_fixture_labels(ids):
     with pytest.raises(ValueError, match='unique generated'):
         plot_layout_native('nonexistent.dwg', 'nonexistent', ids)
+
+
+def test_pdf_scale_matches_geometry_not_annotation():
+    from cad import verify_pdf_outline_scale
+    outline=[[0,0],[6,0],[6,2],[4,2],[4,4],[0,4]]
+    factor=1000/50*72/25.4
+    points=[(200+x*factor,400-y*factor) for x,y in outline]
+    points.append(points[0])
+    curve={'pts':points,'path':[('m',points[0])]+[('l',p) for p in points[1:]]}
+    result=verify_pdf_outline_scale([curve],outline,50)
+    assert result['verified']
+    assert result['maximum_coordinate_error_pt']<1e-10
+    with pytest.raises(ValueError,match='Expected one'):
+        verify_pdf_outline_scale([curve],outline,100)
+    with pytest.raises(ValueError,match='found 2'):
+        verify_pdf_outline_scale([curve,curve],outline,50)
+    curve['path'][1]=('c',points[1])
+    with pytest.raises(ValueError): verify_pdf_outline_scale([curve],outline,50)
+
+
+@pytest.mark.parametrize('denominator,outline',[(True,[[0,0],[1,0],[0,1]]),(50,None),(None,[[0,0],[1,0],[0,1]]),(123,[[0,0],[1,0],[0,1]])])
+def test_bad_fixed_scale_rejected_before_source_access(denominator,outline):
+    with pytest.raises(ValueError):
+        plot_layout_native('missing.dwg','missing',['L0001'],scale_denominator=denominator,scale_outline_m=outline)
