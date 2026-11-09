@@ -10,7 +10,20 @@ This is a static page copier. Forms and signed documents are refused. Bookmarks,
 
 ## Synthetic acceptance
 
+`python -m src.pdf_bundle --evidence-directory <bundle-folder>` independently
+reopens a published bundle and its source files. It verifies output bytes and
+limits, contiguous page mappings, source hashes, duplicate selections, main versus
+appendix order, and every source/output page's text, size and 72-dpi rendering.
+The manifest is supplied evidence, not a signature; no engineering or authorship
+claim is made. Sources must remain available at their recorded paths. This does
+not rewrite the bundle or update an obsolete manifest.
+
 Thirteen tests cover reordered visible text and unequal page sizes, pinned source preservation, duplicate/out-of-range pages, hash mismatches, main-page and byte limits, section ordering, boolean page-number rejection and existing-output preservation. A real AcroForm fixture is refused. Fault injection verifies that an externally changed source or an importer returning the wrong page cannot publish a bundle. Invalid module requests return JSON with `state: rejected` and exit code 2.
+
+Eight additional tests exercise successful independent replay and changed output,
+source, page mapping, evidence hash, main-page count, byte limit and mapping order
+rejection (21 tests total). The independent module command also passed against the
+three-page native-output smoke case below, checking both original source files.
 
 The native-output smoke case `local/pdf-bundle-native-v1` combines the previously verified synthetic mixed-product A3 CAD sheet with pages 18 and 19 of the same synthetic project's DIALux report. All three source/output page rendering, text and size comparisons passed. Each output page was rendered and visually inspected: the landscape sheet, both portrait product tables, coordinates and labels remain legible with no new clipping. Original report page labels remain 18 and 19; they are not renumbered.
 

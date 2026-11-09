@@ -1,5 +1,5 @@
 """Explicit, source-bound assembly of static report pages using PDFium."""
-from contextlib import closing
+from contextlib import closing, ExitStack
 import hashlib
 import io
 import json
@@ -109,13 +109,77 @@ def build_pdf_bundle(sections: list, output_directory: str,
     return manifest
 
 
+def verify_pdf_bundle(evidence_directory: str) -> dict:
+    """Recheck stored bundle bytes and every page against available source files.
+
+    The manifest is supplied evidence, not a signature or proof of authorship.
+    """
+    root=Path(evidence_directory).resolve(strict=True)
+    manifest_bytes=(root/'manifest.json').read_bytes(); manifest=json.loads(manifest_bytes)
+    if manifest.get('schema')!='dialux-agent/pdf-bundle/v1' or manifest.get('state')!='verified':
+        raise ValueError('Completed PDF bundle manifest required')
+    output=Path(manifest['output']).resolve(strict=True)
+    if output!=root/'bundle.pdf':
+        raise ValueError('Bundle output path differs from evidence directory')
+    data=output.read_bytes()
+    if _sha(data)!=manifest.get('sha256') or len(data)!=manifest.get('size_bytes'):
+        raise ValueError('Bundle bytes differ from manifest')
+    limit=manifest.get('max_bytes'); main_limit=manifest.get('max_main_pages')
+    if type(limit) is not int or limit<1 or len(data)>limit:
+        raise ValueError('Invalid bundle byte limit')
+    if type(main_limit) is not int or not 1<=main_limit<=1000:
+        raise ValueError('Invalid bundle main-page limit')
+    pages=manifest.get('pages')
+    if not isinstance(pages,list) or not 1<=len(pages)<=1000 or manifest.get('page_count')!=len(pages):
+        raise ValueError('Invalid bundle page count')
+    sources={}; seen=set(); main_count=0; appendix_started=False
+    with ExitStack() as stack:
+        document=stack.enter_context(pdfium.PdfDocument(data))
+        if len(document)!=len(pages): raise ValueError('Bundle page count differs')
+        for index,mapping in enumerate(pages):
+            if mapping.get('output_page')!=index+1:
+                raise ValueError('Bundle page mapping order differs')
+            role=mapping.get('role')
+            if role not in ('main','appendix') or (role=='main' and appendix_started):
+                raise ValueError('Invalid bundle section order')
+            appendix_started |= role=='appendix'; main_count+=role=='main'
+            source=Path(mapping['source']).resolve(strict=True)
+            if source not in sources:
+                if len(sources)>=100: raise ValueError('Too many bundle sources')
+                source_bytes=source.read_bytes()
+                native=stack.enter_context(pdfium.PdfDocument(source_bytes))
+                if native.get_formtype()!=0 or raw.FPDF_GetSignatureCount(native):
+                    raise ValueError('Forms and signed documents are unsupported')
+                sources[source]=(_sha(source_bytes),native)
+            digest,native=sources[source]
+            number=mapping.get('source_page')
+            if digest!=mapping.get('source_sha256'):
+                raise ValueError('Bundle source hash differs')
+            if type(number) is not int or not 1<=number<=len(native) or (digest,number) in seen:
+                raise ValueError('Invalid or repeated bundle source page')
+            seen.add((digest,number))
+            source_evidence=_page_evidence(native,number-1)
+            if source_evidence!=mapping.get('evidence') or _page_evidence(document,index)!=source_evidence:
+                raise ValueError('Bundle page differs from source evidence')
+    if not 1<=main_count<=main_limit or main_count!=manifest.get('main_page_count'):
+        raise ValueError('Bundle main-page count differs')
+    return {'schema':'dialux-agent/pdf-bundle-verification/v1','state':'verified',
+            'manifest_sha256':_sha(manifest_bytes),'pdf_sha256':_sha(data),
+            'page_count':len(pages),'main_page_count':main_count,'sources_checked':len(sources),
+            'rendering_72dpi_verified':True,'engineering_content_verified':False,
+            'source_authenticity_verified':False,'interactive_features_verified':False}
+
+
 if __name__ == '__main__':
     import argparse
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--request',required=True)
+    mode=parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--request')
+    mode.add_argument('--evidence-directory')
     args=parser.parse_args()
     try:
-        print(json.dumps(build_pdf_bundle(**json.loads(Path(args.request).read_text(encoding='utf-8'))),indent=2))
-    except (ValueError,OSError,TypeError,pdfium.PdfiumError) as exc:
+        result=verify_pdf_bundle(args.evidence_directory) if args.evidence_directory else build_pdf_bundle(**json.loads(Path(args.request).read_text(encoding='utf-8')))
+        print(json.dumps(result,indent=2))
+    except (ValueError,OSError,TypeError,KeyError,pdfium.PdfiumError) as exc:
         print(json.dumps({'state':'rejected','error':str(exc)}))
         raise SystemExit(2)

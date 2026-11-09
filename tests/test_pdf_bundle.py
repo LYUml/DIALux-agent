@@ -3,7 +3,7 @@ import hashlib
 import json
 import pytest
 import pypdfium2 as pdfium
-from src.pdf_bundle import build_pdf_bundle
+from src.pdf_bundle import build_pdf_bundle, verify_pdf_bundle
 
 
 def fixture_pdf(path, form=False):
@@ -109,3 +109,29 @@ def test_module_command_returns_machine_readable_rejection(tmp_path):
     assert completed.returncode==2
     assert json.loads(completed.stdout)['state']=='rejected'
     assert 'Traceback' not in completed.stderr
+
+
+def test_independent_bundle_replay(bundle_request):
+    build_pdf_bundle(**bundle_request)
+    result=verify_pdf_bundle(bundle_request['output_directory'])
+    assert result['page_count']==2 and result['sources_checked']==1
+    assert result['rendering_72dpi_verified'] and not result['source_authenticity_verified']
+
+
+@pytest.mark.parametrize('corruption',['output','source','mapping','evidence','count','limit','order'])
+def test_independent_replay_rejects_changed_artifacts(bundle_request,corruption):
+    from pathlib import Path
+    build_pdf_bundle(**bundle_request)
+    root=Path(bundle_request['output_directory']);path=root/'manifest.json'
+    manifest=json.loads(path.read_bytes())
+    if corruption=='output':
+        pdf=root/'bundle.pdf';pdf.write_bytes(pdf.read_bytes()+b'\n% changed')
+    if corruption=='source':
+        source=Path(bundle_request['sections'][0]['path']);source.write_bytes(source.read_bytes()+b'\n% changed')
+    if corruption=='mapping': manifest['pages'][0]['source_page']=1
+    if corruption=='evidence': manifest['pages'][0]['evidence']['text_sha256']='0'*64
+    if corruption=='count': manifest['main_page_count']=2
+    if corruption=='limit': manifest['max_bytes']=1
+    if corruption=='order': manifest['pages'].reverse()
+    path.write_text(json.dumps(manifest),encoding='utf-8')
+    with pytest.raises(ValueError): verify_pdf_bundle(str(root))
