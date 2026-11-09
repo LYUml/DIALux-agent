@@ -263,6 +263,7 @@ def test_arrangement_refuses_existing_calculation_content(monkeypatch):
 
 
 def test_calculation_reports_process_exit_without_reading_stale_ui(monkeypatch):
+    monkeypatch.setattr(windows_worker, "prepare_calculation_view", lambda *a: None)
     import psutil
     state = {'controls': {'CalculationButtonStart': {'enabled': True}}}
     monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: (Path('test.evo'), state))
@@ -372,3 +373,18 @@ def test_modern_save_dialog_commits_filename_before_submit(tmp_path):
     target = tmp_path/'new project.evo'
     windows_worker.submit_file_dialog(main, 'Save project', target)
     assert model['saved'] == str(target)
+
+
+@pytest.mark.parametrize('initially_open',[True,False])
+def test_calculation_monitor_presence_not_tab_visibility(monkeypatch,initially_open):
+    state={'open':initially_open,'clicks':0}
+    tab=SimpleNamespace(element_info=SimpleNamespace(automation_id='ResultsMonitorTool'),is_visible=lambda:False)
+    main=SimpleNamespace(descendants=lambda **k:[tab] if state['open'] else [])
+    monkeypatch.setattr(windows_worker,'select_lighting_tool',lambda *a:None)
+    monkeypatch.setattr(windows_worker.time,'sleep',lambda *a:None)
+    def click():
+        state['open']=True
+        state['clicks']+=1
+    monkeypatch.setattr(windows_worker,'unique_control',lambda *a:SimpleNamespace(click_input=click))
+    windows_worker.prepare_calculation_view(main)
+    assert state['clicks']==(0 if initially_open else 1)

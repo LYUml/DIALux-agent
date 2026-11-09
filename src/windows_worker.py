@@ -184,6 +184,7 @@ def save(app, main, process, expected_project):
 def calculate(app, main, process, expected_project, recalculate=False):
     import psutil
     expected, state = prepare_project(app, main, process, expected_project)
+    prepare_calculation_view(main)
     def button(control_id):
         found = [c for c in main.descendants(control_type='Button') if c.element_info.automation_id == control_id]
         if len(found) != 1 or not found[0].is_enabled():
@@ -572,6 +573,20 @@ def arrange_room(app, main, process, expected_project, parameters):
         journal.update(state='failed', error=str(exc))
         record()
         raise ValueError(f'Arrangement outcome requires inspection: {directory / "journal.json"}: {exc}') from exc
+
+
+def prepare_calculation_view(main):
+    # Report output can hide result rows even after the solver finishes. The
+    # monitor's dock tab itself is hidden in the observed layout, so visibility
+    # of that TabItem is not an open/closed test; presence is the useful signal.
+    select_lighting_tool(main, 'LuminaireArrangementTool')
+    if not any(c.element_info.automation_id == 'ResultsMonitorTool'
+               for c in main.descendants(control_type='TabItem')):
+        unique_control(main, 'Button', 'ShowResultsMonitor').click_input()
+        time.sleep(.3)
+    if not any(c.element_info.automation_id == 'ResultsMonitorTool'
+               for c in main.descendants(control_type='TabItem')):
+        raise ValueError('Results monitor did not open; calculation not invoked')
 
 
 def select_lighting_tool(main, tool_id):

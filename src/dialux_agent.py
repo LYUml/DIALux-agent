@@ -124,6 +124,11 @@ def main():
     rooms = commands.add_parser('rooms-create')
     rooms.add_argument('--spec', required=True)
     rooms.add_argument('--output', required=True)
+    checkpoint = commands.add_parser('calculation-checkpoint')
+    checkpoint.add_argument('--expected-project', required=True)
+    checkpoint.add_argument('--evidence-directory', required=True)
+    checkpoint.add_argument('--checks', required=True)
+    checkpoint.add_argument('--recalculate', action='store_true')
     commands.add_parser('desktop-status')
     launching = commands.add_parser('desktop-launch')
     launching.add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
@@ -211,6 +216,8 @@ def main():
             result = _local_module('desktop').desktop_import_stf(args.path)
         elif args.command == 'desktop-export-pdf':
             result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
+        elif args.command == 'calculation-checkpoint':
+            result = _local_module('workflow').calculation_checkpoint(args.expected_project, args.evidence_directory, json.loads(Path(args.checks).read_text(encoding='utf-8-sig')), args.recalculate)
         elif args.command == 'desktop-arrange-room':
             spec = json.loads(Path(args.spec).read_text(encoding='utf-8-sig'))
             result = _local_module('desktop').desktop_arrange_room(args.expected_project, **spec)
@@ -252,7 +259,7 @@ def main():
             result = inventory(args.source) if args.command == 'inventory' else verify(
                 json.loads(Path(args.manifest).read_text(encoding='utf-8-sig')))
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        if args.command in {'criteria-check', 'report-check'}:
+        if args.command in {'criteria-check', 'report-check', 'calculation-checkpoint'}:
             return {'pass': 0, 'fail': 1, 'unverified': 3}[result['status']]
         return 0 if result.get('ok', True) else 1
     except (OSError, ValueError, KeyError, TypeError) as exc:

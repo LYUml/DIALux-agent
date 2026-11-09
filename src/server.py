@@ -9,7 +9,7 @@ if __package__:
     from .dialux_agent import inventory, verify
     from .regulations import evaluate_profile
     from .results import read_summary_pdf, read_report_pdf
-    from .workflow import check_report, check_report_summary
+    from .workflow import calculation_checkpoint, check_report, check_report_summary
     from .desktop import desktop_arrange_room, desktop_room_context, desktop_read_space, desktop_close_project, desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 else:
     from verification import verify_room_addition
@@ -20,7 +20,7 @@ else:
     from dialux_agent import inventory, verify
     from regulations import evaluate_profile
     from results import read_summary_pdf, read_report_pdf
-    from workflow import check_report, check_report_summary
+    from workflow import calculation_checkpoint, check_report, check_report_summary
     from desktop import desktop_arrange_room, desktop_room_context, desktop_read_space, desktop_close_project, desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 
 server = MCPServer('DIALux-agent', instructions='Geometry tools do not run lighting calculations. Preserve source files; report unverified capabilities explicitly.')
@@ -43,6 +43,7 @@ server.tool()(read_summary_pdf)
 server.tool()(read_report_pdf)
 server.tool()(check_report)
 server.tool()(check_report_summary)
+server.tool()(calculation_checkpoint)
 server.tool()(desktop_status)
 server.tool()(desktop_close_project)
 server.tool()(desktop_read_space)
