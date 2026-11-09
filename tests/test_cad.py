@@ -175,3 +175,12 @@ def test_pdf_rectangle_path_uses_implicit_closure():
     with pytest.raises(ValueError): verify_pdf_outline_scale([rect],[[0,0],[30,0],[30,34],[0,34]],200)
     rect['object_type']='curve'
     with pytest.raises(ValueError): verify_pdf_outline_scale([rect],[[0,0],[30,0],[30,34],[0,34]],100)
+
+@pytest.mark.parametrize('product',['Panel %%d','Panel\nInjected note','Panel\tModel'])
+def test_drawing_notes_reject_cad_escapes_before_output(tmp_path,product):
+    spec=json.loads((Path(__file__).parents[1]/'examples/synthetic-apply-grid.json').read_text())
+    spec['fixture']['product_id']=product
+    output=tmp_path/'invalid.dxf'
+    with pytest.raises(ValueError,match='drawing notes'):
+        export_layout_dxf(spec,str(output))
+    assert not output.exists()

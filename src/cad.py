@@ -121,6 +121,8 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
         notes += ['Native observation snapshot SHA256:', layout['observations_sha256'][:32],
                   layout['observations_sha256'][32:], 'Product and envelope dimensions: supplied assumptions']
     for index, text in enumerate(notes):
+        if '%%' in text or any(ord(character)<32 for character in text):
+            raise ValueError('Unsupported CAD text escape or control character in drawing notes')
         model.add_text(text, dxfattribs={'height':note_height,'layer':'NOTES','insert':(tx,ty-index*note_height*20/9)})
     if schedule is not None:
         if __package__:
