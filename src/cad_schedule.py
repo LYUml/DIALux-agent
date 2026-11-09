@@ -42,7 +42,8 @@ def add_schedule_table(doc, schedule, origin, height, symbol_dimensions=None, sy
              'Reported product: '+schedule['product']['reported_label'],
              'Article: '+schedule['product']['article_number'],
              'Positions matched to this group; supplied alignment.' if symbol_dimensions is not None else 'Positions matched to all drawing fixtures; supplied alignment.',
-             'Product identity and manufacturer dimensions not authenticated.']
+             (f"Symbol envelope: {symbol_dimensions['width_m']} x {symbol_dimensions['depth_m']} m (supplied)"
+              if symbol_dimensions is not None else 'Product identity and manufacturer dimensions not authenticated.')]
     if symbol_dimensions is not None:
         lines += [f"Mounting height: {symbol_dimensions['mounting_height_m']} m",
                   'Drawing IDs: '+', '.join(f['fixture_id'] for f in schedule['fixtures'])]

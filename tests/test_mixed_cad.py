@@ -35,6 +35,7 @@ def test_symbols_and_labels_use_each_product_dimensions(case):
   assert not label.intersects(box(x-w/2,y-d/2,x+w/2,y+d/2))
  text=' '.join(e.dxf.text for e in doc.modelspace().query('TEXT[layer=="SCHEDULE"]'))
  assert 'L001' in text and 'L002' in text and 'Group1' in text and 'Group2' in text
+ assert '0.6 x 0.6 m (supplied)' in text and '1.2 x 0.3 m (supplied)' in text
 
 @pytest.mark.parametrize('change',['overlap','outside','duplicate_id','bad_dimension','partial','missing_assumptions'])
 def test_invalid_mixed_inputs_never_write(case,change):
