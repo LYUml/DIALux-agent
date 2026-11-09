@@ -58,3 +58,11 @@ positive mean illuminance and explicitly labels itself an orchestration smoke
 test, not an engineering design standard. Both grids and the existing report
 summary identity were checked offline. Native execution has not started; its
 future report values must be obtained from new calculations.
+
+Failure evidence distinguishes pending copy, layout, calculation and report
+comparison. Exceptions set `active_project` to null and retain
+`last_expected_project`; the UI may have changed even when an operation did not
+return successfully. `native_outcome_verified` remains false on failure. Tests
+inject each failure stage, replaced report hashes and external source changes,
+and verify no later candidate starts. These are failure-path tests, not evidence
+of native interruption recovery or automatic resume.

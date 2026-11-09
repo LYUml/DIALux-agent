@@ -112,6 +112,8 @@ def run_layout_candidates(expected_project: str, group_id: str, candidates: list
             item['checkpoint'] = checkpoint
             if checkpoint.get('state') != 'completed' or checkpoint.get('status') not in ('pass', 'fail', 'unverified'):
                 raise ValueError('Calculation checkpoint did not complete')
+            item['state'] = 'pending_report_comparison'
+            record()
             report = read_report_pdf(checkpoint['report'])
             if report['sha256'] != checkpoint['report_sha256']:
                 raise ValueError('Checkpoint report changed before comparison')
@@ -146,6 +148,9 @@ def run_layout_candidates(expected_project: str, group_id: str, candidates: list
         record()
         return journal
     except Exception as exc:
-        journal.update(state='failed', error=str(exc), active_project=current)
+        failed_at = journal['iterations'][-1]['state'] if journal['iterations'] else journal['state']
+        journal.update(state='failed', failed_at=failed_at, error=str(exc),
+                       last_expected_project=current, active_project=None,
+                       native_outcome_verified=False)
         record()
         raise ValueError(f'Candidate run failed; inspect {directory / "journal.json"} before further actions: {exc}') from exc

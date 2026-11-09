@@ -94,3 +94,38 @@ def test_missing_objective_keeps_failed_journal_and_never_retries(harness,monkey
     journal = json.loads((Path(request['evidence_directory'])/'journal.json').read_text())
     assert journal['state'] == 'failed'
     assert actions == ['copy','layout','calculate']
+    assert journal['failed_at'] == 'pending_report_comparison'
+    assert journal['active_project'] is None
+
+
+@pytest.mark.parametrize('stage,expected,action_count', [
+    ('copy','pending_copy',0), ('layout','pending_layout',1),
+    ('calculate','pending_calculation',2), ('hash','pending_report_comparison',3)])
+def test_failure_stops_before_next_candidate_and_records_stage(harness,monkeypatch,stage,expected,action_count):
+    request, values, statuses, actions = harness
+    def fail(*args, **kwargs):
+        raise ValueError('Injected native failure')
+    if stage == 'copy': monkeypatch.setattr(module,'desktop_save_as',fail)
+    if stage == 'layout': monkeypatch.setattr(module,'apply_grid_layout',lambda *a:{'state':'failed'})
+    if stage == 'calculate': monkeypatch.setattr(module,'calculation_checkpoint',lambda *a,**k:{'state':'failed'})
+    if stage == 'hash': monkeypatch.setattr(module,'read_report_pdf',lambda *a:{'sha256':'replaced'})
+    with pytest.raises(ValueError, match='Candidate run failed'):
+        module.run_layout_candidates(**request)
+    journal = json.loads((Path(request['evidence_directory'])/'journal.json').read_text())
+    assert len(journal['iterations']) == 1
+    assert len(actions) == action_count
+    assert journal['failed_at'] == expected
+    assert journal['active_project'] is None
+    assert not journal['native_outcome_verified']
+
+
+def test_source_modification_prevents_next_candidate(harness,monkeypatch):
+    request, values, statuses, actions = harness
+    original = module.read_report_pdf
+    def read(path):
+        Path(request['expected_project']).write_bytes(b'external modification')
+        return original(path)
+    monkeypatch.setattr(module,'read_report_pdf',read)
+    with pytest.raises(ValueError, match='Source project changed'):
+        module.run_layout_candidates(**request)
+    assert actions == ['copy','layout','calculate']
