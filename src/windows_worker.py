@@ -1065,6 +1065,37 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
             'warning': 'Selected native coordinate fields committed. Independently inspect all fixtures and save/reopen before accepting the layout.'}
 
 
+def read_arrangement(app, main, process, expected_project, tree_item_id):
+    if not isinstance(tree_item_id,str) or tree_item_id.count('_Luminaires_') != 1:
+        raise ValueError('Expected an explicit luminaire arrangement tree identity')
+    parent = tree_item_id.split('_Luminaires_',1)[0]+'_Luminaires'
+    inventory = project_tree(app, main, process, expected_project, parent)
+    if inventory['search_text']:
+        raise ValueError('Arrangement inspection requires an unfiltered tree')
+    tree = wait_control(main,'List','FilterTreeListBox')
+    matches = [e for e in container_elements(tree) if e.CurrentAutomationId == tree_item_id]
+    if len(matches)!=1:
+        raise ValueError('Arrangement identity is absent or ambiguous')
+    item = materialize_tree_item(matches[0])
+    item.select()
+    if not item.is_selected():
+        raise ValueError('Arrangement selection not confirmed')
+    select_lighting_tool(main,'LuminaireArrangementTool')
+    set_storey_context(main)
+    allowed = {'ElementCountX','ElementCountY','PolygonPosition_X','PolygonPosition_Y',
+               'PolygonPosition_Z','ArrangementRotation_Z','ArrangementObjectName'}
+    available = {c.element_info.automation_id for c in main.descendants(control_type='Edit')
+                 if c.is_visible() and c.element_info.automation_id in allowed}
+    if not available-{'ArrangementObjectName'}:
+        raise ValueError('No supported arrangement parameters exposed')
+    values = read_edit_values(main,sorted(available))
+    if snapshot(app,main,process)['dialogs']:
+        raise ValueError('Dialog during arrangement readback')
+    return {'operation':'read_arrangement','path':inventory['path'],'tree_item_id':tree_item_id,
+            'display_values':values,'coordinate_frame':'active_storey',
+            'fixture_positions_verified':False,'uses_codex_computer_use':False}
+
+
 def edit_arrangement(app, main, process, expected_project, parameters):
     """Edit an exact visible tree item, then read committed native parameters."""
     import math
@@ -1125,7 +1156,10 @@ def edit_arrangement(app, main, process, expected_project, parameters):
             control.type_keys('{TAB}', pause=.1)
         else:
             control.set_focus()
-            control.type_keys('^a' + format(value, '.12g') + '{TAB}', set_foreground=False)
+            control.iface_value.SetValue(format(value, '.12g'))
+            if not math.isclose(float(control.get_value()),value,rel_tol=0,abs_tol=.00051):
+                raise ValueError('Arrangement field replacement not observed; partial edit possible')
+            control.type_keys('{TAB}', set_foreground=False)
         time.sleep(1)
         edit_state = snapshot(app, main, process)
         if edit_state['dialogs']:
@@ -1199,7 +1233,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture', 'apply-grid'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture', 'apply-grid', 'read-arrangement'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -1215,7 +1249,7 @@ def main():
             from desktop_lock import desktop_lease
         with desktop_lease():
             app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-            if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture', 'apply-grid'} and not args.expected_project:
+            if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture', 'apply-grid', 'read-arrangement'} and not args.expected_project:
                 raise ValueError('expected_project is required')
             if args.action in {'status', 'launch'}:
                 result = snapshot(app, window, process)
@@ -1243,6 +1277,8 @@ def main():
                 result = edit_fixture(app, window, process, args.expected_project, json.loads(args.parameters))
             elif args.action == 'apply-grid':
                 result = apply_grid(app, window, process, args.expected_project, json.loads(args.parameters))
+            elif args.action == 'read-arrangement':
+                result = read_arrangement(app, window, process, args.expected_project, **json.loads(args.parameters))
             elif args.action == 'read-furniture':
                 result = read_furniture(app, window, process, args.expected_project, **json.loads(args.parameters))
             elif args.action == 'inspect-group':

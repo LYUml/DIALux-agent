@@ -113,3 +113,12 @@ separate room/light-scene identity. A native reopen/export check of both saved
 copies is in progress; no reopening claim follows merely from matching hashes.
 Automatic candidate generation, different products/counts, comprehensive project
 criteria and large interrupted recovery remain outside this accepted small case.
+
+Both saved candidates have now been independently reopened and exported again.
+`local/candidate-native-v3/reopen-check/journal.json` confirms identical metrics,
+complete coordinate tables and reported products for both, with unchanged
+original native files. Reopened PDF hashes: candidate 0
+`272f1ed73f08b731f650e44395a8a5c4b70a363c37193461668b886caef217c6`, candidate 1
+`477eb869d32a6fcd6d604030f77aebeceb0e89149962b3dadeeeddaafb3a9fc9`.
+Documentation-session changes were saved to separate session copies before
+closing. This completes persistence evidence for the two-candidate synthetic case.

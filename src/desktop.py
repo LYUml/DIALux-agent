@@ -96,6 +96,11 @@ def desktop_save_as(expected_project: str, path: str) -> dict:
     return _run('save-as', expected_project, target=path)
 
 
+def desktop_read_arrangement(expected_project: str, tree_item_id: str) -> dict:
+    """Read exposed native array parameters without changing geometry or results."""
+    return _run('read-arrangement', expected_project, parameters={'tree_item_id':tree_item_id})
+
+
 def desktop_save(expected_project: str) -> dict:
     """Save only the specified currently open native project; reject dialogs and mismatches."""
     return _run('save', expected_project)

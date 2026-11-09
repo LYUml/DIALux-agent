@@ -47,6 +47,23 @@ Before/after inspection pages are now saved separately as hashed `before-page-NN
 The 168-fixture native movement gate is running separately in `local/large-grid-run-v1` against the new copy `local/large-grid-probe-v1.evo` (initial SHA256 `525aef00ad8c4eca5fea46cf78cb836a78606d02f87e5f2fd9bc40806e92351f`). The explicit target shifts every centre by +0.1 m in X/Y, retaining the original grid spacing, height and zero rotation. The original large project hash was checked unchanged before launch. This gate is pending until the actual process terminates successfully and all evidence is reviewed. 311 tests passed before launch.
 # Mid-movement reminder guard
 
+## Native array parameter inspection
+
+`desktop-read-arrangement --expected-project <copy.evo> --tree-item-id <group>`
+/ MCP `desktop_read_arrangement` reads the exposed native array fields without
+clearing results or changing geometry. It expands the exact luminaire parent,
+rejects a filtered tree, selects the unique native container item and normalizes
+the storey frame. Returned display values are not a whole-group geometry check.
+
+The untouched 168-fixture synthetic array exposes counts 14 x 12, centre
+`[15,17,3.035]` and zero rotation. On `local/large-array-probe-v1.evo`, the existing
+public arrangement editor submitted centre X/Y `[15.1,17.1]` and read both back.
+Numeric arrangement edits now also use atomic UIA value replacement and Tab
+commit. `local/large-array-shift-v1.json` retains the before/after fields. All 168
+individual positions are being collected independently before accepting this as
+successful bulk translation. Parameter success alone is not the missing large
+movement gate, nor evidence of arbitrary grid restructuring.
+
 The placement loop now records `no_write_required` for fixtures whose initial
 reported XYZ already equal the target within arithmetic noise (1e-10 m). It does
 not call the editor for those fixtures. Full initial and final group inspections

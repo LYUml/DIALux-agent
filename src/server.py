@@ -73,6 +73,11 @@ else:
     from iterations import run_layout_candidates
 server.tool()(run_layout_candidates)
 server.tool()(desktop_status)
+if __package__:
+    from .desktop import desktop_read_arrangement
+else:
+    from desktop import desktop_read_arrangement
+server.tool()(desktop_read_arrangement)
 server.tool()(desktop_close_project)
 server.tool()(desktop_read_space)
 server.tool()(desktop_room_context)

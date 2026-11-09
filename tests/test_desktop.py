@@ -51,6 +51,20 @@ def test_unknown_dialog_identity_is_retained_for_diagnosis(tmp_path, monkeypatch
         windows_worker.prepare_project(None,None,None,str(path))
 
 
+@pytest.mark.parametrize('identity', [None, '', 'not-an-array'])
+def test_arrangement_read_rejects_bad_identity_before_ui(identity,monkeypatch):
+    monkeypatch.setattr(windows_worker,'project_tree',lambda *a:pytest.fail('UI accessed'))
+    with pytest.raises(ValueError,match='arrangement tree'):
+        windows_worker.read_arrangement(None,None,None,'test.evo',identity)
+
+
+def test_arrangement_read_refuses_filtered_inventory(monkeypatch):
+    monkeypatch.setattr(windows_worker,'project_tree',lambda *a:{'search_text':'filter'})
+    monkeypatch.setattr(windows_worker,'wait_control',lambda *a:pytest.fail('Selected filtered array'))
+    with pytest.raises(ValueError,match='unfiltered'):
+        windows_worker.read_arrangement(None,None,None,'test.evo','Building_Luminaires_Array')
+
+
 def saved_toast(path):
     return {'title':'','automation_id':'','class':'Popup','children':[
         {'type':'Text','text':f'The project has been saved at {path}.'},
