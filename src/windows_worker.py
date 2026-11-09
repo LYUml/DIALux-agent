@@ -776,22 +776,37 @@ def materialize_tree_item(element):
     return item
 
 
-def read_group_fixtures(app, main, process, expected_project, group_id, offset=0, limit=4, inventory_token=None, expected_count=None):
+def read_group_fixtures(app, main, process, expected_project, group_id, offset=0, limit=4, inventory_token=None, expected_count=None, _context=None):
     """Read visible individual fixture parameters from one exact expanded group."""
     import math
     if not isinstance(group_id, str) or not group_id.strip():
         raise ValueError('group_id must be a nonempty string')
     if expected_count is not None and (type(expected_count) is not int or not 1 <= expected_count <= 2000):
         raise ValueError('expected_count must be 1 to 2000')
-    inventory = project_tree(app, main, process, expected_project, group_id)
-    if inventory['search_text']:
-        raise ValueError('Cannot inspect a filtered fixture inventory')
-    tree = wait_control(main, 'List', 'FilterTreeListBox')
-    elements = container_elements(tree)
-    source_elements = {tuple(e.GetRuntimeId()): e for e in elements
-                       if e.CurrentAutomationId.startswith(group_id + '_')}
-    nodes = [{'runtime_id': list(runtime), 'tree_item_id': element.CurrentAutomationId}
-             for runtime, element in source_elements.items()]
+    context = _context if _context is not None else {}
+    if not context:
+        inventory = project_tree(app, main, process, expected_project, group_id)
+        if inventory['search_text']:
+            raise ValueError('Cannot inspect a filtered fixture inventory')
+        tree = wait_control(main, 'List', 'FilterTreeListBox')
+        elements = container_elements(tree)
+        source_elements = {tuple(e.GetRuntimeId()): e for e in elements
+                           if e.CurrentAutomationId.startswith(group_id + '_')}
+        nodes = [{'runtime_id': list(runtime), 'tree_item_id': element.CurrentAutomationId}
+                 for runtime, element in source_elements.items()]
+        context.update(inventory=inventory, source_elements=source_elements, nodes=nodes,
+                       project=str(Path(expected_project).resolve()), group_id=group_id,
+                       elements=elements)
+    else:
+        if context['project'] != str(Path(expected_project).resolve()) or context['group_id'] != group_id:
+            raise ValueError('Persistent inventory belongs to another project or group')
+        prepare_project(app, main, process, expected_project)
+        inventory, source_elements, nodes = (context[key] for key in ('inventory', 'source_elements', 'nodes'))
+        # Keep all COM references alive, but never accept changed cached identities.
+        for node in nodes:
+            element = source_elements[tuple(node['runtime_id'])]
+            if list(element.GetRuntimeId()) != node['runtime_id'] or element.CurrentAutomationId != node['tree_item_id']:
+                raise ValueError('Persistent fixture identity changed; restart inspection')
     total = len(nodes)
     if expected_count is not None and total != expected_count:
         raise ValueError(f'Only {total} inventory fixture nodes for expected {expected_count}; virtualized/incomplete inventory, no fixture read attempted')
@@ -834,6 +849,19 @@ def read_group_fixtures(app, main, process, expected_project, group_id, offset=0
             'fixtures': fixtures, 'observed_count': len(fixtures), 'complete_inventory': False,
             'uses_codex_computer_use': False,
             'warning': 'UI-displayed coordinates rounded by DIALux. Native ItemContainer covers this expanded group, not collapsed or filtered project content. Runtime IDs are session-local. realized_node_count is a compatibility alias for container_node_count.'}
+
+
+def inspect_group(app, main, process, expected_project, parameters):
+    if not isinstance(parameters, dict) or set(parameters) != {'group_id', 'expected_count', 'evidence_directory'}:
+        raise ValueError('Expected group_id, expected_count and evidence_directory')
+    if __package__:
+        from .placement import _inspect_group_checkpoint
+    else:
+        from placement import _inspect_group_checkpoint
+    context = {}
+    def reader(project, group_id, **options):
+        return read_group_fixtures(app, main, process, project, group_id, _context=context, **options)
+    return _inspect_group_checkpoint(expected_project, page_reader=reader, **parameters)
 
 
 def edit_fixture(app, main, process, expected_project, parameters):
@@ -1029,7 +1057,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -1040,7 +1068,7 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
@@ -1066,6 +1094,8 @@ def main():
             result = arrange_space(app, window, process, args.expected_project, args.product_id)
         elif args.action == 'edit-fixture':
             result = edit_fixture(app, window, process, args.expected_project, json.loads(args.parameters))
+        elif args.action == 'inspect-group':
+            result = inspect_group(app, window, process, args.expected_project, json.loads(args.parameters))
         elif args.action == 'group-fixtures':
             result = read_group_fixtures(app, window, process, args.expected_project, **json.loads(args.parameters))
         elif args.action == 'project-tree':

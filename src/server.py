@@ -2,7 +2,7 @@
 from mcp.server.mcpserver import MCPServer
 if __package__:
     from .verification import verify_room_addition
-    from .placement import apply_grid_layout
+    from .placement import inspect_group_checkpoint, apply_grid_layout
     from .layout import plan_grid, verify_observed_layout
     from .cad_geometry import drawing_extract_boundary
     from .cad import export_observed_layout_dxf, drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native, plot_layout_native
@@ -14,7 +14,7 @@ if __package__:
     from .desktop import desktop_arrange_room, desktop_room_context, desktop_read_space, desktop_close_project, desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 else:
     from verification import verify_room_addition
-    from placement import apply_grid_layout
+    from placement import inspect_group_checkpoint, apply_grid_layout
     from layout import plan_grid, verify_observed_layout
     from cad_geometry import drawing_extract_boundary
     from cad import export_observed_layout_dxf, drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native, plot_layout_native
@@ -30,6 +30,7 @@ server.tool()(create_room)
 server.tool()(create_rooms)
 server.tool()(plan_grid)
 server.tool()(apply_grid_layout)
+server.tool()(inspect_group_checkpoint)
 server.tool()(verify_room_addition)
 server.tool()(verify_observed_layout)
 server.tool()(drawing_convert)
