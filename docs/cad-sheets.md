@@ -38,3 +38,20 @@ its missing room edge correctly failed vector-scale verification. Failed v1
 artifacts remain preserved. The accepted 20 mm frame is tested on this A3 setup,
 not certified for every printer or paper configuration. 30 targeted CAD tests
 passed. Combined dimension-heavy/large framed sheets remain separate gates.
+
+A second native gate exported the existing synthetic concave grid through the
+public drawing exporter with `spec.sheet`: 23 fixtures, 12 m and 9 m native linear
+dimensions, label-placement rules and the fixed A3 frame. Native reopen preserved
+all fixture, dimension and sheet records. PDF physical scale error was below
+0.078 pt; visual inspection confirmed complete frame, dimension labels and all
+fixture IDs. It retains substantial whitespace and is not an automatic sheet
+composition acceptance.
+
+- Evidence: ignored `local/sheet-dimensions-evidence-v1.json`.
+- PDF SHA256: `7173df0d016ea159fb99d5ee1a3b3e8d5d4abd23bbb81ceec892950c082e9ad0`.
+- Native DWG SHA256: `c40a29850a02a1bb2ff7376e16b49ec001a824bef25c5d899ebb572ee4c6c4d0`.
+
+Actual Core Console negative gates also refused a 1:50 request for a 1:100 sheet
+and a fit-to-page request. Logs contain the specific sheet-guard errors;
+`local/sheet-negative-gates-v1.json` records these outcomes. These are actual
+native refusals, not inferred from unit tests. Full regression suite: 395 passed.
