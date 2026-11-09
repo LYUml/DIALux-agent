@@ -67,12 +67,15 @@ CAD export, native DWG verification and fixed-scale PDF workflow, use the
 | Discover native state | `desktop-status`, `desktop-project-tree`, `desktop-read-arrangement`, `group-inspection-checkpoint`, `group-inspection-verify` | [Group inspection](docs/group-inspection-checkpoints.md) |
 | Place and verify fixtures | `desktop-import-luminaire`, `desktop-arrange-room`, `desktop-edit-arrangement`, `desktop-edit-fixture`, `layout-apply-grid`, `layout-apply-array`, `layout-verify-observed` | [Room creation](docs/journalled-room-creation.md), [grid application](docs/grid-application.md), [large array](docs/large-array-translation.md) |
 | Calculate and compare | `calculation-checkpoint`, `layout-candidates-generate`, `layout-candidates-run`, `layout-offset-search` | [Calculation checkpoints](docs/calculation-checkpoints.md), [candidate runs](docs/layout-candidates.md) |
-| Read and evaluate results | `report-read-all`, `report-workplane-read`, `report-layout-read`, `report-arrangements-read`, `report-check`, `criteria-check` | [Scoped summaries](docs/scoped-report-reading.md), [mixed products](docs/mixed-product-report-reading.md), [workplane extrema](docs/workplane-extrema.md), [applicability](docs/profile-applicability.md) |
+| Read and evaluate results | `report-read-all`, `report-model-parameters`, `report-workplane-read`, `report-layout-read`, `report-arrangements-read`, `report-check`, `criteria-check` | [Scoped summaries](docs/scoped-report-reading.md), [mixed products](docs/mixed-product-report-reading.md), [workplane extrema](docs/workplane-extrema.md), [applicability](docs/profile-applicability.md) |
 | Produce independent CAD | `drawing-export-observed`, `schedule-build`, `schedule-build-mixed`, `drawing-export-scheduled`, `drawing-export-mixed`, `layout-verify-native`, `layout-plot-native` | [Observed layouts](docs/observed-layout-cad.md), [schedule](docs/luminaire-schedule.md), [sheets](docs/cad-sheets.md) |
 
 `report-read` is the single-summary adapter; use `report-read-all` for multiple
 supported summaries. `report-check --summary-id ...` selects exactly one summary.
 Report export uses stored results unless a fresh calculation was explicitly run.
+[Reported model parameters](docs/reported-model-parameters.md) expose scoped
+reflection percentages and fixed maintenance factors without assuming defaults
+or claiming individual-surface materials.
 
 Native reads/edits qualify coordinates as `active_storey`. Runtime IDs are
 session-local and must be rediscovered after reopening. Operation journals retain

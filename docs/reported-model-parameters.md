@@ -24,3 +24,8 @@ summary `3837d1f7d66cf857a136131a7287babde530ed18370c4d0be3fc09252c7b6d7d`.
 Page 15 was rendered and visually checked: 70/50/20%, fixed 0.80, mounting
 height 3.035 m, workplane 0.8 m, wall zone 0 m, room height 3 m and area 24 m².
 This is tool-validation evidence, not an assignment design.
+
+A real stdio MCP client also called `read_model_parameters` against that native
+report and verified the same values. Its local result is retained as
+`local/model-parameters-mcp-result.json`. This checks the transport and backend
+with actual PDF bytes; it does not upgrade freshness or per-surface claims.
