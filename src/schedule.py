@@ -17,6 +17,11 @@ def build_luminaire_schedule(layout: dict, report_spec: dict, alignment: dict) -
     Alignment is explicitly supplied, not inferred. Report product association
     does not authenticate the live project or prove manufacturer dimensions.
     """
+    return _build_luminaire_schedule(layout, report_spec, alignment)
+
+
+def _build_luminaire_schedule(layout, report_spec, alignment, report=None):
+    """Shared validation/linking; a pre-read report is internal, never a public trust bypass."""
     if (layout.get('schema')!='dialux-agent/layout/v1' or layout.get('origin')!='supplied_native_observations'
             or layout.get('units')!='m' or layout.get('coordinate_frame')!='active_storey'):
         raise ValueError('Expected an observed active-storey metre layout')
@@ -42,7 +47,10 @@ def build_luminaire_schedule(layout: dict, report_spec: dict, alignment: dict) -
     c,s=math.cos(angle),math.sin(angle)
     positions=[vector(f.get('position_m')) for f in fixtures]
     for f in fixtures: number(f.get('rotation_deg'),'observed rotation')
-    report=read_report_layout(**report_spec,expected_count=len(fixtures))
+    if report is None:
+        report=read_report_layout(**report_spec,expected_count=len(fixtures))
+    if len(report['fixtures']) != len(fixtures):
+        raise ValueError('Report and observed layout counts differ')
     transformed=[]
     for row in report['fixtures']:
         x,y,z=vector(row['position_m'])

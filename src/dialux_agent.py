@@ -59,6 +59,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('schedule-build').add_argument('--request', required=True)
+    commands.add_parser('schedule-build-mixed').add_argument('--request', required=True)
     commands.add_parser('drawing-export-scheduled').add_argument('--request', required=True)
     commands.add_parser('layout-candidates-generate').add_argument('--request', required=True)
     commands.add_parser('layout-offset-search').add_argument('--request', required=True)
@@ -259,6 +260,8 @@ def main():
             result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
         elif args.command == 'schedule-build':
             result = _local_module('schedule').build_luminaire_schedule(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
+        elif args.command == 'schedule-build-mixed':
+            result = _local_module('mixed_schedule').build_mixed_luminaire_schedule(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'drawing-export-scheduled':
             result = _local_module('cad').export_scheduled_layout_dxf(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'layout-candidates-generate':
