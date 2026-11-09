@@ -130,3 +130,5 @@ Native plotting optionally supports an explicit A3 fixed scale, verified against
 The [large-project checkpoint](docs/large-project-validation.md) exercises a synthetic 1020 m² / 168-luminaire native calculation. Fixture inspection now uses UIA ItemContainer/VirtualizedItem patterns instead of assuming that visible WPF rows are the complete group. First/last/back reads passed; the full paginated scan is tracked separately and must not be inferred from those samples.
 
 `group-inspection-checkpoint` / MCP `inspect_group_checkpoint` collects one explicitly counted native fixture group in a single worker, with hashed page evidence and a durable failure journal. See [operation and limits](docs/group-inspection-checkpoints.md).
+
+`report-layout-read` / MCP `read_report_layout` reads an explicitly selected complete native PDF coordinate table, including product metadata and page evidence. It preserves unknown coordinate-frame and rotation status; see [parser boundaries and native 168-fixture regression](docs/report-layout-reading.md).

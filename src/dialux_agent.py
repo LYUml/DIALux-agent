@@ -64,6 +64,12 @@ def main():
     room.add_argument('--spec', required=True)
     room.add_argument('--output', required=True)
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
+    report_layout = commands.add_parser('report-layout-read')
+    report_layout.add_argument('--path', required=True)
+    report_layout.add_argument('--first-page', required=True, type=int)
+    report_layout.add_argument('--last-page', required=True, type=int)
+    report_layout.add_argument('--expected-count', required=True, type=int)
+    report_layout.add_argument('--expected-header', required=True)
     commands.add_parser('report-read').add_argument('--path', required=True)
     commands.add_parser('report-read-all').add_argument('--path', required=True)
     commands.add_parser('layout-plan').add_argument('--spec', required=True)
@@ -231,6 +237,8 @@ def main():
             result = _local_module('desktop').desktop_import_stf(args.path)
         elif args.command == 'desktop-export-pdf':
             result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
+        elif args.command == 'report-layout-read':
+            result = _local_module('report_layout').read_report_layout(args.path, args.first_page, args.last_page, args.expected_count, args.expected_header)
         elif args.command == 'group-inspection-verify':
             result = _local_module('inspection').verify_group_checkpoint(args.evidence_directory, json.loads(Path(args.layout).read_text(encoding='utf-8-sig')))
         elif args.command == 'group-inspection-checkpoint':
