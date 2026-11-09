@@ -167,3 +167,12 @@ inspection and reproduction on a new evidence directory; it does not authorize
 blind replay after partial mutation, supply the original native file, or make
 session-local fixture runtime IDs reusable. Existing running processes do not
 acquire these changes retroactively.
+
+Search results additionally map every completed native iteration back to its
+explicit X/Y offset, objective value and scoped assessment status.
+`all_generated_candidates_simulated` means every selected candidate completed;
+`all_distinct_same_count_offsets_simulated` additionally requires that the
+geometric candidate budget excluded none of the distinct same-count layouts.
+Neither flag asserts a global optimum, successful criteria, complete project
+coverage or evaluation of count-changing layouts. Early stopping and the native
+iteration budget can leave generated candidates unsimulated.

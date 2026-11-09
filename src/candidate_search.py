@@ -94,10 +94,20 @@ def run_offset_search(expected_project: str, group_id: str, spec: dict,
     path.write_bytes(payload)
     result = run_layout_candidates(str(source),group_id,generated['candidates'],checks,
                                    objective,policy,str(directory/'native'))
+    offsets = {d['candidate_index']:d['offset_m'] for d in generated['decisions']
+               if d['status']=='selected'}
+    evaluated = [{'candidate_index':item['index'], 'offset_m':offsets[item['index']],
+                  'objective_value':item['objective_value'],
+                  'assessment_status':item['checkpoint']['status']}
+                 for item in result['iterations'] if item['state']=='completed']
+    all_generated = len(evaluated)==len(generated['candidates'])
     response = {'schema':'dialux-agent/offset-search-run/v1', 'generation':str(path),
                 'request':str(request_path),
                 'request_sha256':hashlib.sha256(request_payload).hexdigest(),
                 'generation_sha256':hashlib.sha256(payload).hexdigest(),
-                'run':result,'optimality_verified':False,'whole_project_assessed':False}
+                'run':result,'evaluated_offsets':evaluated,
+                'all_generated_candidates_simulated':all_generated,
+                'all_distinct_same_count_offsets_simulated':all_generated and generated['all_distinct_same_count_candidates_included'],
+                'optimality_verified':False,'whole_project_assessed':False}
     (directory/'result.json').write_text(json.dumps(response,indent=2,allow_nan=False),encoding='utf-8')
     return response

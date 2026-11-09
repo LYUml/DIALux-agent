@@ -56,7 +56,9 @@ def test_search_plan_is_preserved_before_native_call(tmp_path,monkeypatch,fail):
         assert Path(evidence)==directory/'native'
         assert len(candidates)==2
         if fail: raise ValueError('Native test failure')
-        return {'state':'completed','stop_reason':'candidate_list_exhausted'}
+        return {'state':'completed','stop_reason':'iteration_budget',
+                'iterations':[{'index':0,'state':'completed','objective_value':.5,
+                               'checkpoint':{'status':'fail'}}]}
     monkeypatch.setattr(iterations,'run_layout_candidates',run)
     args=(str(project),'group',spec(),[0,.1],[0],[],{},{},str(directory))
     if fail:
@@ -68,5 +70,24 @@ def test_search_plan_is_preserved_before_native_call(tmp_path,monkeypatch,fail):
         assert hashlib.sha256((directory/'generation.json').read_bytes()).hexdigest()==result['generation_sha256']
         assert hashlib.sha256((directory/'request.json').read_bytes()).hexdigest()==result['request_sha256']
         assert not result['optimality_verified']
+        assert not result['all_generated_candidates_simulated']
+        assert not result['all_distinct_same_count_offsets_simulated']
+        assert result['evaluated_offsets']==[{'candidate_index':0,'offset_m':[0,0],
+                                              'objective_value':.5,'assessment_status':'fail'}]
     assert (directory/'generation.json').is_file()
     assert (directory/'request.json').is_file()
+
+
+@pytest.mark.parametrize('budget,complete_domain',[(1,False),(2,True)])
+def test_native_coverage_distinguishes_generation_budget(tmp_path,monkeypatch,budget,complete_domain):
+    from src import iterations
+    project=tmp_path/'source.evo';project.write_bytes(b'fixture')
+    def run(source,group,candidates,*args):
+        return {'iterations':[{'index':i,'state':'completed','objective_value':.5,
+                               'checkpoint':{'status':'pass'}} for i in range(len(candidates))]}
+    monkeypatch.setattr(iterations,'run_layout_candidates',run)
+    result=run_offset_search(str(project),'group',spec(),[0,.1],[0],[],{},{},
+                             str(tmp_path/'search'),max_candidates=budget)
+    assert result['all_generated_candidates_simulated']
+    assert result['all_distinct_same_count_offsets_simulated'] is complete_domain
+    assert not result['optimality_verified']
