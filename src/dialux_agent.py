@@ -110,6 +110,15 @@ def main():
     tree = commands.add_parser('desktop-project-tree')
     tree.add_argument('--expected-project', required=True)
     tree.add_argument('--expand-id')
+    space = commands.add_parser('desktop-read-space')
+    space.add_argument('--expected-project', required=True)
+    space.add_argument('--tree-item-id', required=True)
+    close = commands.add_parser('desktop-close-project')
+    close.add_argument('--expected-project', required=True)
+    close.add_argument('--save-current', action='store_true')
+    rooms = commands.add_parser('rooms-create')
+    rooms.add_argument('--spec', required=True)
+    rooms.add_argument('--output', required=True)
     commands.add_parser('desktop-status')
     launching = commands.add_parser('desktop-launch')
     launching.add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
@@ -175,6 +184,12 @@ def main():
             result = _local_module('desktop').desktop_group_fixtures(args.expected_project, args.group_id, args.offset, args.limit, args.inventory_token)
         elif args.command == 'desktop-project-tree':
             result = _local_module('desktop').desktop_project_tree(args.expected_project, args.expand_id)
+        elif args.command == 'rooms-create':
+            result = _local_module('backend').create_rooms(json.loads(Path(args.spec).read_text(encoding='utf-8')), args.output)
+        elif args.command == 'desktop-read-space':
+            result = _local_module('desktop').desktop_read_space(args.expected_project, args.tree_item_id)
+        elif args.command == 'desktop-close-project':
+            result = _local_module('desktop').desktop_close_project(args.expected_project, args.save_current)
         elif args.command == 'desktop-status':
             result = _local_module('desktop').desktop_status()
         elif args.command == 'desktop-launch':

@@ -141,3 +141,17 @@ def desktop_edit_fixture(expected_project: str, runtime_id: list[int], expected_
     """
     return _run('edit-fixture', expected_project, parameters={'runtime_id': runtime_id,
                 'expected_position_m': expected_position_m, 'position_m': position_m})
+
+
+def desktop_close_project(expected_project: str, save_current: bool = False) -> dict:
+    """Close only the expected project, refusing unsaved changes unless saving is requested."""
+    if not isinstance(save_current, bool):
+        raise ValueError('save_current must be a boolean')
+    return _run('close-project', expected_project, save_current=save_current)
+
+
+def desktop_read_space(expected_project: str, tree_item_id: str) -> dict:
+    """Read native space height, workplane and maintenance displays for an exact visible node."""
+    if not isinstance(tree_item_id, str) or not tree_item_id:
+        raise ValueError('Explicit space tree_item_id is required')
+    return _run('read-space', expected_project, parameters=tree_item_id)

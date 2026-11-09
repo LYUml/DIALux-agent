@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-from backend import create_room, inspect_stf
+from backend import create_room, create_rooms, inspect_stf
 from dialux_agent import inventory, verify
 
 
@@ -27,6 +27,30 @@ def test_roundtrip(spec, tmp_path):
     assert room['plano_trabajo_m'] == .8
     assert room['reflectancia_techo'] == 70
     assert room['factor_mantenimiento'] == .8
+
+
+def test_adjacent_rooms_reuse_upstream_boundary_splitting(tmp_path):
+    specs = json.loads((ROOT/'examples/synthetic-three-rooms.json').read_text())
+    target = tmp_path/'rooms.stf'
+    result = create_rooms(specs, str(target))
+    rooms = inspect_stf(str(target))['salas']
+    assert result['room_count'] == len(rooms) == 3
+    assert sorted(r['area_m2'] for r in rooms) == [16,20,24]
+    assert not result['dialux_import_verified']
+    # The corridor boundary must include the neighbour junction, courtesy of
+    # the unchanged upstream serializer's shared-wall vertex insertion.
+    corridor = next(r for r in rooms if r['nombre'] == 'Synthetic corridor')
+    assert corridor['vertices'] == 5
+    assert (6.0,4.0) in corridor['contorno_m']
+
+
+@pytest.mark.parametrize('mutation', ['duplicate', 'overlap'])
+def test_multiroom_invalid_set_never_creates_output(spec, tmp_path, mutation):
+    other = copy.deepcopy(spec)
+    if mutation == 'overlap': other['name'] = 'Distinct name same footprint'
+    target = tmp_path/'bad.stf'
+    with pytest.raises(ValueError): create_rooms([spec,other], str(target))
+    assert not target.exists()
 
 
 @pytest.mark.parametrize('key,value', [

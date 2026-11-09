@@ -11,6 +11,14 @@ import desktop
 import windows_worker
 
 
+def test_close_project_refuses_unsaved_changes_before_menu_action(monkeypatch):
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: (Path('test.evo'),
+                        {'title':'test.evo* - DIALux evo 14.1'}))
+    monkeypatch.setattr(windows_worker, 'unique_control', lambda *a: pytest.fail('Menu invoked'))
+    with pytest.raises(ValueError, match='modified'):
+        windows_worker.close_project(None,None,None,'test.evo',False)
+
+
 def test_fixture_pages_reject_stale_order_and_require_continuation_token():
     nodes = [{'runtime_id':[7,1,i]} for i in range(5)]
     page, token, next_offset = windows_worker.fixture_page(nodes, 'group', 0, 2, None)

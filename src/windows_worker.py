@@ -316,6 +316,29 @@ def save_as(app, main, process, expected_project, target_path):
     raise ValueError('Save As completion not observed; outcome unverified')
 
 
+def close_project(app, main, process, expected_project, save_current=False):
+    expected, state = prepare_project(app, main, process, expected_project)
+    prefix = state['title'].rpartition(' - DIALux evo ')[0]
+    if prefix.endswith('*'):
+        if not save_current:
+            raise ValueError('Current project is modified; explicitly save before closing')
+        save(app, main, process, expected_project)
+        deadline = time.monotonic() + 5
+        while snapshot(app, main, process)['dialogs'] and time.monotonic() < deadline:
+            time.sleep(.2)
+        prepare_project(app, main, process, expected_project)
+    unique_control(main, 'MenuItem', 'File').iface_expand_collapse.Expand()
+    wait_control(main, 'MenuItem', 'CloseProject').iface_invoke.Invoke()
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        state = snapshot(app, main, process)
+        if not state['dialogs'] and state['title'].startswith('DIALux evo '):
+            return {'operation':'close_project', 'closed_project':str(expected), 'title':state['title'],
+                    'uses_codex_computer_use':False}
+        time.sleep(.3)
+    raise ValueError('Project close not verified; inspect before retry')
+
+
 def open_project(app, main, process, target_path, expected_current=None, save_current=False):
     target = Path(target_path).resolve(strict=True)
     if target.suffix.lower() != '.evo':
@@ -457,6 +480,25 @@ def project_tree(app, main, process, expected_project, expand_id=None):
     return {'operation': 'project_tree', 'path': str(expected), 'items': records,
             'search_text': search, 'complete_inventory': False, 'uses_codex_computer_use': False,
             'warning': 'Only realized UIA nodes are listed; collapsed, filtered or virtualized nodes may be absent. IDs can change after renaming or count edits.'}
+
+
+def read_space(app, main, process, expected_project, tree_item_id):
+    expected, _ = prepare_project(app, main, process, expected_project)
+    unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+    item = wait_control(main, 'ListItem', tree_item_id)
+    if not item.is_visible():
+        raise ValueError('Space node must be visible')
+    item.select()
+    if not item.is_selected():
+        raise ValueError('Space selection failed')
+    unique_control(main, 'TabItem', 'SpaceTool').select()
+    fields = ('ObjectName', 'Height', 'WorkplaneNameTextBox', 'WorkplaneHeightDoubleBox',
+              'WorkplaneMarginDoubleBox', 'MaintenanceFactor')
+    values = {key: wait_control(main, 'Edit', key).get_value() for key in fields}
+    if snapshot(app, main, process)['dialogs']:
+        raise ValueError('Dialog during space inspection; values not verified')
+    return {'operation':'read_space', 'path':str(expected), 'tree_item_id':tree_item_id,
+            'display_values':values, 'boundary_geometry_verified':False, 'uses_codex_computer_use':False}
 
 
 def fixture_page(nodes, group_id, offset, limit, inventory_token):
@@ -678,7 +720,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -689,12 +731,16 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
         elif args.action == 'save':
             result = save(app, window, process, args.expected_project)
+        elif args.action == 'read-space':
+            result = read_space(app, window, process, args.expected_project, json.loads(args.parameters))
+        elif args.action == 'close-project':
+            result = close_project(app, window, process, args.expected_project, args.save_current)
         elif args.action == 'open':
             result = open_project(app, window, process, args.path, args.expected_project, args.save_current)
         elif args.action == 'import-stf':
