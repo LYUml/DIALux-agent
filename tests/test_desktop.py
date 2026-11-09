@@ -425,3 +425,20 @@ def test_item_container_enumerates_unrealized_rows_and_rejects_repetition():
     repeat=SimpleNamespace(FindItemByProperty=lambda *a:elements[0])
     with pytest.raises(ValueError,match='repeated'):
         windows_worker.container_elements(SimpleNamespace(iface_item_container=repeat))
+
+@pytest.mark.parametrize('identity',['','group','x_Furniture and objects_','x_Furniture and objects_a_Furniture and objects_b',None])
+def test_furniture_read_refuses_nonexplicit_identity_before_ui(identity,monkeypatch):
+    monkeypatch.setattr(windows_worker,'project_tree',lambda *a:pytest.fail('UI accessed'))
+    with pytest.raises(ValueError,match='furniture tree'):
+        windows_worker.read_furniture(None,None,None,'test.evo',identity)
+
+
+def test_furniture_tool_recovers_construction_mode(monkeypatch):
+    actions=[]
+    mode=SimpleNamespace(element_info=SimpleNamespace(automation_id=''),
+        window_text=lambda:'Dial.Dialux.InteractionModes.BuildingConstructionMode',select=lambda:actions.append('mode'))
+    main=SimpleNamespace(descendants=lambda **kw:[mode])
+    tool=SimpleNamespace(select=lambda:actions.append('furniture'))
+    monkeypatch.setattr(windows_worker,'wait_control',lambda *a:tool)
+    windows_worker.select_furniture_tool(main)
+    assert actions==['mode','furniture']

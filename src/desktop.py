@@ -180,3 +180,8 @@ def desktop_arrange_room(expected_project: str, room_name: str, group_name: str,
         'room_name':room_name, 'group_name':group_name, 'product_id':product_id,
         'parent_id':parent_id, 'expected_groups':expected_groups,
         'evidence_directory':evidence_directory})
+
+
+def desktop_read_furniture(expected_project: str, tree_item_id: str) -> dict:
+    """Read exact native furniture identity, reference position and dimensions."""
+    return _run('read-furniture', expected_project, parameters={'tree_item_id':tree_item_id})

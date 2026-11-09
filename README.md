@@ -136,3 +136,5 @@ The [large-project checkpoint](docs/large-project-validation.md) exercises a syn
 `room-create` / `rooms-create` can include validated ground-supported obstacle boxes using the licensed upstream STF implementation. See [supported geometry, fixed material assumption and pending native gate](docs/obstacle-exchange.md).
 
 Native plotting accepts an explicit ISO landscape paper (`--paper A3|A2|A1|A0`) and drawing specifications can set fixture/note text heights. The [168-symbol A1 1:100 native test](docs/large-native-plots.md) records actual DWG reopen, PDF vector-scale checks and visual inspection, separately from DIALux observation evidence.
+
+`desktop-read-furniture` / MCP `desktop_read_furniture` reads native object reference positions, rotations and sizes with exact identity checks. The [synthetic column/desk gate](docs/obstacle-exchange.md) includes actual import, calculation, report inspection and persisted readback after native reopen.

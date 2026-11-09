@@ -146,6 +146,9 @@ def main():
     scan_check = commands.add_parser('group-inspection-verify')
     scan_check.add_argument('--evidence-directory', required=True)
     scan_check.add_argument('--layout', required=True)
+    furniture = commands.add_parser('desktop-read-furniture')
+    furniture.add_argument('--expected-project', required=True)
+    furniture.add_argument('--tree-item-id', required=True)
     scan = commands.add_parser('group-inspection-checkpoint')
     scan.add_argument('--expected-project', required=True)
     scan.add_argument('--group-id', required=True)
@@ -242,6 +245,8 @@ def main():
             result = _local_module('report_layout').read_report_layout(args.path, args.first_page, args.last_page, args.expected_count, args.expected_header)
         elif args.command == 'group-inspection-verify':
             result = _local_module('inspection').verify_group_checkpoint(args.evidence_directory, json.loads(Path(args.layout).read_text(encoding='utf-8-sig')))
+        elif args.command == 'desktop-read-furniture':
+            result = _local_module('desktop').desktop_read_furniture(args.expected_project,args.tree_item_id)
         elif args.command == 'group-inspection-checkpoint':
             result = _local_module('placement').inspect_group_checkpoint(args.expected_project, args.group_id, args.expected_count, args.evidence_directory)
         elif args.command == 'drawing-export-observed':

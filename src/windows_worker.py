@@ -864,6 +864,50 @@ def inspect_group(app, main, process, expected_project, parameters):
     return _inspect_group_checkpoint(expected_project, page_reader=reader, **parameters)
 
 
+def select_furniture_tool(main):
+    matches=[c for c in main.descendants(control_type='TabItem') if c.element_info.automation_id=='FurnitureTool']
+    if not matches:
+        modes=[c for c in main.descendants(control_type='TabItem')
+               if c.window_text()=='Dial.Dialux.InteractionModes.BuildingConstructionMode']
+        if len(modes)!=1: raise ValueError('Expected one native building-construction mode')
+        modes[0].select()
+    wait_control(main,'TabItem','FurnitureTool').select()
+
+
+def read_furniture(app, main, process, expected_project, tree_item_id):
+    """Read one explicit native furniture reference point, rotation and size."""
+    import math
+    marker='_Furniture and objects_'
+    if not isinstance(tree_item_id,str) or tree_item_id.count(marker)!=1 or not tree_item_id.split(marker)[1]:
+        raise ValueError('Expected exact furniture tree item ID')
+    parent=tree_item_id.split(marker)[0]+'_Furniture and objects'
+    inventory=project_tree(app,main,process,expected_project,parent)
+    if inventory['search_text']: raise ValueError('Filtered furniture inventory is not supported')
+    tree=wait_control(main,'List','FilterTreeListBox')
+    elements=[e for e in container_elements(tree) if e.CurrentAutomationId==tree_item_id]
+    if len(elements)!=1: raise ValueError('Furniture identity missing or ambiguous')
+    runtime=list(elements[0].GetRuntimeId())
+    item=materialize_tree_item(elements[0]);item.select()
+    if not item.is_selected() or list(item.element_info.runtime_id)!=runtime:
+        raise ValueError('Furniture selection identity changed')
+    select_furniture_tool(main)
+    set_storey_context(main)
+    fields=[prefix+axis for prefix in ('PositionVectorControl_','RotationVectorControl_','SizeVectorControl_') for axis in 'XYZ']
+    displayed=read_edit_values(main,fields+['ArrangementObjectName','EditableName'])
+    values=[float(displayed[key]) for key in fields]
+    if not all(math.isfinite(v) for v in values) or min(values[6:])<=0:
+        raise ValueError('Invalid native furniture parameters')
+    if displayed['ArrangementObjectName']!=tree_item_id.split(marker)[1]:
+        raise ValueError('Furniture displayed name differs from selected identity')
+    if snapshot(app,main,process)['dialogs']: raise ValueError('Dialog during furniture readback')
+    return {'operation':'read_furniture','path':inventory['path'],'tree_item_id':tree_item_id,
+            'runtime_id':runtime,'name':displayed['ArrangementObjectName'],
+            'prototype_label':displayed['EditableName'],'coordinate_frame':'active_storey',
+            'reference_position_m':values[:3],'rotation_deg':values[3:6],'size_m':values[6:],
+            'shape_verified':False,'material_verified':False,'uses_codex_computer_use':False,
+            'warning':'UI-displayed native object reference point, not assumed geometric centre. Dimensions do not prove mesh shape, material or optical effect.'}
+
+
 def edit_fixture(app, main, process, expected_project, parameters):
     """Move one realized fixture with session identity and prior-position guards."""
     import math
@@ -1057,7 +1101,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -1073,7 +1117,7 @@ def main():
             from desktop_lock import desktop_lease
         with desktop_lease():
             app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-            if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group'} and not args.expected_project:
+            if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture'} and not args.expected_project:
                 raise ValueError('expected_project is required')
             if args.action in {'status', 'launch'}:
                 result = snapshot(app, window, process)
@@ -1099,6 +1143,8 @@ def main():
                 result = arrange_space(app, window, process, args.expected_project, args.product_id)
             elif args.action == 'edit-fixture':
                 result = edit_fixture(app, window, process, args.expected_project, json.loads(args.parameters))
+            elif args.action == 'read-furniture':
+                result = read_furniture(app, window, process, args.expected_project, **json.loads(args.parameters))
             elif args.action == 'inspect-group':
                 result = inspect_group(app, window, process, args.expected_project, json.loads(args.parameters))
             elif args.action == 'group-fixtures':
