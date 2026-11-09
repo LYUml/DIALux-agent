@@ -388,3 +388,40 @@ def test_calculation_monitor_presence_not_tab_visibility(monkeypatch,initially_o
     monkeypatch.setattr(windows_worker,'unique_control',lambda *a:SimpleNamespace(click_input=click))
     windows_worker.prepare_calculation_view(main)
     assert state['clicks']==(0 if initially_open else 1)
+
+
+def test_related_edit_fields_are_read_in_one_traversal(monkeypatch):
+    calls=[]
+    def control(identity,runtime,value):
+        return SimpleNamespace(element_info=SimpleNamespace(automation_id=identity,runtime_id=runtime),
+            is_visible=lambda:True,get_value=lambda:value)
+    x=control('X',[1],'3.0'); y=control('Y',[2],'4.0')
+    main=SimpleNamespace(descendants=lambda **k:(calls.append(k) or [x,x,y]))
+    assert windows_worker.read_edit_values(main,['X','Y'])=={'X':'3.0','Y':'4.0'}
+    assert len(calls)==1
+    main=SimpleNamespace(descendants=lambda **k:[x,control('X',[3],'9.0'),y])
+    with pytest.raises(ValueError,match='exactly one'): windows_worker.read_edit_values(main,['X','Y'])
+    main=SimpleNamespace(descendants=lambda **k:[x])
+    with pytest.raises(ValueError,match='exactly one'): windows_worker.read_edit_values(main,['X','Y'])
+
+
+def test_expected_group_count_rejects_virtualized_subset_before_fixture_selection(monkeypatch):
+    monkeypatch.setattr(windows_worker,'project_tree',lambda *a:{'items':[], 'search_text':''})
+    monkeypatch.setattr(windows_worker,'wait_control',lambda *a:None)
+    element=SimpleNamespace(CurrentAutomationId='group_fixture',GetRuntimeId=lambda:[1])
+    monkeypatch.setattr(windows_worker,'container_elements',lambda *a:[element])
+    monkeypatch.setattr(windows_worker,'unique_control',lambda *a:pytest.fail('Fixture accessed'))
+    with pytest.raises(ValueError,match='virtualized/incomplete'):
+        windows_worker.read_group_fixtures(None,None,None,'test.evo','group',expected_count=168)
+
+
+def test_item_container_enumerates_unrealized_rows_and_rejects_repetition():
+    elements=[SimpleNamespace(GetRuntimeId=lambda i=i:[7,i]) for i in range(30)]
+    class Container:
+        def FindItemByProperty(self,previous,prop,value):
+            index=0 if previous==0 else elements.index(previous)+1
+            return elements[index] if index<len(elements) else None
+    assert windows_worker.container_elements(SimpleNamespace(iface_item_container=Container()))==elements
+    repeat=SimpleNamespace(FindItemByProperty=lambda *a:elements[0])
+    with pytest.raises(ValueError,match='repeated'):
+        windows_worker.container_elements(SimpleNamespace(iface_item_container=repeat))

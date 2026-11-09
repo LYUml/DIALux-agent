@@ -1,0 +1,31 @@
+{
+  "name": "Synthetic scale test",
+  "units": "m",
+  "contour": [
+    [
+      0,
+      0
+    ],
+    [
+      30,
+      0
+    ],
+    [
+      30,
+      34
+    ],
+    [
+      0,
+      34
+    ]
+  ],
+  "height_m": 3,
+  "workplane_m": 0.8,
+  "maintenance_factor": 0.8,
+  "ceiling_reflectance_pct": 70,
+  "wall_reflectance_pct": 50,
+  "floor_reflectance_pct": 20,
+  "assumptions": [
+    "Synthetic 1020 square metre scalability fixture only; not traced from assignment geometry and not a lighting design."
+  ]
+}

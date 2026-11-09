@@ -1,0 +1,23 @@
+# Large-project scalability and virtualized fixture reading
+
+Synthetic tool test only. `examples/synthetic-large-room.json` is a 30 × 34 m rectangle (1020 m²), unrelated to traced assignment geometry. The same tested manufacturer ULD was imported. Native automatic placement created a 14 × 12 arrangement with 168 luminaires.
+
+## Native calculation evidence
+
+Public STF import, native save-as, luminaire import, placement, calculation and PDF export completed. `local/large-report-v1.pdf` has 35 pages, 2,491,395 bytes and SHA256 `d6983b5309b8415bca24945070de73c4899e63f63503f99d21c363348eba7f42`. Summary pages 14–15 state 1020 m², 510 lx average perpendicular illuminance, Uo 0.43 and 4.28 W/m². Native luminaire-list text records 168 units. These are outputs of a synthetic software test, not adopted design criteria or a compliance conclusion.
+
+Saved `local/large-native-v1.evo`: 4,657,199 bytes, SHA256 `68be0e4bee9cad65132b3ff76841414496c2bdf7ecf133940d538f6ef22218b9`. STF SHA256: `9c82a0f6790147cddd6d35131f8b69cbdc436aece376e74a35a0a0c178fa0b2b`. A separate reopen gate remains outstanding.
+
+## Virtualization defect and implementation
+
+The old `descendants(ListItem)` approach observed only 19 realized fixture nodes (18 visible), later 18 after changing mode, despite the native 168 count. This is WPF UI virtualization, not evidence of missing luminaires. `--expected-count 168` initially rejected this subset before fixture reads. The optional count guard remains available in CLI/MCP.
+
+The adapter now reuses Windows UIA ItemContainer/VirtualizedItem patterns exposed by the existing pywinauto dependency. ItemContainer enumeration returned 182 total tree entries, including all 168 fixture children with unique runtime identities. Each requested row is realized/scrolled into view before selection and readback. Group nodes are likewise materialized so scrolling to the bottom does not make the next request unable to expand/find the group. Enumeration rejects repeated runtime IDs and more than 10,000 tree entries; filtered fixture inventories are refused.
+
+Public readback successfully reached index 167: (28.929, 32.583, 3.035) m. Returning to index 0 read (1.071, 1.417, 3.035) m with the same inventory token. This proves first/last/back navigation and token continuity, not all intermediate fixture coordinates. `container_node_count` is the current inventory size; the legacy `realized_node_count` field is retained as a compatibility alias. `complete_inventory` remains false because the whole project and collapsed content are not inventoried.
+
+Related coordinate/name fields now use one UIA Edit traversal rather than seven repeated searches, retaining uniqueness checks. A real one-fixture comparison returned identical evidence before/after. Observed times were 12.594 s and 10.984 s, but UI starting states differed; these are not a controlled performance benchmark.
+
+A full 168-fixture paginated scan was started in `local/large-full-scan-v1`, saving every page and a progress file, to compare against explicit 14×12 synthetic grid coordinates. Until its final verification exists and is inspected, the all-fixture gate is pending. A progress file alone is not proof of a running or successful process.
+
+253 tests passed at this checkpoint, including single-traversal uniqueness, expected-count refusal, complete item-container enumeration and repetition rejection. Whole-project inventory, obstacles, arbitrary project sizes and large-project edit/recovery acceptance are not established by this test.

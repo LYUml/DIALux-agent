@@ -68,8 +68,8 @@ This example returns exit code **3 / unverified**, because no project applicabil
 
 | Capability | Current evidence |
 |---|---|
-| PDF/DWG integrity | SHA-256 inventory and tamper test; no DWG geometry interpretation |
-| Single-room STF exchange | Reused serializer, parameter validation and round-trip tests |
+| CAD inputs | Native DWG conversion, hash-bound explicit DXF boundary extraction and coordinate transforms; no automatic semantic room inference |
+| STF exchange | Reused upstream serializer; adjacent multiroom and concave native import/report tests |
 | CLI / MCP | Real process tests; common backend |
 | Hong Kong sources | Eight official PDFs cached locally with hashes, editions and review register |
 | Hong Kong rules | Source-reviewed BEC 2024 office LPD module with evidenced applicability; other criteria pending, no whole-project certification |
@@ -81,7 +81,7 @@ See [requirements](docs/requirements.md), [test plan](docs/test-plan.md), [modul
 
 Commit convention: `YYYY-MM-DD English change description`, matching polyu_bse3124. Do not publish assignment originals, credentials, logs containing personal data, or generated local projects.
 
-## Latest verification
+## Initial independent acceptance checkpoint
 
 2026-11-09: 102 Python tests and 8 historical adapter tests passed; 21 local artifact/source hashes matched; both assignment originals were unchanged; the distributed skill passed validation. The final native fixture is `local/acceptance-project-v9.evo`, with report `local/acceptance-v9.pdf` and reopened comparison `local/acceptance-v9-reopened.pdf`. Read the acceptance document before applying the prototype to other projects or DIALux versions.
 
@@ -126,3 +126,5 @@ The [concave native validation](docs/concave-room-validation.md) exercises offse
 `drawing-export-observed` / MCP `export_observed_layout_dxf` exports actual supplied native fixture positions into editable CAD blocks, with explicit drawing-ID mapping and observation hashes. It reuses the native CAD reopen/plot gates; see [the five-fixture concave validation and limitations](docs/observed-layout-cad.md).
 
 Native plotting optionally supports an explicit A3 fixed scale, verified against the exported PDF vector outline rather than its label alone. See [fixed-scale usage, Autodesk references and native 1:50 evidence](docs/fixed-scale-plots.md).
+
+The [large-project checkpoint](docs/large-project-validation.md) exercises a synthetic 1020 m² / 168-luminaire native calculation. Fixture inspection now uses UIA ItemContainer/VirtualizedItem patterns instead of assuming that visible WPF rows are the complete group. First/last/back reads passed; the full paginated scan is tracked separately and must not be inferred from those samples.

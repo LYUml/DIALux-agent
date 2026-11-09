@@ -613,7 +613,16 @@ def project_tree(app, main, process, expected_project, expand_id=None):
     tree = wait_control(main, 'List', 'FilterTreeListBox')
     search = unique_control(main, 'Edit', 'ProjectTreeToolSearch').get_value()
     if expand_id:
-        item = wait_control(tree, 'ListItem', expand_id)
+        try:
+            candidates = [e for e in container_elements(tree) if e.CurrentAutomationId == expand_id]
+        except ValueError:
+            candidates = None
+        if candidates is not None:
+            if len(candidates) != 1:
+                raise ValueError('Expansion target not unique in native item container')
+            item = materialize_tree_item(candidates[0])
+        else:
+            item = wait_control(tree, 'ListItem', expand_id)
         if not item.is_visible():
             raise ValueError('Expansion target is not visible')
         checkbox = unique_control(item, 'CheckBox', 'ExpandCheckBox')
@@ -719,23 +728,81 @@ def set_storey_context(main):
     time.sleep(.3)
 
 
-def read_group_fixtures(app, main, process, expected_project, group_id, offset=0, limit=4, inventory_token=None):
+def read_edit_values(main, keys):
+    """Collect related native fields in one UIA traversal; retain uniqueness checks."""
+    controls = {key: {} for key in keys}
+    for control in main.descendants(control_type='Edit'):
+        key = control.element_info.automation_id
+        if key in controls and control.is_visible():
+            controls[key][tuple(control.element_info.runtime_id)] = control
+    if any(len(matches) != 1 for matches in controls.values()):
+        raise ValueError('Expected exactly one visible control for every requested edit field')
+    return {key: next(iter(matches.values())).get_value() for key, matches in controls.items()}
+
+
+def container_elements(tree):
+    """Use the native ItemContainer pattern, including unrealized WPF rows."""
+    from pywinauto import uia_defines
+    try:
+        container = tree.iface_item_container
+    except uia_defines.NoPatternInterfaceError as exc:
+        raise ValueError('Native item-container pattern unavailable') from exc
+    element = container.FindItemByProperty(0, 0, uia_defines.vt_empty)
+    elements, seen = [], set()
+    while element:
+        runtime = tuple(element.GetRuntimeId())
+        if runtime in seen or len(elements) >= 10000:
+            raise ValueError('Native item-container enumeration repeated or exceeded limit')
+        seen.add(runtime)
+        elements.append(element)
+        element = container.FindItemByProperty(element, 0, uia_defines.vt_empty)
+    return elements
+
+
+def materialize_tree_item(element):
+    from pywinauto.uia_defines import get_elem_interface, NoPatternInterfaceError
+    from pywinauto.uia_element_info import UIAElementInfo
+    from pywinauto.controls.uiawrapper import UIAWrapper
+    try:
+        get_elem_interface(element, 'VirtualizedItem').Realize()
+    except NoPatternInterfaceError:
+        pass
+    item = UIAWrapper(UIAElementInfo(element))
+    if not item.is_visible():
+        item.iface_scroll_item.ScrollIntoView()
+        time.sleep(.2)
+    if not item.is_visible():
+        raise ValueError('Native item could not be made visible')
+    return item
+
+
+def read_group_fixtures(app, main, process, expected_project, group_id, offset=0, limit=4, inventory_token=None, expected_count=None):
     """Read visible individual fixture parameters from one exact expanded group."""
     import math
     if not isinstance(group_id, str) or not group_id.strip():
         raise ValueError('group_id must be a nonempty string')
+    if expected_count is not None and (type(expected_count) is not int or not 1 <= expected_count <= 2000):
+        raise ValueError('expected_count must be 1 to 2000')
     inventory = project_tree(app, main, process, expected_project, group_id)
-    nodes = [item for item in inventory['items'] if item['tree_item_id'].startswith(group_id + '_')
-             and not item['expandable']]
+    if inventory['search_text']:
+        raise ValueError('Cannot inspect a filtered fixture inventory')
+    tree = wait_control(main, 'List', 'FilterTreeListBox')
+    elements = container_elements(tree)
+    source_elements = {tuple(e.GetRuntimeId()): e for e in elements
+                       if e.CurrentAutomationId.startswith(group_id + '_')}
+    nodes = [{'runtime_id': list(runtime), 'tree_item_id': element.CurrentAutomationId}
+             for runtime, element in source_elements.items()]
     total = len(nodes)
+    if expected_count is not None and total != expected_count:
+        raise ValueError(f'Only {total} inventory fixture nodes for expected {expected_count}; virtualized/incomplete inventory, no fixture read attempted')
     nodes, token, next_offset = fixture_page(nodes, group_id, offset, limit, inventory_token)
     fields = ['PositionVectorControl_' + axis for axis in 'XYZ'] + ['RotationVectorControl_' + axis for axis in 'XYZ']
     fixtures = []
     for node in nodes:
         unique_control(main, 'TabItem', 'ProjectTreeTool').select()
         tree = wait_control(main, 'List', 'FilterTreeListBox')
-        matches = [c for c in tree.descendants(control_type='ListItem')
-                   if list(c.element_info.runtime_id) == node['runtime_id']]
+        item = materialize_tree_item(source_elements[tuple(node['runtime_id'])])
+        matches = [item] if list(item.element_info.runtime_id) == node['runtime_id'] else []
         if len(matches) != 1 or not matches[0].is_visible():
             raise ValueError('Fixture UI identity changed or is not visible; inventory again')
         matches[0].select()
@@ -743,20 +810,30 @@ def read_group_fixtures(app, main, process, expected_project, group_id, offset=0
             raise ValueError('Native fixture selection was not confirmed')
         unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
         set_storey_context(main)
-        values = [float(wait_control(main, 'Edit', key).get_value()) for key in fields]
+        deadline = time.monotonic() + 5
+        while True:
+            try:
+                displayed = read_edit_values(main, fields + ['ArrangementObjectName'])
+                break
+            except ValueError:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(.2)
+        values = [float(displayed[key]) for key in fields]
         if not all(math.isfinite(v) for v in values):
             raise ValueError('Nonfinite native fixture parameter')
         if snapshot(app, main, process)['dialogs']:
             raise ValueError('Dialog while inspecting fixtures; readback incomplete')
         fixtures.append({'runtime_id': node['runtime_id'], 'tree_item_id': node['tree_item_id'],
-                         'name': unique_control(main, 'Edit', 'ArrangementObjectName').get_value(),
+                         'name': displayed['ArrangementObjectName'],
                          'position_m': values[:3], 'rotation_deg': values[3:]})
     return {'operation': 'read_group_fixtures', 'path': inventory['path'], 'group_id': group_id,
             'coordinate_frame': 'active_storey',
             'offset': offset, 'next_offset': next_offset, 'inventory_token': token, 'realized_node_count': total,
+            'inventory_source': 'native_item_container', 'container_node_count': total,
             'fixtures': fixtures, 'observed_count': len(fixtures), 'complete_inventory': False,
             'uses_codex_computer_use': False,
-            'warning': 'UI-displayed coordinates, rounded by DIALux. Runtime IDs are session-local, not persistent fixture IDs. Hidden/virtualized nodes may be absent.'}
+            'warning': 'UI-displayed coordinates rounded by DIALux. Native ItemContainer covers this expanded group, not collapsed or filtered project content. Runtime IDs are session-local. realized_node_count is a compatibility alias for container_node_count.'}
 
 
 def edit_fixture(app, main, process, expected_project, parameters):
