@@ -29,6 +29,10 @@ def verify_layout_tile_coverage(layout: dict, grid_request: dict) -> dict:
         raise ValueError('Expected 1 to 2000 supplied fixtures')
     if type(layout.get('fixture_count')) is not int or layout['fixture_count'] != len(fixtures):
         raise ValueError('Fixture count differs from supplied records')
+    if any(not isinstance(f, dict) for f in fixtures):
+        raise ValueError('Every fixture must be an object')
+    if not isinstance(grid_request, dict):
+        raise ValueError('Explicit grid extraction request object required')
     ids = [f.get('id') for f in fixtures]
     if any(not isinstance(i, str) or not i for i in ids) or len(set(ids)) != len(ids):
         raise ValueError('Unique fixture IDs required')

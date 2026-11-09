@@ -36,7 +36,7 @@ def test_missing_cells_and_partial_overhang_are_not_filled(tmp_path,x,width):
     assert result['fixtures'][0]['uncovered_area_m2'] > 0
 
 
-@pytest.mark.parametrize('kind', ['hash','centroid','count','duplicate','units'])
+@pytest.mark.parametrize('kind', ['hash','centroid','count','duplicate','units','fixture_type','request_type'])
 def test_rejects_invalid_evidence(tmp_path,kind):
     layout, request = inputs(tmp_path)
     if kind == 'hash': request['expected_sha256'] = '0'*64
@@ -45,6 +45,8 @@ def test_rejects_invalid_evidence(tmp_path,kind):
     if kind == 'duplicate':
         layout['fixtures'] *= 2; layout['fixture_count'] = 2
     if kind == 'units': layout['units'] = 'mm'
+    if kind == 'fixture_type': layout['fixtures'][0] = 'not an object'
+    if kind == 'request_type': request = []
     with pytest.raises(ValueError): verify_layout_tile_coverage(layout,request)
 
 
