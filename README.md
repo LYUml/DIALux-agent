@@ -140,3 +140,5 @@ Native plotting accepts an explicit ISO landscape paper (`--paper A3|A2|A1|A0`) 
 `desktop-read-furniture` / MCP `desktop_read_furniture` reads native object reference positions, rotations and sizes with exact identity checks. The [synthetic column/desk gate](docs/obstacle-exchange.md) includes actual import, calculation, report inspection and persisted readback after native reopen.
 
 `report-workplane-read` / MCP `read_workplane_pdf` extracts direct minimum/maximum illuminance from an explicitly selected native working-plane table, with room/scene/surface identity and PDF evidence. See [scope, native regression and applicability limits](docs/workplane-extrema.md).
+
+`schedule-build` / MCP `build_luminaire_schedule` links observed CAD fixture IDs to native PDF product records using unique coordinate correspondence and an explicit transform. See [schedule evidence, native regression and limits](docs/luminaire-schedule.md).

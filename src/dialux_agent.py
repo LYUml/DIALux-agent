@@ -58,6 +58,7 @@ def verify(manifest):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
+    commands.add_parser('schedule-build').add_argument('--request', required=True)
     commands.add_parser('inventory').add_argument('--source', required=True)
     commands.add_parser('verify').add_argument('--manifest', required=True)
     room = commands.add_parser('room-create')
@@ -246,6 +247,8 @@ def main():
             result = _local_module('desktop').desktop_import_stf(args.path)
         elif args.command == 'desktop-export-pdf':
             result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
+        elif args.command == 'schedule-build':
+            result = _local_module('schedule').build_luminaire_schedule(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'report-workplane-read':
             result = _local_module('workplane').read_workplane_pdf(args.path,args.page,args.expected_header,args.expected_surface)
         elif args.command == 'report-layout-read':
