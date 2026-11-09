@@ -13,7 +13,7 @@ the model height for the intended print scale. Explicit endpoints are caller
 inputs, not authenticated architectural boundaries. This does not automatically
 infer dimension chains or resolve annotation collisions.
 
-`drawing-verify-native` now compares dimension IDs retained in XDATA, extension
+`layout-verify-native` now compares dimension IDs retained in XDATA, extension
 points, definition point, angle and measured length across native DWG save and
 independent reopen. It rejects manual dimension text overrides and changed
 millimetre label settings. Visual block fidelity remains a separate gate.
