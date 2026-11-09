@@ -9,6 +9,8 @@ Locate the user's DIALux-agent checkout. This skill is distributed inside it at 
 
 Read the checkout's `README.md` for current commands and verified capabilities. Use its Python environment (`.venv/Scripts/python.exe` on Windows) and absolute paths when the working directory differs. CLI and MCP share a backend; select the available interface rather than reimplementing STF serialization. Do not describe unsupported commands as implemented.
 
+Read the checkout's `AGENTS.md` and `docs/current-acceptance.md` before selecting a workflow. In this workspace the authorized phase is agent development with synthetic test cases; BSE3125 assignment production requires the user's separate instruction. Assignment materials can inform requirements without authorizing a design or submission.
+
 ## Prepare inputs and geometry
 
 - Inventory original PDF/DWG files and preserve their hashes. A DWG header identifies format only; it does not prove dimensions, units or room boundaries.
@@ -32,5 +34,15 @@ Start with `desktop-status`. Match the exact expected native project before muta
 A successful command submission is not proof of completion. After a timeout, unexpected dialog or process exit, inspect state and preserve evidence before retrying. DIALux 14.1 has a documented native crash under the inherited temporary path. New processes started by desktop-launch use a process-local ASCII temporary directory; this recovered a fresh six-luminaire calculation. Reusing an existing process cannot apply that environment change. Read the current evidence before claiming stability, and never substitute cached results or synthetic numbers. `desktop-export-pdf` exports the current documentation selection to a new PDF using stored results. `report-read` preserves document page numbers and hashes, supports exactly one adjacent English two-page room Summary inside a larger report, and rejects multiple summaries.
 
 Verify room inputs in evo, load traceable manufacturer photometry, calculate, save a native project, reopen it, and compare the exported report with application results. Record actual observations and artifact paths. Keep unperformed stages explicitly pending. Source discrepancies must be resolved for design conclusions, not silently overwritten. A catalogue UGR label is not a calculated room UGR.
+
+## Choose the evidence workflow
+
+- For explicit fixture grids, use `layout-apply-grid` and read `docs/grid-application.md`. Its persistent worker collects the full group, journals movements and reads back the group; a pending step can contain a real partial write. Preserve and inspect that project before recovery. Runtime IDs are session-local and can change; never reuse them blindly after reopening or rebuilding UI inventory.
+- For multiple supplied grids, use `layout-candidates-run` / MCP `run_layout_candidates` and read `docs/layout-candidates.md`. The runner allows only fixed-product, same-count, zero-rotation grid changes. Keep objective ranking separate from pass/fail criteria. A completed stopping policy does not mean a feasible design was found, and the winning copy is not automatically activated.
+- For multiroom reports, use `report-read-all` and explicit summary identities rather than the single-summary reader. Use `report-workplane-read` for directly reported extrema; do not infer a minimum from rounded average and uniformity. Read `docs/scoped-report-reading.md` and `docs/workplane-extrema.md` for supported scopes.
+- For observed CAD output, read `docs/observed-layout-cad.md` and `docs/cad-dimensions.md`. Explicit dimension endpoints and product envelopes remain assumptions unless independently evidenced. Native reopen checks and fixed-scale PDF vector checks are separate from visual sheet acceptance.
+- For report-linked product tables, use `drawing-export-scheduled` / MCP `export_scheduled_layout_dxf`; read `docs/luminaire-schedule.md`. It rereads one product section and links positions under an explicit transform. It does not authenticate photometry or turn reported fixture power into a verified regulatory load.
+
+Do not run competing desktop workflows. Poll a live process through its handle; a stale journal alone is not evidence it is alive or stopped. A worker's code does not hot-update when repository files change. After failure, use fresh native state and preserved artifacts to decide the next step; do not repeat a mutation merely because the command returned an error.
 
 For BSE3125, read `docs/requirements.md` before producing assignment outputs. Build and verify the tool first; preserve assignment originals and do not publish local project files or personal data merely because repository pushing is authorized.
