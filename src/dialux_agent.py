@@ -64,6 +64,11 @@ def main():
     room.add_argument('--spec', required=True)
     room.add_argument('--output', required=True)
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
+    workplane = commands.add_parser('report-workplane-read')
+    workplane.add_argument('--path', required=True)
+    workplane.add_argument('--page', required=True, type=int)
+    workplane.add_argument('--expected-header', required=True)
+    workplane.add_argument('--expected-surface', required=True)
     report_layout = commands.add_parser('report-layout-read')
     report_layout.add_argument('--path', required=True)
     report_layout.add_argument('--first-page', required=True, type=int)
@@ -241,6 +246,8 @@ def main():
             result = _local_module('desktop').desktop_import_stf(args.path)
         elif args.command == 'desktop-export-pdf':
             result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
+        elif args.command == 'report-workplane-read':
+            result = _local_module('workplane').read_workplane_pdf(args.path,args.page,args.expected_header,args.expected_surface)
         elif args.command == 'report-layout-read':
             result = _local_module('report_layout').read_report_layout(args.path, args.first_page, args.last_page, args.expected_count, args.expected_header)
         elif args.command == 'group-inspection-verify':
