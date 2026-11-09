@@ -176,3 +176,30 @@ geometric candidate budget excluded none of the distinct same-count layouts.
 Neither flag asserts a global optimum, successful criteria, complete project
 coverage or evaluation of count-changing layouts. Early stopping and the native
 iteration budget can leave generated candidates unsimulated.
+
+## Generated-domain native run: partial failure retained
+
+`local/offset-search-native-v1` selected four distinct six-fixture offset grids
+and excluded two periodic duplicates. Candidates 0 and 1 completed actual
+calculations (both reported Uo 0.060). Candidate 2 failed during placement with
+`Expected one PositionVectorControl_X, found 0`; candidate 3 never ran. The full
+four-candidate search is **not accepted** and no global ranking follows.
+
+The worker ended; fresh status showed the expected candidate project and no
+secondary dialogs. The current native state was saved separately to
+`local/offset-search-interrupted-v1.evo`, SHA256
+`ccb10d676e9e1d83d5638bff99535ab7772328823d6f26edeb33996e1db5d2ba`.
+A fresh complete six-fixture inspection found five fixtures at their target
+positions and the sixth at its prior position. The movement journal recorded
+four committed steps and the fifth pending: pending intent does not prove no
+mutation occurred. The observed file hash is
+`1948548b2057399d98ef778809ff8bbb3d8746ba23fe93261d2b647e75fd65aa`.
+
+Fixture editing now rechecks the selected runtime identity before each axis
+write. Missing-field errors identify initial readback, before-write,
+after-reminder or final-readback stage and list axes whose commits were observed.
+These changes improve guards and diagnosis; the cause of the disappearing control
+is not yet established, and no automatic retry was added. Tests include selection
+loss without a dialog and a field disappearing after both coordinate commits.
+100 desktop/placement tests passed. A separate recovery copy is under native
+verification; it does not overwrite or turn the failed search into a successful run.

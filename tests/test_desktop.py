@@ -242,14 +242,14 @@ def test_fixture_stale_position_rejected_before_clearing_results(monkeypatch):
                                     {'runtime_id':[7,1,2], 'expected_position_m':[1,1,1], 'position_m':[3,3,3]})
 
 
-@pytest.mark.parametrize('failure', [None, 'selection', 'position', 'unknown_dialog'])
+@pytest.mark.parametrize('failure', [None, 'selection', 'selection_without_dialog', 'position', 'unknown_dialog', 'missing_final_field'])
 def test_movement_reminder_requires_identity_and_partial_coordinate_readback(monkeypatch, failure):
     values = [1., 1., 1.]
     actions = []
     prepared = []
     node = SimpleNamespace(element_info=SimpleNamespace(runtime_id=[7,1,2]),
                            is_visible=lambda:True, select=lambda:None,
-                           is_selected=lambda:not (failure == 'selection' and actions))
+                           is_selected=lambda:not (failure in ('selection','selection_without_dialog') and actions))
     def prepare(*args):
         prepared.append(True)
         if len(prepared)>1 and failure == 'unknown_dialog':
@@ -258,6 +258,8 @@ def test_movement_reminder_requires_identity_and_partial_coordinate_readback(mon
     def control(parent, kind, identity):
         if kind == 'TabItem': return SimpleNamespace(select=lambda:None)
         if kind == 'List': return object()
+        if failure == 'missing_final_field' and len(actions)==2:
+            raise ValueError('Expected one PositionVectorControl_X, found 0')
         axis = 'XYZ'.index(identity[-1])
         def set_value(text):
             values[axis] = float(text)
@@ -276,11 +278,15 @@ def test_movement_reminder_requires_identity_and_partial_coordinate_readback(mon
     monkeypatch.setattr(windows_worker,'select_lighting_tool',lambda *a:None)
     monkeypatch.setattr(windows_worker,'set_storey_context',lambda *a:None)
     monkeypatch.setattr(windows_worker.time,'sleep',lambda *a:None)
-    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:{'dialogs':[{}]})
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:{'dialogs':[] if failure in ('selection_without_dialog','missing_final_field') else [{}]})
     parameters = {'runtime_id':[7,1,2], 'expected_position_m':[1,1,1], 'position_m':[2,3,1]}
     if failure:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as caught:
             windows_worker.edit_fixture(None,None,None,'test.evo',parameters)
+        if failure == 'missing_final_field':
+            assert 'final_readback' in str(caught.value) and 'completed_axes=' in str(caught.value)
+            assert actions == [0,1]
+            return
         assert actions == [0]  # never send another coordinate after a failed guard
     else:
         result = windows_worker.edit_fixture(None,None,None,'test.evo',parameters)

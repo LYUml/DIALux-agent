@@ -1004,6 +1004,13 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
     expected, state = prepare_project(app, main, process, expected_project)
     fields = ['PositionVectorControl_' + axis for axis in 'XYZ']
     selected_item = []
+    completed_axes = []
+    def field_control(key, stage, wait=False):
+        try:
+            return (wait_control if wait else unique_control)(main, 'Edit', key)
+        except ValueError as exc:
+            raise ValueError(f'Fixture {stage}; field={key}; runtime_id={runtime}; '
+                             f'completed_axes={completed_axes}; inspect native state before retry: {exc}') from exc
     def select_and_read():
         unique_control(main, 'TabItem', 'ProjectTreeTool').select()
         tree = wait_control(main, 'List', 'FilterTreeListBox')
@@ -1020,7 +1027,7 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
         selected_item[:] = matches
         select_lighting_tool(main, 'LuminaireArrangementTool')
         set_storey_context(main)
-        current = [float(wait_control(main, 'Edit', key).get_value()) for key in fields]
+        current = [float(field_control(key,'initial_readback',wait=True).get_value()) for key in fields]
         if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(current, parameters['expected_position_m'])):
             raise ValueError('Fixture position changed since inspection; no movement attempted')
         return current
@@ -1035,7 +1042,10 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
     for axis_index, (key, value, old) in enumerate(zip(fields, parameters['position_m'], before)):
         if math.isclose(value, old, rel_tol=0, abs_tol=1e-10):
             continue
-        control = unique_control(main, 'Edit', key)
+        item = selected_item[0]
+        if list(item.element_info.runtime_id) != runtime or not item.is_selected():
+            raise ValueError(f'Fixture selection changed before writing {key}; completed_axes={completed_axes}')
+        control = field_control(key,'before_write')
         if not control.is_enabled() or control.iface_value.CurrentIsReadOnly:
             raise ValueError('Fixture position is not editable; partial movement possible')
         control.set_focus()
@@ -1047,15 +1057,16 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
         control.type_keys('{TAB}', set_foreground=False)
         time.sleep(1)
         committed[axis_index] = value
+        completed_axes.append(key)
         if snapshot(app, main, process)['dialogs']:
             prepare_project(app, main, process, expected_project)
             item = selected_item[0]
             if list(item.element_info.runtime_id) != runtime or not item.is_selected():
                 raise ValueError('Fixture selection changed during movement reminder')
-            observed = [float(unique_control(main, 'Edit', field).get_value()) for field in fields]
+            observed = [float(field_control(field,'after_reminder').get_value()) for field in fields]
             if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(observed, committed)):
                 raise ValueError('Partial movement differs after reminder; inspect before retry')
-    after = [float(unique_control(main, 'Edit', key).get_value()) for key in fields]
+    after = [float(field_control(key,'final_readback').get_value()) for key in fields]
     if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(after, parameters['position_m'])):
         raise ValueError('Fixture movement readback differs; partial movement possible')
     return {'operation': 'edit_fixture', 'path': str(expected), 'runtime_id': runtime,
