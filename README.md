@@ -142,3 +142,5 @@ Native plotting accepts an explicit ISO landscape paper (`--paper A3|A2|A1|A0`) 
 `report-workplane-read` / MCP `read_workplane_pdf` extracts direct minimum/maximum illuminance from an explicitly selected native working-plane table, with room/scene/surface identity and PDF evidence. See [scope, native regression and applicability limits](docs/workplane-extrema.md).
 
 `schedule-build` / MCP `build_luminaire_schedule` links observed CAD fixture IDs to native PDF product records using unique coordinate correspondence and an explicit transform. See [schedule evidence, native regression and limits](docs/luminaire-schedule.md).
+
+The [current acceptance matrix and remaining gates](docs/current-acceptance.md) separates observed native capabilities from pending work and compares the reviewed pinned upstream modules without claiming complete agent acceptance.
