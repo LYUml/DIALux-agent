@@ -85,6 +85,12 @@ def main():
     edit_arrangement.add_argument('--expected-project', required=True)
     edit_arrangement.add_argument('--tree-item-id', required=True)
     edit_arrangement.add_argument('--values', required=True, help='Path to JSON parameter object')
+    fixtures = commands.add_parser('desktop-group-fixtures')
+    fixtures.add_argument('--expected-project', required=True)
+    fixtures.add_argument('--group-id', required=True)
+    tree = commands.add_parser('desktop-project-tree')
+    tree.add_argument('--expected-project', required=True)
+    tree.add_argument('--expand-id')
     commands.add_parser('desktop-status')
     launching = commands.add_parser('desktop-launch')
     launching.add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
@@ -135,6 +141,10 @@ def main():
             result = _local_module('cad').drawing_inspect(args.path, args.grid_layer)
         elif args.command == 'desktop-edit-arrangement':
             result = _local_module('desktop').desktop_edit_arrangement(args.expected_project, args.tree_item_id, json.loads(Path(args.values).read_text(encoding='utf-8')))
+        elif args.command == 'desktop-group-fixtures':
+            result = _local_module('desktop').desktop_group_fixtures(args.expected_project, args.group_id)
+        elif args.command == 'desktop-project-tree':
+            result = _local_module('desktop').desktop_project_tree(args.expected_project, args.expand_id)
         elif args.command == 'desktop-status':
             result = _local_module('desktop').desktop_status()
         elif args.command == 'desktop-launch':

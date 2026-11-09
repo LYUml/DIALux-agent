@@ -25,7 +25,7 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--parameters', json.dumps(parameters, allow_nan=False)]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=75 if action in {'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
+                             timeout=75 if action in {'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -40,6 +40,12 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
 def desktop_status() -> dict:
     """Read the unique running DIALux process and current controls using Windows UIA."""
     return _run('status')
+
+
+def desktop_project_tree(expected_project: str, expand_id: str | None = None) -> dict:
+    """Read realized native tree nodes; optionally expand one exact visible node."""
+    # The worker shares the JSON argument transport with edit operations.
+    return _run('project-tree', expected_project, parameters=expand_id)
 
 
 def desktop_edit_arrangement(expected_project: str, tree_item_id: str, values: dict) -> dict:
@@ -114,3 +120,11 @@ def desktop_open(path: str, expected_current_project: str | None = None, save_cu
 def desktop_export_pdf(expected_project: str, path: str) -> dict:
     """Export selected documentation to a new PDF using stored results, without recalculation."""
     return _run('export-pdf', expected_project, target=path)
+
+
+def desktop_group_fixtures(expected_project: str, group_id: str) -> dict:
+    """Read individual position/rotation fields from realized children of an exact group.
+
+    Does not claim a complete inventory; runtime IDs are valid only in this session.
+    """
+    return _run('group-fixtures', expected_project, parameters=group_id)

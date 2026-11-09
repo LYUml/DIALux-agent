@@ -11,6 +11,25 @@ import desktop
 import windows_worker
 
 
+def test_tree_identity_with_quotes_survives_worker_transport(monkeypatch):
+    identity = 'Building_"Test"_Luminaires'
+    monkeypatch.setattr(desktop.sys, 'platform', 'win32')
+    def run(command, **kwargs):
+        assert command[2] == 'project-tree'
+        assert json.loads(command[command.index('--parameters') + 1]) == identity
+        assert not kwargs.get('shell', False)
+        return SimpleNamespace(returncode=0, stdout='{"items":[]}')
+    monkeypatch.setattr(desktop.subprocess, 'run', run)
+    assert desktop.desktop_project_tree('test.evo', identity) == {'items': []}
+
+
+@pytest.mark.parametrize('identity', ['', ' ', None, 3])
+def test_group_reader_rejects_missing_identity_before_ui(identity, monkeypatch):
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
+    with pytest.raises(ValueError, match='group_id'):
+        windows_worker.read_group_fixtures(None, None, None, 'test.evo', identity)
+
+
 @pytest.mark.parametrize('kind,text,nested,expected', [
     ('Text', '2.000 m', False, True), ('Text', '-0.5 m', False, True),
     ('Edit', '2.000 m', False, False), ('Text', 'Continue?', False, False),

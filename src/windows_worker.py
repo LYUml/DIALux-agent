@@ -418,6 +418,84 @@ def arrange_space(app, main, process, expected_project, product_id):
     raise ValueError('Arrangement was invoked but readback failed; inspect before retry')
 
 
+def project_tree(app, main, process, expected_project, expand_id=None):
+    """Inventory realized tree nodes, optionally expand one exact visible node."""
+    if expand_id is not None and (not isinstance(expand_id, str) or not expand_id.strip()):
+        raise ValueError('expand_id must be a nonempty string')
+    expected, _ = prepare_project(app, main, process, expected_project)
+    unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+    tree = wait_control(main, 'List', 'FilterTreeListBox')
+    search = unique_control(main, 'Edit', 'ProjectTreeToolSearch').get_value()
+    if expand_id:
+        item = wait_control(tree, 'ListItem', expand_id)
+        if not item.is_visible():
+            raise ValueError('Expansion target is not visible')
+        checkbox = unique_control(item, 'CheckBox', 'ExpandCheckBox')
+        if checkbox.get_toggle_state() == 0:
+            checkbox.click_input()
+            deadline = time.monotonic() + 5
+            while checkbox.get_toggle_state() != 1:
+                if time.monotonic() > deadline:
+                    raise ValueError('Tree expansion not observed; inspect before retry')
+                time.sleep(.1)
+            time.sleep(.4)
+        elif checkbox.get_toggle_state() != 1:
+            raise ValueError('Unexpected expansion checkbox state')
+    records = []
+    for item in tree.descendants(control_type='ListItem'):
+        identity = item.element_info.automation_id
+        if not identity:
+            continue
+        labels = [c.window_text() for c in item.descendants(control_type='Text')
+                  if c.element_info.automation_id == '_textBlock']
+        checkboxes = [c for c in item.descendants(control_type='CheckBox')
+                      if c.element_info.automation_id == 'ExpandCheckBox']
+        records.append({'tree_item_id': identity, 'labels': labels, 'visible': item.is_visible(),
+                        'runtime_id': list(item.element_info.runtime_id),
+                        'expandable': len(checkboxes) == 1,
+                        'expanded': checkboxes[0].get_toggle_state() == 1 if len(checkboxes) == 1 else None})
+    return {'operation': 'project_tree', 'path': str(expected), 'items': records,
+            'search_text': search, 'complete_inventory': False, 'uses_codex_computer_use': False,
+            'warning': 'Only realized UIA nodes are listed; collapsed, filtered or virtualized nodes may be absent. IDs can change after renaming or count edits.'}
+
+
+def read_group_fixtures(app, main, process, expected_project, group_id):
+    """Read visible individual fixture parameters from one exact expanded group."""
+    import math
+    if not isinstance(group_id, str) or not group_id.strip():
+        raise ValueError('group_id must be a nonempty string')
+    inventory = project_tree(app, main, process, expected_project, group_id)
+    nodes = [item for item in inventory['items'] if item['tree_item_id'].startswith(group_id + '_')
+             and not item['expandable']]
+    if not nodes or len(nodes) > 100:
+        raise ValueError('Expected 1 to 100 realized fixture nodes; no complete-inventory claim')
+    fields = ['PositionVectorControl_' + axis for axis in 'XYZ'] + ['RotationVectorControl_' + axis for axis in 'XYZ']
+    fixtures = []
+    for node in nodes:
+        unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+        tree = wait_control(main, 'List', 'FilterTreeListBox')
+        matches = [c for c in tree.descendants(control_type='ListItem')
+                   if list(c.element_info.runtime_id) == node['runtime_id']]
+        if len(matches) != 1 or not matches[0].is_visible():
+            raise ValueError('Fixture UI identity changed or is not visible; inventory again')
+        matches[0].select()
+        if not matches[0].is_selected():
+            raise ValueError('Native fixture selection was not confirmed')
+        unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+        values = [float(wait_control(main, 'Edit', key).get_value()) for key in fields]
+        if not all(math.isfinite(v) for v in values):
+            raise ValueError('Nonfinite native fixture parameter')
+        if snapshot(app, main, process)['dialogs']:
+            raise ValueError('Dialog while inspecting fixtures; readback incomplete')
+        fixtures.append({'runtime_id': node['runtime_id'], 'tree_item_id': node['tree_item_id'],
+                         'name': unique_control(main, 'Edit', 'ArrangementObjectName').get_value(),
+                         'position_m': values[:3], 'rotation_deg': values[3:]})
+    return {'operation': 'read_group_fixtures', 'path': inventory['path'], 'group_id': group_id,
+            'fixtures': fixtures, 'observed_count': len(fixtures), 'complete_inventory': False,
+            'uses_codex_computer_use': False,
+            'warning': 'UI-displayed coordinates, rounded by DIALux. Runtime IDs are session-local, not persistent fixture IDs. Hidden/virtualized nodes may be absent.'}
+
+
 def edit_arrangement(app, main, process, expected_project, parameters):
     """Edit an exact visible tree item, then read committed native parameters."""
     import math
@@ -528,7 +606,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -539,7 +617,7 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
@@ -555,6 +633,10 @@ def main():
             result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
         elif args.action == 'arrange-space':
             result = arrange_space(app, window, process, args.expected_project, args.product_id)
+        elif args.action == 'group-fixtures':
+            result = read_group_fixtures(app, window, process, args.expected_project, json.loads(args.parameters))
+        elif args.action == 'project-tree':
+            result = project_tree(app, window, process, args.expected_project, json.loads(args.parameters) if args.parameters else None)
         elif args.action == 'edit-arrangement':
             result = edit_arrangement(app, window, process, args.expected_project, json.loads(args.parameters))
         elif args.action == 'export-pdf':

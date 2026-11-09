@@ -11,3 +11,5 @@ Dimension labels can appear as top-level UIA windows rather than descendants. Bo
 Supported numeric fields: ElementCountX/Y, PolygonPosition_X/Y/Z, ArrangementRotation_Z. Native acceptance currently covers count changes only; XYZ/rotation paths still need separate native verification. The exact tree ID includes the current object name and may change when counts change. The item must already be expanded; automatic discovery/expansion and stable object identity remain development work. Individual fixture coordinates, full arbitrary layout application, save/reopen persistence and report evidence for this edited project are not yet verified.
 
 128 tests passed, including MCP discovery of `desktop_edit_arrangement`. The native calculation was performed through public CLI calls; no Codex Computer Use dependency was used.
+
+Follow-up: individual fixture position readback and save/reopen persistence for this count-edit scenario are now verified in [tree and fixture inspection](tree-and-fixture-inspection.md). Arbitrary coordinate editing and complete large-project enumeration remain unverified.
