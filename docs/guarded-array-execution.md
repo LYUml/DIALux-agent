@@ -36,3 +36,9 @@ Hashes and bounded claims: [guarded-array-v2.json](evidence/guarded-array-v2.jso
 This accepts the full independent API chain for one six-fixture regular array, with 0.1 m XY translation and 5-degree rotation. It does not establish arbitrary transformations, large-array execution through this API, preservation of other groups, automatic recovery, manufacturer dimensions, design compliance or assignment readiness.
 
 The executor now also saves the complete native array readback as `arrangement.json` before preflight, with its file SHA-256 in the journal. Together with the hashed full before-inspection and request, this allows an auditor to reconstruct `plan_array_transform` exactly, including its input hashes. A regression test performs that reconstruction. This is additional evidence retention, not a change to geometry or an authentication claim.
+
+## Independent offline replay command
+
+`python -m src.array_audit --evidence-directory <completed-execution-folder>` reads the evidence without desktop access. It replays the geometry preflight from the request, before inspection and raw array snapshot, verifies both full inspection checkpoints, checks project/group/source bindings, and compares every expected pending/verified field event and final field value. Changed fixture identities, missing events, tampered pages and mismatched hashes are rejected. It returns no live-state, persistence, simulation or authenticity claim.
+
+This reader requires the newer `arrangement.json` capture; older execution folders are not silently upgraded. Eight focused tests include independent reconstruction and corruption/identity/commit rejection. General CLI/MCP registration is separate; the module command is available now. The 168-fixture native run under `local/guarded-large-array-v1` is still in progress, so large-array acceptance is not claimed.
