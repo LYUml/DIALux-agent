@@ -68,6 +68,16 @@ def test_budget_and_minimizing_objective(harness):
     assert result['best_candidate'] == result['best_feasible_candidate'] == 0
 
 
+def test_small_improvement_still_ranks_actual_best(harness):
+    request, values, statuses, actions = harness
+    values[:] = [.5, .505, .506, .7]
+    statuses[:] = ['pass']*4
+    result = module.run_layout_candidates(**request)
+    assert result['stop_reason'] == 'no_improvement'
+    assert len(result['iterations']) == 3
+    assert result['best_candidate'] == result['best_feasible_candidate'] == 2
+
+
 def test_changed_room_rejected_before_native_work(harness):
     request, values, statuses, actions = harness
     request['candidates'][1]['fixture']['product_id'] = 'different'

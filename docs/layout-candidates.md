@@ -23,7 +23,10 @@ the calculation checkpoint; missing or ambiguous evidence stops the run.
 - `max_iterations`: integer 1–20; never exceeds the supplied candidate count.
 - `no_improvement_limit`: integer 1–20 consecutive candidates.
 - `minimum_improvement`: finite nonnegative threshold in the objective's units;
-  improvement must strictly exceed it. This is not statistical significance.
+  improvement must strictly exceed it to reset the stopping counter. Smaller
+  cumulative improvements are compared to the last value that reset this counter.
+  Best-candidate ranking still records every strictly better measured value,
+  independently of this stopping threshold. This is not statistical significance.
 - `stop_on_pass`: boolean; stop when all selected checks pass if true.
 
 Each iteration saves a new `candidate-NNN.evo`, applies the explicit grid with
@@ -46,3 +49,12 @@ Tests cover budget, minimization, passing/incomplete stops, no-improvement,
 source preservation, unsupported changes and missing objective evidence. Full
 suite: 354 passed. Real multi-candidate evidence remains required before native
 acceptance, once the separate 168-fixture desktop task releases its worker.
+
+The next native test request is prepared in ignored
+`local/candidate-native-request-v1.json`: two explicit six-fixture offsets in the
+existing synthetic obstacle-room copy, unchanged product and geometry, maximizing
+reported WP1 uniformity with a two-iteration budget. The check requires only
+positive mean illuminance and explicitly labels itself an orchestration smoke
+test, not an engineering design standard. Both grids and the existing report
+summary identity were checked offline. Native execution has not started; its
+future report values must be obtained from new calculations.

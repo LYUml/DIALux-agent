@@ -84,11 +84,12 @@ def run_layout_candidates(expected_project: str, group_id: str, candidates: list
     def unchanged():
         if hashlib.sha256(source.read_bytes()).hexdigest() != digest:
             raise ValueError('Source project changed during candidate run')
-    def better(value, prior):
+    def improvement(value, prior):
         difference = value-prior if objective['direction'] == 'maximize' else prior-value
-        return difference > delta
+        return difference
     record()
     current, best, feasible, stale = str(source), None, None, 0
+    significant_best = None
     try:
         budget = min(len(candidates), policy['max_iterations'])
         for index in range(budget):
@@ -121,12 +122,14 @@ def run_layout_candidates(expected_project: str, group_id: str, candidates: list
                 raise ValueError('Objective measurement missing, ambiguous or nonfinite')
             value = values[0]
             item.update(state='completed', objective_value=value)
-            if best is None or better(value, best):
-                best, stale = value, 0
+            if best is None or improvement(value, best) > 0:
+                best = value
                 journal['best_candidate'] = index
+            if significant_best is None or improvement(value, significant_best) > delta:
+                significant_best, stale = value, 0
             else:
                 stale += 1
-            if checkpoint['status'] == 'pass' and (feasible is None or better(value, feasible)):
+            if checkpoint['status'] == 'pass' and (feasible is None or improvement(value, feasible) > 0):
                 feasible = value
                 journal['best_feasible_candidate'] = index
             unchanged()
