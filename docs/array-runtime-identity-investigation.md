@@ -91,3 +91,13 @@ only the guarded X/Y centre increments, requiring no results-clear event. It is
 under `local/motion-only-identity-probe-v1`. Its outcome will inform whether a
 post-cache-clear baseline can preserve identity checks across subsequent movement;
 the full executor has not yet been changed or accepted on a large array.
+
+The motion-only experiment completed: exactly X/Y pending/verified events, no
+cache-clear event, and four sampled fixtures each matched the requested 0.1 m XY
+shift. The two full inventories nevertheless had 150 lost/new UI IDs. Evidence
+SHA-256 `6cfb4e9b16616b7377edb836ec1111827a3109b3f56c17c3922fffd9f3f2e280`.
+The unchanged source was preserved, and the experiment session was saved and
+closed separately. Moving cache clearing before the baseline is therefore not
+sufficient by itself in this observed case. A new motion-only copy is now being
+tested with the first inventory's native references retained across the move.
+No production identity guard has been removed or weakened.
