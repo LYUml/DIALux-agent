@@ -129,6 +129,8 @@ def main():
     checkpoint.add_argument('--evidence-directory', required=True)
     checkpoint.add_argument('--checks', required=True)
     checkpoint.add_argument('--recalculate', action='store_true')
+    boundary = commands.add_parser('drawing-extract-boundary')
+    boundary.add_argument('--request', required=True)
     commands.add_parser('desktop-status')
     launching = commands.add_parser('desktop-launch')
     launching.add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
@@ -216,6 +218,8 @@ def main():
             result = _local_module('desktop').desktop_import_stf(args.path)
         elif args.command == 'desktop-export-pdf':
             result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
+        elif args.command == 'drawing-extract-boundary':
+            result = _local_module('cad_geometry').drawing_extract_boundary(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'calculation-checkpoint':
             result = _local_module('workflow').calculation_checkpoint(args.expected_project, args.evidence_directory, json.loads(Path(args.checks).read_text(encoding='utf-8-sig')), args.recalculate)
         elif args.command == 'desktop-arrange-room':
