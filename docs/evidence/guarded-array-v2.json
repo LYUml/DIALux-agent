@@ -1,0 +1,23 @@
+{
+  "schema": "dialux-agent/native-array-acceptance/v1",
+  "execution_revision": "cd1be34",
+  "fixture_count": 6,
+  "translation_m": [
+    0.1,
+    0.1,
+    0
+  ],
+  "rotation_deg": 5,
+  "native_sha256": "38c6a7016b170878b6e2f6e42f79bddd15ba8894a932ccb851f8f73a0451f44c",
+  "fresh_report_sha256": "82a8beb5943ef91096b47bd0f6d7a5c7cf0feff716f4735f6572a0a27fc8bd87",
+  "reopened_report_sha256": "c496f5f1813dfa671b3b2fb79a6d744e7d512bd644e21d6d338caa0c40bec995",
+  "full_before_after_geometry_verified": true,
+  "independent_report_position_match": true,
+  "full_reopened_geometry_verified": true,
+  "products_and_summary_metrics_persisted": true,
+  "source_unchanged": true,
+  "whole_project_verified": false,
+  "arbitrary_arrays_verified": false,
+  "evidence_root": "local/guarded-array-native-v2",
+  "synthetic_only": true
+}

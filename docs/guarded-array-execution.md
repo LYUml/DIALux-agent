@@ -12,12 +12,25 @@ Failure retains the outer journal plus inspection pages and any pending field ev
 
 ## Verification status
 
-The full suite passed 539 tests after CLI/MCP integration. Five execution tests cover complete before/after checkpoints, rejected nonrigid input, a failed write, unchanged geometry and changed fixture identities. Fourteen field-commit tests cover intent ordering and unexpected field changes. Three additional adapter tests reject stale runtime IDs/counts and absent runtime evidence before results clearing.
+The full suite passed 543 tests after the native-selection fix. Five execution tests cover complete before/after checkpoints, rejected nonrigid input, a failed write, unchanged geometry and changed fixture identities. Fourteen field-commit tests cover intent ordering and unexpected field changes. Three additional adapter tests reject stale runtime IDs/counts and absent runtime evidence before results clearing.
 
-A separate real native test is in progress under `local/guarded-array-native-v1`: it requests a 0.1 m XY translation plus 5-degree rotation of the six-fixture synthetic obstacle room. The original source is preserved and a new copy is used. No native execution or persistence acceptance is claimed until the run and independent checks finish. This API is experimental while that gate is pending.
+The second native execution passed the six-fixture combined translation/rotation case described below. Broader array sizes, other transformations and failure recovery remain separate acceptance gates. This is bounded native evidence, not general whole-project acceptance.
 
 ## Initial native execution failure
 
 The first combined executor run (`local/guarded-array-native-v1`) stopped after clearing stored calculation results, before any `pending_field` event. It attempted to locate `FilterTreeListBox` after switching to the luminaire parameter tab, where that tree is no longer visible. This is a failed native gate, not successful array execution.
 
 The adapter now retains the uniquely selected native item reference obtained by `read_arrangement`, and continues checking its runtime ID and selection state through that reference. It does not switch panels or use a first-match fallback. A regression test simulates the hidden tree and fails if the adapter tries to query it; all 23 targeted array-execution/commit/adapter tests pass. The retained reference does not exclude external user changes, so every write still rechecks identity and the complete field vector.
+
+
+## Combined native acceptance, 2026-11-09
+
+Revision `cd1be34` ran on a separate copy of the synthetic obstacle room. The independent worker moved the array centre from (3,2,3.035) m to (3.1,2.1,3.035) m and rotated it from 0 to 5 degrees. Its complete six-fixture before/after inspections passed the rigid preflight and target geometry comparison. The three changed fields each retained pending and verified events in order; unchanged Z was skipped. Fixture runtime identities and names were preserved. The executor returned `geometry_verified_unsaved` as specified.
+
+A separate calculation checkpoint saved and recalculated the result. An independent artifact audit rechecked source-code snapshot hashes, request/preflight hashes, complete post-edit inspection pages, runtime IDs, write-event ordering, source preservation and all six report XYZ positions against UI readings. The synthetic WP1 result was average 496 lx, Uo 0.060 and reported LPD 6.5 W/m². These are smoke-test results, not a compliant design claim.
+
+A separate persistence run closed and reopened the saved project, fully inspected all six positions/rotations/names again, and exported another report. Product, report coordinates and all parsed scoped summary measurements matched. The saved native file hash remained unchanged. Documentation-session changes were saved to a separate copy and closed. The original source remained unchanged throughout.
+
+Hashes and bounded claims: [guarded-array-v2.json](evidence/guarded-array-v2.json). Local evidence: `local/guarded-array-native-v2/{execution,calculation,independent-audit.json,reopen-v1}`. The first failed execution remains under v1; subsequent live field inspection matched its original preflight values and its cleared-results session was saved separately before the new run.
+
+This accepts the full independent API chain for one six-fixture regular array, with 0.1 m XY translation and 5-degree rotation. It does not establish arbitrary transformations, large-array execution through this API, preservation of other groups, automatic recovery, manufacturer dimensions, design compliance or assignment readiness.
