@@ -11,6 +11,22 @@ import workflow
 from regulations import SOURCE_FIELDS
 
 
+def test_unavailable_report_uniformity_cannot_pass(monkeypatch):
+    from results import parse_summary_pages
+    header = 'STF Building · STF Storey · Unlit room (Light scene 1)\nSummary\n'
+    report = parse_summary_pages([
+        header + 'Ground area 24.00 m² Clearance height 3.000 m\nHeight Working plane 0.800 m',
+        header + 'Working plane Ēperpendicular 0.00 lx ≥ 500 lx WP1\n'
+        'Uo (g1) - ≥ 0.60 WP1\nSpace Lighting power density 0.00 W/m² –\n'])
+    monkeypatch.setattr(workflow, 'read_summary_pdf', lambda path: report)
+    profile = {'schema': 'dialux-agent/criteria-profile/v1', 'status': 'verified',
+               'criteria': [{'id': 'synthetic-uniformity', 'metric': 'uniformity_u0',
+                             'unit': '1', 'calculation_surface': 'WP1',
+                             'operator': '>=', 'threshold': .6,
+                             'source': {k: 'Synthetic fixture' for k in SOURCE_FIELDS}}]}
+    assert workflow.check_report('synthetic.pdf', profile)['status'] == 'unverified'
+
+
 def test_scoped_assessment_never_receives_other_room_measurements(monkeypatch):
     first = {'summary_id':'one','measurements':[{'value':100}]}
     second = {'summary_id':'two','measurements':[{'value':500}]}

@@ -187,6 +187,8 @@ def calculate(app, main, process, expected_project, recalculate=False):
                 and state['controls']['DiscardResultsButton']['enabled'] and results and not obsolete and not busy):
             return {'operation': 'calculate', 'status': 'results_available', 'path': str(expected),
                     'results': results, 'native_project_saved': False,
+                    'results_scoped': False,
+                    'results_scope_warning': 'Monitor values have no verified room/surface identity. Use a scoped native report for assessment.',
                     'evidence': 'Calculation invoked from enabled state; results controls available afterward',
                     'uses_codex_computer_use': False}
         time.sleep(.3)

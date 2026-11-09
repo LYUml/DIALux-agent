@@ -13,4 +13,16 @@ Verification on 2026-11-09:
 - Public scoped criteria checking of the acceptance PDF with the HK BEC profile and no applicability facts returned `unverified`; it did not infer office applicability or claim whole-project compliance.
 - 161 automated tests passed, including verification that the criteria engine receives only the selected room's measurements and explicit context. MCP discovery includes both new tools.
 
-A true multi-room native DIALux project/export still needs end-to-end acceptance. The parser still does not extract minimum illuminance or glare; it supports only the previously tested average illuminance, uniformity and lighting-power-density fields. No assignment report was produced.
+## Native three-room checkpoint
+
+On 2026-11-09, independent desktop CLI calculation and PDF export completed for the synthetic `three-room-B-v1.evo` project. Public `report-read-all` reads the resulting 39-page `local/three-room-B-report-v1.pdf` (2,475,915 bytes; SHA256 `86159502dd89c02c69c510f3746b6fb6639eb86171fcc05443e34e7ed10f8b43`). Its summaries are:
+
+| Room | Pages | Average lx | Uniformity | LPD W/m² |
+| --- | --- | --- | --- | --- |
+| Synthetic A | 15–16 | 0 | unavailable (`-`) | 0 |
+| Synthetic B | 20–21 | 693 | 0.57 | 9.75 |
+| Synthetic corridor | 28–29 | 0 | unavailable (`-`) | 0 |
+
+The parser now recognizes custom building names in the native building/storey/room header. A numeric uniformity is retained as a measurement; an explicit dash is recorded separately in `unavailable_measurements`, with surface identity, original page and PDF hash. Missing rows, conflicting surfaces and ambiguous pairs still fail. The criteria engine receives no fabricated numeric uniformity and returns unverified when a criterion requires it. Raw calculation monitor values now explicitly advertise that room/surface scope is unverified.
+
+This verifies native multi-room report separation, not complete multi-room placement: only B contains luminaires. The public automatic arrangement guard still prevents adding another room's arrangement after existing calculation-ready content; that capability remains unfinished. The parser does not extract minimum illuminance or glare. No assignment report was produced.

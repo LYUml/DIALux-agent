@@ -10,7 +10,7 @@ from pdfminer.psexceptions import PSException
 from pdfplumber.utils.exceptions import PdfminerException
 
 NUMBER = r'(\d+(?:\.\d+)?)'
-SUMMARY_HEADER = r'^(Building .+?\s*\(Light scene\s+\d+\))\s*\nSummary\s*$'
+SUMMARY_HEADER = r'^([^\n]+? · [^\n]+? · [^\n]+?\s*\(Light scene\s+\d+\))\s*\nSummary\s*$'
 
 
 def _one(pattern, text):
@@ -35,21 +35,26 @@ def parse_summary_pages(pages: list[str]) -> dict:
     plane = float(_one(r'Height Working plane\s+' + NUMBER + r'\s+m\b', a))
     height = float(_one(r'Clearance height\s+' + NUMBER + r'\s+m\b', a))
     em, plane_id = _one(r'^Working plane\s+Ēperpendicular\s+' + NUMBER + r'\s+lx\b[^\n]*?\s+(WP\d+)\s*$', b)
-    uo, uniformity_id = _one(r'^Uo \(g1\)\s+' + NUMBER + r'\b[^\n]*?\s+(WP\d+)\s*$', b)
+    uo, uniformity_id = _one(r'^Uo \(g1\)\s+(\d+(?:\.\d+)?|-)\s+[^\n]*?\s+(WP\d+)\s*$', b)
     if plane_id != uniformity_id:
         raise ValueError('Illuminance and uniformity refer to different calculation surfaces')
-    illuminance, uniformity = float(em), float(uo)
+    illuminance = float(em)
+    uniformity = None if uo == '-' else float(uo)
     lpd = float(_one(r'^Space Lighting power density\s+' + NUMBER + r'\s+W/m²\s', b))
-    if (not all(math.isfinite(v) for v in (area, plane, height, illuminance, uniformity, lpd))
-            or area <= 0 or not 0 <= plane < height or not 0 <= uniformity <= 1):
+    if (not all(math.isfinite(v) for v in (area, plane, height, illuminance, lpd))
+            or area <= 0 or not 0 <= plane < height
+            or (uniformity is not None and (not math.isfinite(uniformity) or not 0 <= uniformity <= 1))):
         raise ValueError('Invalid physical values in summary')
     return {'room_scene_header': headers[0], 'area_m2': area,
             'height_m': height, 'workplane_m': plane,
+            'unavailable_measurements': ([{'metric': 'uniformity_u0', 'unit': '1',
+                'calculation_surface': plane_id, 'page': 2, 'reported_value': '-',
+                'reason': 'Native report provides no numeric value'}] if uniformity is None else []),
             'measurements': [
                 {'metric': 'average_perpendicular_illuminance', 'value': illuminance,
                  'unit': 'lx', 'calculation_surface': plane_id, 'page': 2},
-                {'metric': 'uniformity_u0', 'value': uniformity,
-                 'unit': '1', 'calculation_surface': plane_id, 'page': 2},
+                *([{'metric': 'uniformity_u0', 'value': uniformity,
+                 'unit': '1', 'calculation_surface': plane_id, 'page': 2}] if uniformity is not None else []),
                 {'metric': 'lighting_power_density', 'value': lpd,
                  'unit': 'W/m2', 'calculation_surface': 'space', 'page': 2}]}
 
@@ -61,7 +66,7 @@ def parse_report_pages(pages: list[str]) -> dict:
     if len(selected) != 2 or selected[1][0] != selected[0][0] + 1:
         raise ValueError('Expected exactly one adjacent two-page room Summary in report')
     result = parse_summary_pages([text for _, text in selected])
-    for row in result['measurements']:
+    for row in result['measurements'] + result['unavailable_measurements']:
         row['page'] = selected[row['page'] - 1][0] + 1
     result['summary_pages'] = [index + 1 for index, _ in selected]
     result['document_pages'] = len(pages)
@@ -87,7 +92,7 @@ def parse_report_summaries(pages: list[str]) -> dict:
         identity = hashlib.sha256(header.encode('utf-8')).hexdigest()
         summary['summary_id'] = identity
         summary['summary_pages'] = [i+1 for i,_ in pair]
-        for row in summary['measurements']:
+        for row in summary['measurements'] + summary['unavailable_measurements']:
             row['page'] = pair[row['page']-1][0]+1
             row['summary_id'] = identity
             row['room_scene_header'] = header
@@ -114,7 +119,7 @@ def read_report_pdf(path: str) -> dict:
         raise ValueError(f'Unreadable or unsupported PDF: {type(exc).__name__}') from exc
     result = parse_report_summaries(pages)
     for summary in result['summaries']:
-        for row in summary['measurements']:
+        for row in summary['measurements'] + summary['unavailable_measurements']:
             row['evidence'] = f'{source}#page={row["page"]};sha256={digest}'
     result.update(schema='dialux-agent/report-results/v1', source=str(source), sha256=digest,
                   compliance_status='not_evaluated', warnings=[
@@ -138,7 +143,7 @@ def read_summary_pdf(path: str) -> dict:
     except (PSException, PdfminerException) as exc:
         raise ValueError(f'Unreadable or unsupported PDF: {type(exc).__name__}') from exc
     result = parse_report_pages(pages)
-    for row in result['measurements']:
+    for row in result['measurements'] + result['unavailable_measurements']:
         row['evidence'] = f'{source}#page={row["page"]};sha256={digest}'
     result.update(schema='dialux-agent/summary-results/v1', source=str(source), sha256=digest,
                   compliance_status='not_evaluated',

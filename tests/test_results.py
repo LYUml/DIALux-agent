@@ -21,6 +21,38 @@ def test_actual_values_not_targets(pages):
     assert result['measurements'][0]['calculation_surface'] == 'WP7'
 
 
+def test_custom_building_header_and_unavailable_uniformity(pages):
+    pages = [p.replace('Building B', 'STF Building') for p in pages]
+    pages[1] = pages[1].replace('217 lx', '0.00 lx').replace('0.41', '-')
+    result = parse_report_summaries(['Cover'] + pages)['summaries'][0]
+    assert [r['metric'] for r in result['measurements']] == [
+        'average_perpendicular_illuminance', 'lighting_power_density']
+    missing = result['unavailable_measurements'][0]
+    assert missing['reported_value'] == '-'
+    assert missing['page'] == 3
+    assert missing['summary_id'] == result['summary_id']
+    assert missing['calculation_surface'] == 'WP7'
+    assert 'value' not in missing
+
+
+@pytest.mark.skipif(not (ROOT/'local/three-room-B-report-v1.pdf').exists(), reason='Local native artifact is not distributed')
+def test_native_three_room_report():
+    result = read_report_pdf(str(ROOT/'local/three-room-B-report-v1.pdf'))
+    assert result['sha256'] == '86159502dd89c02c69c510f3746b6fb6639eb86171fcc05443e34e7ed10f8b43'
+    assert result['document_pages'] == 39
+    assert result['summary_count'] == 3
+    summaries = result['summaries']
+    assert [s['summary_pages'] for s in summaries] == [[15,16],[20,21],[28,29]]
+    assert [s['measurements'][0]['value'] for s in summaries] == [0,693,0]
+    assert [len(s['unavailable_measurements']) for s in summaries] == [1,0,1]
+    assert [r['value'] for r in summaries[1]['measurements']] == [693,.57,9.75]
+    for summary in summaries:
+        for row in summary['measurements'] + summary['unavailable_measurements']:
+            assert result['sha256'] in row['evidence']
+    with pytest.raises(ValueError):
+        read_summary_pdf(str(ROOT/'local/three-room-B-report-v1.pdf'))
+
+
 def test_multi_room_scene_results_remain_separate_with_original_pages(pages):
     other = [p.replace('Room R', 'Room X').replace('217 lx', '333 lx') for p in pages]
     scene = [p.replace('scene\n2', 'scene\n3').replace('217 lx', '111 lx') for p in pages]
