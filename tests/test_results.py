@@ -53,6 +53,17 @@ def test_native_three_room_report():
         read_summary_pdf(str(ROOT/'local/three-room-B-report-v1.pdf'))
 
 
+@pytest.mark.skipif(not (ROOT/'local/multiroom-two-lit-v1.pdf').exists(), reason='Local native artifact is not distributed')
+def test_native_two_lit_rooms_recalculation():
+    report = read_report_pdf(str(ROOT/'local/multiroom-two-lit-v1.pdf'))
+    assert report['sha256'] == '5e2bb749c33701bed5c94eb77c8b107beed1dbe6d336844b9e08eb2aa9e2c992'
+    assert report['document_pages'] == 42
+    assert [s['summary_pages'] for s in report['summaries']] == [[15,16],[23,24],[31,32]]
+    assert [[m['value'] for m in s['measurements']] for s in report['summaries']] == [
+        [531,.57,6.5],[693,.59,9.75],[0,0]]
+    assert [len(s['unavailable_measurements']) for s in report['summaries']] == [0,0,1]
+
+
 def test_multi_room_scene_results_remain_separate_with_original_pages(pages):
     other = [p.replace('Room R', 'Room X').replace('217 lx', '333 lx') for p in pages]
     scene = [p.replace('scene\n2', 'scene\n3').replace('217 lx', '111 lx') for p in pages]

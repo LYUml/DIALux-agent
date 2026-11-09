@@ -106,21 +106,51 @@ def snapshot(app, main, process):
             'uses_codex_computer_use': False}
 
 
+def is_save_reminder(dialog):
+    """Match only the observed English periodic reminder, not save/overwrite prompts."""
+    children = dialog.get('children', [])
+    return (dialog.get('automation_id') == 'InformationBox'
+            and dialog.get('title') == 'DIALux' and dialog.get('class') == 'Window'
+            and all(c.get('type') in {'Button', 'Image', 'Text', 'Edit'} for c in children)
+            and [c.get('text') for c in children if c.get('type') == 'Edit'] ==
+                ['The project has not been saved for 5 minutes.\r\nSave now?']
+            and sorted(c.get('text', '') for c in children if c.get('type') == 'Button') == ['', 'No', 'Yes'])
+
+
+def defer_save_reminder(app, main, process, state):
+    if len(state['dialogs']) != 1 or not is_save_reminder(state['dialogs'][0]):
+        return state
+    window = unique_control(main, 'Window', 'InformationBox')
+    current = {'title': window.window_text(), 'automation_id': window.element_info.automation_id,
+               'class': window.class_name(), 'children': [
+                   {'type': c.element_info.control_type, 'text': c.window_text()} for c in window.descendants()]}
+    if not is_save_reminder(current):
+        raise ValueError('Save reminder changed before dismissal')
+    buttons = [c for c in window.descendants(control_type='Button') if c.window_text() == 'No']
+    if len(buttons) != 1:
+        raise ValueError('Expected one save-reminder No button')
+    buttons[0].click()
+    time.sleep(.2)
+    return snapshot(app, main, process)
+
+
 def prepare_project(app, main, process, expected_project, must_exist=True):
     expected = Path(expected_project).resolve(strict=must_exist)
     if expected.suffix.lower() != '.evo':
         raise ValueError('Expected an existing native .evo project')
     state = snapshot(app, main, process)
-    if state['dialogs']:
-        raise ValueError('A DIALux secondary window/dialog is open; inspect before acting')
     prefix, separator, version = state['title'].rpartition(' - DIALux evo ')
     if not separator or Path(prefix.rstrip('* ')).resolve() != expected:
         raise ValueError('Active project does not match expected_project')
+    state = defer_save_reminder(app, main, process, state)
+    if state['dialogs']:
+        raise ValueError('A DIALux secondary window/dialog is open; inspect before acting')
     # WPF commands can report disabled while DIALux is inactive. Activation is
     # explicit and affects foreground focus, though Invoke does not move the mouse.
     main.set_focus()
     time.sleep(.3)
     state = snapshot(app, main, process)
+    state = defer_save_reminder(app, main, process, state)
     if state['dialogs']:
         raise ValueError('A dialog appeared after activation; operation was not invoked')
     return expected, state

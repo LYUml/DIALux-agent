@@ -11,6 +11,51 @@ import desktop
 import windows_worker
 
 
+@pytest.fixture
+def reminder():
+    return {'title':'DIALux','automation_id':'InformationBox','class':'Window',
+            'children':[{'type':'Edit','text':'The project has not been saved for 5 minutes.\r\nSave now?'},
+                        *[{'type':'Button','text':text} for text in ('','Yes','No')]]}
+
+
+@pytest.mark.parametrize('mutation', ['none','overwrite','other_id','extra_edit','cancel','extra_dialog'])
+def test_save_reminder_recognition_is_narrow(reminder, mutation, monkeypatch):
+    if mutation == 'overwrite': reminder['children'][0]['text'] = 'Overwrite existing file?'
+    if mutation == 'other_id': reminder['automation_id'] = 'SaveProject'
+    if mutation == 'extra_edit': reminder['children'].append({'type':'Edit','text':'Other question'})
+    if mutation == 'cancel': reminder['children'].append({'type':'Button','text':'Cancel'})
+    if mutation == 'extra_dialog':
+        state = {'dialogs':[reminder,reminder]}
+        monkeypatch.setattr(windows_worker,'unique_control',lambda *a:pytest.fail('Dialog acted on'))
+        assert windows_worker.defer_save_reminder(None,None,None,state) is state
+    else:
+        assert windows_worker.is_save_reminder(reminder) == (mutation == 'none')
+
+
+def test_wrong_project_never_dismisses_reminder(tmp_path, reminder, monkeypatch):
+    path = tmp_path/'intended.evo'
+    path.write_bytes(b'fixture')
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:{'title':'other.evo - DIALux evo 14.1','dialogs':[reminder]})
+    monkeypatch.setattr(windows_worker,'defer_save_reminder',lambda *a:pytest.fail('Dismissed wrong project reminder'))
+    with pytest.raises(ValueError,match='does not match'):
+        windows_worker.prepare_project(None,None,None,str(path))
+
+
+def test_reminder_defers_without_saving_and_reads_fresh_state(reminder, monkeypatch):
+    actions = []
+    controls = [SimpleNamespace(element_info=SimpleNamespace(control_type=c['type']),
+        window_text=lambda c=c:c['text'], click=lambda c=c:actions.append(c['text'])) for c in reminder['children']]
+    window = SimpleNamespace(element_info=SimpleNamespace(automation_id='InformationBox'),
+        window_text=lambda:'DIALux',class_name=lambda:'Window',
+        descendants=lambda **kw:[c for c in controls if not kw or c.element_info.control_type==kw['control_type']])
+    monkeypatch.setattr(windows_worker,'unique_control',lambda *a:window)
+    monkeypatch.setattr(windows_worker.time,'sleep',lambda *a:None)
+    after = {'dialogs':[]}
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:after)
+    assert windows_worker.defer_save_reminder(None,None,None,{'dialogs':[reminder]}) is after
+    assert actions == ['No']
+
+
 @pytest.mark.parametrize('name', ['', 'bad{ENTER}', 'bad^a', ' trailing ', 'x'*81, 12])
 def test_arrangement_name_rejects_unsafe_or_invalid_input_before_ui(name, monkeypatch):
     monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
