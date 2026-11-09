@@ -19,7 +19,7 @@ file does not establish complete native engineering acceptance.
 | --- | --- |
 | Independent desktop control | STF/ULD import, arrangement, actual calculation, save, PDF export and reopen through standalone workers. Requires an interactive Windows session; no private mouse. |
 | Geometry | Concave and adjacent synthetic rooms, ground-supported box obstacles, source-preserving DWG survey and explicitly selected DXF boundary extraction. General CAD room inference and arbitrary object topology are not established. |
-| Fixture control | Six-fixture explicit grid movement and 168-fixture regular-array translation passed full position checks, calculation and persistence. Arbitrary large individual movement, native rotation and general recovery remain unaccepted. |
+| Fixture control | Six-fixture explicit grid movement and 168-fixture regular-array translation passed full position checks, calculation and persistence. A six-fixture 5° native rotation also passed those gates. Arbitrary large individual movement and general recovery remain unaccepted. |
 | Iteration | Two explicit candidates passed actual calculations, comparison and reopen checks. A generated four-candidate domain also passed calculation, comparison and reopen checks; previous failures are retained. No global-optimum or automatic winner-installation claim. |
 | Drawing | Observed fixture coordinates, editable IDs, bounded label placement, linear dimensions, single-product schedule and fixed-paper frame/titleblock. Native DWG reopen and physical PDF scale checked on A3, A2 and 168-symbol A1 synthetic sheets. Mixed-product tables and general sheet composition remain unfinished. |
 | Results | Exact supported English room/scene summaries, direct working-plane minimum/maximum and explicitly scoped coordinate tables. Missing/ambiguous evidence is rejected; whole-project completeness is not inferred. |
@@ -82,7 +82,9 @@ automatic resume or rollback.
 
 The offline [rigid-array preflight](docs/array-transform-preflight.md) checks whether
 a complete observed array can reach a target grid by one translation/rotation.
-It does not execute that movement.
+It does not execute that movement. The separate
+[native 5° rotation test](docs/native-array-rotation.md) has scoped readback,
+calculation and reopen evidence.
 
 ## MCP and AI skill
 

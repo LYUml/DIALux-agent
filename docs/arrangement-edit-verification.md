@@ -1,5 +1,11 @@
 # Native arrangement editing checkpoint
 
+This page records the initial count-edit checkpoint. Later native evidence covers
+[168-fixture regular-array translation](large-array-translation.md) and
+[six-fixture 5° rotation](native-array-rotation.md), with full readback,
+calculation and reopening. The historical pending statements below do not
+supersede those scoped later results.
+
 2026-11-09, synthetic tool test only. `placement-probe-v1.evo` was created with public Save As from the previous synthetic acceptance project. No assignment project was created or edited.
 
 The standalone worker can select an exact expanded native project-tree ListItem through UIA SelectionItem, switch to the arrangement tool and edit the native count fields with committed keyboard input. Public `desktop-edit-arrangement` changed ElementCountX from 3 to 2 while retaining ElementCountY=2. The operation read back both values and rejected unexpected dialogs. Public save succeeded; subsequent public calculation produced displayed average 364 lx and uniformity 0.48. These are test observations, not compliance or a design recommendation.

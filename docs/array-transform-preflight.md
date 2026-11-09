@@ -51,3 +51,8 @@ fixtures passed the existing hashed-checkpoint verifier and then this preflight
 for a further 0.1 m X/Y translation. The predicted centre was (15.2, 17.2, 3.035) m.
 `local/large-array-next-transform-preflight-v1.json` records that offline result;
 it is not a newly executed native movement.
+
+The separate [six-fixture native 5° test](native-array-rotation.md) subsequently
+used this preflight before the low-level array editor. All positions/angles,
+calculation and save/reopen passed in that case. It does not turn this planner
+into a guarded native apply command.

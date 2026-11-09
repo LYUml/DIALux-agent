@@ -1,0 +1,31 @@
+{
+  "state": "verified",
+  "scope": "Synthetic six-fixture 5 degree array rotation only",
+  "native_sha256": "5cb1c224cf986a3ffa44763e85de5bb83dd19fc283ad1e93f92c5268f4bd7235",
+  "fresh_report_sha256": "c1edaa4931a69237cde30019f54b4f0e31d2a434e509371b0b1352c8ec7f079f",
+  "reopened_report_sha256": "5cee0cfda77793ea84b480f3708e96173f747a69dd9cef9204974820ffa6ec03",
+  "source_unchanged": true,
+  "all_positions_rotations_persisted": true,
+  "metrics": [
+    {
+      "metric": "average_perpendicular_illuminance",
+      "value": 497.0,
+      "unit": "lx",
+      "surface": "WP1"
+    },
+    {
+      "metric": "uniformity_u0",
+      "value": 0.07,
+      "unit": "1",
+      "surface": "WP1"
+    },
+    {
+      "metric": "lighting_power_density",
+      "value": 6.5,
+      "unit": "W/m2",
+      "surface": "space"
+    }
+  ],
+  "whole_project_verified": false,
+  "guarded_bulk_apply_api_verified": false
+}
