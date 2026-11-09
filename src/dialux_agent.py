@@ -130,6 +130,9 @@ def main():
     exporting = commands.add_parser('desktop-export-pdf')
     exporting.add_argument('--expected-project', required=True)
     exporting.add_argument('--path', required=True)
+    room_arrangement = commands.add_parser('desktop-arrange-room')
+    room_arrangement.add_argument('--expected-project', required=True)
+    room_arrangement.add_argument('--spec', required=True)
     arrangement = commands.add_parser('desktop-arrange-space')
     arrangement.add_argument('--expected-project', required=True)
     arrangement.add_argument('--product-id', required=True)
@@ -203,6 +206,9 @@ def main():
             result = _local_module('desktop').desktop_import_stf(args.path)
         elif args.command == 'desktop-export-pdf':
             result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
+        elif args.command == 'desktop-arrange-room':
+            spec = json.loads(Path(args.spec).read_text(encoding='utf-8-sig'))
+            result = _local_module('desktop').desktop_arrange_room(args.expected_project, **spec)
         elif args.command == 'desktop-arrange-space':
             result = _local_module('desktop').desktop_arrange_space(args.expected_project, args.product_id)
         elif args.command == 'desktop-import-luminaire':

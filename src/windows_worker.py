@@ -474,6 +474,106 @@ def arrange_space(app, main, process, expected_project, product_id):
     raise ValueError('Arrangement was invoked but readback failed; inspect before retry')
 
 
+
+def arrange_room(app, main, process, expected_project, parameters):
+    """Journal one new native arrangement; geometry acceptance remains separate."""
+    required = {'room_name', 'group_name', 'product_id', 'parent_id', 'expected_groups', 'evidence_directory'}
+    if not isinstance(parameters, dict) or set(parameters) != required:
+        raise ValueError('Expected explicit room, group, product, parent, existing groups and evidence directory')
+    for key in required - {'expected_groups'}:
+        if not isinstance(parameters[key], str) or not parameters[key].strip():
+            raise ValueError('Arrangement request strings must be nonempty')
+    name = parameters['group_name']
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9 ._-]{0,39}', name) or name != name.strip():
+        raise ValueError('New group name must be 1 to 40 plain ASCII letters/digits/spaces/._-')
+    groups = parameters['expected_groups']
+    if not isinstance(groups, list) or any(not isinstance(g, str) or not g for g in groups) or len(set(groups)) != len(groups):
+        raise ValueError('expected_groups must contain unique exact group IDs')
+    parent = parameters['parent_id']
+    if not parent.endswith('_Luminaires'):
+        raise ValueError('Expected exact native storey Luminaires parent ID')
+    directory = Path(parameters['evidence_directory']).resolve()
+    if directory.exists():
+        raise ValueError('Evidence directory already exists; inspect prior operation, never retry blindly')
+    expected, _ = prepare_project(app, main, process, expected_project)
+    before = project_tree(app, main, process, str(expected), parent)
+    def group_nodes(tree):
+        if tree['search_text']:
+            raise ValueError('Project tree is filtered')
+        return [n for n in tree['items'] if n['tree_item_id'].startswith(parent + '_') and n['expandable']]
+    nodes = group_nodes(before)
+    if sorted(n['tree_item_id'] for n in nodes) != sorted(groups):
+        raise ValueError('Realized groups differ from expected_groups; no placement attempted')
+    if any(name in n['labels'] for n in before['items']):
+        raise ValueError('Requested group name already exists in realized tree')
+    before_ids = {tuple(n['runtime_id']) for n in nodes}
+    journal = {'schema':'dialux-agent/arrangement-run/v1', 'project':str(expected),
+               'request':parameters, 'before_tree':before, 'state':'preparing',
+               'native_project_saved':False, 'whole_project_verified':False}
+    directory.mkdir(parents=True, exist_ok=False)
+    def record():
+        temporary = directory / 'journal.tmp'
+        temporary.write_text(json.dumps(journal, indent=2, allow_nan=False), encoding='utf-8')
+        temporary.replace(directory / 'journal.json')
+    record()
+    try:
+        journal['room_selection'] = room_context(app, main, process, str(expected), parameters['room_name'])
+        select_lighting_tool(main, 'LuminaireArrangementTool')
+        if parameters['product_id'] not in [c.window_text() for c in main.descendants(control_type='Text') if c.is_visible()]:
+            raise ValueError('Expected active product is not visible')
+        _, state = prepare_project(app, main, process, str(expected))
+        journal['state'] = 'pending_native_creation'
+        record()  # A crash from this point leaves durable intent, not a safe retry.
+        if state['controls']['DiscardResultsButton']['enabled']:
+            unique_control(main, 'Button', 'DiscardResultsButton').click()
+            time.sleep(.4)
+        if snapshot(app, main, process)['dialogs']:
+            raise ValueError('Dialog before placement')
+        unique_control(main, 'Button', 'aid_ArrangementFromSpace').click()
+        time.sleep(.7)
+        after = project_tree(app, main, process, str(expected), parent)
+        observed = group_nodes(after)
+        new = [n for n in observed if tuple(n['runtime_id']) not in before_ids]
+        if len(new) != 1 or not before_ids <= {tuple(n['runtime_id']) for n in observed}:
+            raise ValueError('Expected exactly one new realized group and all previous groups')
+        journal['created_node'] = new[0]
+        journal['state'] = 'created_pending_name'
+        record()
+        candidates = [c for c in main.descendants(control_type='ListItem')
+                      if tuple(c.element_info.runtime_id) == tuple(new[0]['runtime_id'])]
+        if len(candidates) != 1 or not candidates[0].is_visible():
+            raise ValueError('New group is not uniquely selectable')
+        candidates[0].select()
+        if not candidates[0].is_selected():
+            raise ValueError('New group selection not observed')
+        select_lighting_tool(main, 'LuminaireArrangementTool')
+        control = unique_control(main, 'Edit', 'ArrangementObjectName')
+        control.click_input()
+        control.type_keys('^a', pause=.1)
+        control.type_keys(name, pause=.2, with_spaces=True)
+        control.type_keys('{TAB}', pause=.1)
+        time.sleep(.3)
+        if unique_control(main, 'Edit', 'ArrangementObjectName').get_value() != name:
+            raise ValueError('Created group name did not commit')
+        final = project_tree(app, main, process, str(expected), parent)
+        matches = [n for n in group_nodes(final) if n['labels'] == [name]]
+        if len(matches) != 1 or matches[0]['runtime_id'] != new[0]['runtime_id']:
+            raise ValueError('Renamed group identity differs')
+        journal.update(state='created_unverified', group_id=matches[0]['tree_item_id'], after_tree=final,
+                       room_geometry_verified=False, existing_fixture_geometry_verified=False)
+        record()
+        return {'operation':'arrange_room', 'state':journal['state'], 'group_id':journal['group_id'],
+                'journal':str(directory/'journal.json'), 'native_project_saved':False,
+                'room_geometry_verified':False, 'existing_fixture_geometry_verified':False,
+                'uses_codex_computer_use':False,
+                'warning':'Only realized group identity verified. Read new and previous fixture geometry before accepting placement; do not repeat creation.'}
+    except Exception as exc:
+        journal['failed_at'] = journal['state']
+        journal.update(state='failed', error=str(exc))
+        record()
+        raise ValueError(f'Arrangement outcome requires inspection: {directory / "journal.json"}: {exc}') from exc
+
+
 def select_lighting_tool(main, tool_id):
     """Recover construction tools after native report output changes the mode."""
     matches = [c for c in main.descendants(control_type='TabItem')
@@ -837,7 +937,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -848,7 +948,7 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
@@ -868,6 +968,8 @@ def main():
             result = save_as(app, window, process, args.expected_project, args.path)
         elif args.action == 'import-luminaire':
             result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
+        elif args.action == 'arrange-room':
+            result = arrange_room(app, window, process, args.expected_project, json.loads(args.parameters))
         elif args.action == 'arrange-space':
             result = arrange_space(app, window, process, args.expected_project, args.product_id)
         elif args.action == 'edit-fixture':

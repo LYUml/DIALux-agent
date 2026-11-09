@@ -25,7 +25,7 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--parameters', json.dumps(parameters, allow_nan=False)]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=75 if action in {'edit-fixture', 'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
+                             timeout=120 if action == 'arrange-room' else 75 if action in {'edit-fixture', 'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -162,3 +162,19 @@ def desktop_read_space(expected_project: str, tree_item_id: str) -> dict:
 def desktop_room_context(expected_project: str, room_name: str | None = None) -> dict:
     """List room context labels or invoke an exact unique label; active context remains unverified."""
     return _run('room-context', expected_project, parameters=room_name)
+
+
+def desktop_arrange_room(expected_project: str, room_name: str, group_name: str,
+                         product_id: str, parent_id: str, expected_groups: list[str],
+                         evidence_directory: str) -> dict:
+    """Create one named group in a selected room, with durable intent before mutation.
+
+    Existing realized group IDs must match expected_groups. Requires a new evidence
+    directory; never automatically retries. Result is created_unverified: inspect
+    new and existing fixture geometry separately, then save/calculate. Native room
+    menu selection alone does not prove spatial scope. Does not import photometry.
+    """
+    return _run('arrange-room', expected_project, parameters={
+        'room_name':room_name, 'group_name':group_name, 'product_id':product_id,
+        'parent_id':parent_id, 'expected_groups':expected_groups,
+        'evidence_directory':evidence_directory})
