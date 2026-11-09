@@ -65,6 +65,13 @@ def main():
     room.add_argument('--output', required=True)
     commands.add_parser('stf-inspect').add_argument('--path', required=True)
     commands.add_parser('report-read').add_argument('--path', required=True)
+    cad = commands.add_parser('drawing-convert')
+    cad.add_argument('--path', required=True)
+    cad.add_argument('--output-directory', required=True)
+    cad.add_argument('--executable', default='C:/Program Files/Autodesk/AutoCAD 2027/accoreconsole.exe')
+    drawing = commands.add_parser('drawing-inspect')
+    drawing.add_argument('--path', required=True)
+    drawing.add_argument('--grid-layer', default='Ceiling Grid')
     commands.add_parser('desktop-status')
     launching = commands.add_parser('desktop-launch')
     launching.add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
@@ -101,7 +108,11 @@ def main():
     report_check.add_argument('--context', help='JSON object of evidenced applicability facts')
     args = parser.parse_args()
     try:
-        if args.command == 'desktop-status':
+        if args.command == 'drawing-convert':
+            result = _local_module('cad').drawing_convert(args.path, args.output_directory, args.executable)
+        elif args.command == 'drawing-inspect':
+            result = _local_module('cad').drawing_inspect(args.path, args.grid_layer)
+        elif args.command == 'desktop-status':
             result = _local_module('desktop').desktop_status()
         elif args.command == 'desktop-launch':
             result = _local_module('desktop').desktop_launch(args.executable, args.runtime_temp)
