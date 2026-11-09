@@ -48,7 +48,7 @@ def test_journal_intent_precedes_each_mutation_and_verifies_all(tmp_path, monkey
         calls.append(args)
         return {'after_position_m': args[-1]}
     monkeypatch.setattr(placement, 'desktop_edit_fixture', edit)
-    result = placement.apply_grid_layout(spec, str(project), 'group', str(directory))
+    result = placement._apply_grid_layout(spec, str(project), 'group', str(directory))
     assert result['state'] == 'verified' and len(calls) == 4
     assert calls[0][-1] == pytest.approx([1.5, 1.0, 3.035])
     assert not result['whole_project_verified']
@@ -65,13 +65,13 @@ def test_partial_failure_is_preserved_without_retry_or_rollback(tmp_path, monkey
         return {'ok':True}
     monkeypatch.setattr(placement, 'desktop_edit_fixture', edit)
     with pytest.raises(ValueError, match='native dialog'):
-        placement.apply_grid_layout(spec, str(project), 'group', str(directory))
+        placement._apply_grid_layout(spec, str(project), 'group', str(directory))
     journal = json.loads((directory/'journal.json').read_text())
     assert journal['state'] == 'failed'
     assert [s['state'] for s in journal['steps']] == ['committed','pending']
     assert len(calls) == 2
     with pytest.raises(FileExistsError):
-        placement.apply_grid_layout(spec, str(project), 'group', str(directory))
+        placement._apply_grid_layout(spec, str(project), 'group', str(directory))
 
 
 def test_count_mismatch_stops_before_mutation(tmp_path, monkeypatch):
@@ -80,7 +80,7 @@ def test_count_mismatch_stops_before_mutation(tmp_path, monkeypatch):
     monkeypatch.setattr(placement, 'desktop_group_fixtures', lambda *a: before)
     monkeypatch.setattr(placement, 'desktop_edit_fixture', lambda *a: pytest.fail('Mutation attempted'))
     with pytest.raises(ValueError, match='count'):
-        placement.apply_grid_layout(spec, str(project), 'group', str(directory))
+        placement._apply_grid_layout(spec, str(project), 'group', str(directory))
 
 
 def test_successful_field_edits_do_not_override_wrong_final_geometry(tmp_path, monkeypatch):
@@ -88,9 +88,17 @@ def test_successful_field_edits_do_not_override_wrong_final_geometry(tmp_path, m
     monkeypatch.setattr(placement, 'desktop_group_fixtures', lambda *a: copy.deepcopy(before))
     monkeypatch.setattr(placement, 'desktop_edit_fixture', lambda *a: {'ok':True})
     with pytest.raises(ValueError, match='Unmatched'):
-        placement.apply_grid_layout(spec, str(project), 'group', str(directory))
+        placement._apply_grid_layout(spec, str(project), 'group', str(directory))
     journal = json.loads((directory/'journal.json').read_text())
     assert journal['state'] == 'failed'
     assert len(journal['steps']) == 4
     assert all(s['state'] == 'committed' for s in journal['steps'])
     assert 'verification' not in journal
+
+
+def test_public_apply_uses_one_worker(monkeypatch):
+    import desktop
+    calls=[]
+    monkeypatch.setattr(desktop,'_run',lambda *a,**k:calls.append((a,k)) or {'state':'verified'})
+    assert placement.apply_grid_layout({'test':1},'x.evo','group','evidence')['state']=='verified'
+    assert calls==[(('apply-grid','x.evo'),{'parameters':{'spec':{'test':1},'group_id':'group','evidence_directory':'evidence'}})]

@@ -79,10 +79,10 @@ def test_project_tool_recovers_from_output_mode(monkeypatch):
     assert actions == ['lighting','tree']
 
 
-def test_missing_or_ambiguous_lighting_mode_refuses_tool_fallback(monkeypatch):
+def test_missing_lighting_mode_and_goto_refuse_tool_fallback(monkeypatch):
     main = SimpleNamespace(descendants=lambda **k:[])
     monkeypatch.setattr(windows_worker, 'wait_control', lambda *a: pytest.fail('Tool accessed'))
-    with pytest.raises(ValueError, match='lighting-design'):
+    with pytest.raises(ValueError, match='MenuGotoConstructionMode'):
         windows_worker.select_lighting_tool(main,'ProjectTreeTool')
 
 
@@ -140,9 +140,12 @@ def test_fixture_edit_invalid_identity_or_geometry_never_touches_ui(runtime, pri
 
 
 def test_fixture_stale_position_rejected_before_clearing_results(monkeypatch):
+    monkeypatch.setattr(windows_worker,'select_lighting_tool',lambda *a:None)
     monkeypatch.setattr(windows_worker, 'set_storey_context', lambda *a: None)
     node = SimpleNamespace(element_info=SimpleNamespace(runtime_id=(7,1,2)),
                            is_visible=lambda: True, select=lambda: None, is_selected=lambda: True)
+    monkeypatch.setattr(windows_worker,'container_elements',lambda *a:[SimpleNamespace(GetRuntimeId=lambda:[7,1,2])])
+    monkeypatch.setattr(windows_worker,'materialize_tree_item',lambda *a:node)
     tree = SimpleNamespace(descendants=lambda **k: [node])
     def control(parent, kind, identity):
         if identity == 'DiscardResultsButton': pytest.fail('Cleared results before validating position')
@@ -442,3 +445,15 @@ def test_furniture_tool_recovers_construction_mode(monkeypatch):
     monkeypatch.setattr(windows_worker,'wait_control',lambda *a:tool)
     windows_worker.select_furniture_tool(main)
     assert actions==['mode','furniture']
+
+
+def test_lighting_tool_uses_native_goto_when_mode_tab_unrealized(monkeypatch):
+    actions=[]
+    main=SimpleNamespace(descendants=lambda **kw:[])
+    menu=SimpleNamespace(iface_expand_collapse=SimpleNamespace(Expand=lambda:actions.append('expand')))
+    command=SimpleNamespace(iface_invoke=SimpleNamespace(Invoke=lambda:actions.append('invoke')))
+    tool=SimpleNamespace(select=lambda:actions.append('select'))
+    monkeypatch.setattr(windows_worker,'unique_control',lambda *a:menu)
+    monkeypatch.setattr(windows_worker,'wait_control',lambda parent,kind,identity:command if kind=='MenuItem' else tool)
+    windows_worker.select_lighting_tool(main,'LuminaireArrangementTool')
+    assert actions==['expand','invoke','select']

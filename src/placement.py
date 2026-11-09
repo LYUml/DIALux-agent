@@ -37,12 +37,24 @@ def read_realized_group(project, group_id, expected_count=None, page_sink=None, 
 
 
 def apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidence_directory: str) -> dict:
+    """Apply and verify a grid inside one independently locked native worker."""
+    if __package__:
+        from .desktop import _run
+    else:
+        from desktop import _run
+    return _run('apply-grid',expected_project,parameters={'spec':spec,'group_id':group_id,
+                                                       'evidence_directory':evidence_directory})
+
+
+def _apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidence_directory: str,
+                       page_reader=None, fixture_editor=None) -> dict:
     """Move an existing equal-count group onto a zero-rotation validated grid.
 
     Runs real desktop operations and clears cached results. Does not create/delete
     fixtures, change photometry, save or calculate. Failure leaves a journal and
     possibly partial movement; inspect the project before starting another run.
     """
+    editor = fixture_editor or desktop_edit_fixture
     plan = plan_grid(spec)
     if not plan['fixtures'] or any(abs(f['rotation_deg'] % 360) > 1e-9 for f in plan['fixtures']):
         raise ValueError('Application currently requires a nonempty zero-rotation grid')
@@ -59,7 +71,7 @@ def apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidence
         temporary.replace(directory / 'journal.json')
     record()
     try:
-        before = read_realized_group(str(project), group_id)
+        before = read_realized_group(str(project), group_id, page_reader=page_reader)
         journal['before'] = before
         if before.get('coordinate_frame') != 'active_storey':
             raise ValueError('Native observation coordinate frame is not active_storey; no movement attempted')
@@ -93,12 +105,12 @@ def apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidence
                     'state': 'pending'}
             journal['steps'].append(step)
             record()  # Persist intent before a potentially partial native mutation.
-            step['result'] = desktop_edit_fixture(str(project), source['runtime_id'], source['position_m'], target['position_m'])
+            step['result'] = editor(str(project), source['runtime_id'], source['position_m'], target['position_m'])
             step['state'] = 'committed'
             record()
         journal['state'] = 'verifying'
         record()
-        after = read_realized_group(str(project), group_id)
+        after = read_realized_group(str(project), group_id, page_reader=page_reader)
         if after.get('next_offset') is not None or after.get('offset', 0) != 0:
             raise ValueError('Final inspection is partial; cannot verify placement')
         journal['after'] = after

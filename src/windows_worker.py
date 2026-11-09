@@ -596,6 +596,13 @@ def select_lighting_tool(main, tool_id):
     if not matches:
         modes = [c for c in main.descendants(control_type='TabItem')
                  if c.window_text() == 'Dial.Dialux.InteractionModes.LightingDesignMode']
+        if not modes and tool_id in {'LuminaireArrangementTool','ProjectTreeTool'}:
+            # WPF may omit unselected top-mode tabs from UIA. Use the native
+            # Goto command instead of relying on a screen coordinate.
+            unique_control(main,'MenuItem','MenuGotoConstructionMode').iface_expand_collapse.Expand()
+            wait_control(main,'MenuItem','MenuGotoShow'+tool_id).iface_invoke.Invoke()
+            wait_control(main,'TabItem',tool_id).select()
+            return
         if len(modes) != 1:
             raise ValueError('Expected one native lighting-design mode')
         modes[0].select()
@@ -785,6 +792,9 @@ def read_group_fixtures(app, main, process, expected_project, group_id, offset=0
         raise ValueError('expected_count must be 1 to 2000')
     context = _context if _context is not None else {}
     if not context:
+        marker='_Luminaires_'
+        if group_id.count(marker)==1:
+            project_tree(app,main,process,expected_project,group_id.split(marker)[0]+'_Luminaires')
         inventory = project_tree(app, main, process, expected_project, group_id)
         if inventory['search_text']:
             raise ValueError('Cannot inspect a filtered fixture inventory')
@@ -823,7 +833,7 @@ def read_group_fixtures(app, main, process, expected_project, group_id, offset=0
         matches[0].select()
         if not matches[0].is_selected():
             raise ValueError('Native fixture selection was not confirmed')
-        unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+        select_lighting_tool(main, 'LuminaireArrangementTool')
         set_storey_context(main)
         deadline = time.monotonic() + 5
         while True:
@@ -862,6 +872,35 @@ def inspect_group(app, main, process, expected_project, parameters):
     def reader(project, group_id, **options):
         return read_group_fixtures(app, main, process, project, group_id, _context=context, **options)
     return _inspect_group_checkpoint(expected_project, page_reader=reader, **parameters)
+
+
+def apply_grid(app, main, process, expected_project, parameters):
+    if not isinstance(parameters,dict) or set(parameters)!={'spec','group_id','evidence_directory'}:
+        raise ValueError('Expected grid spec, group_id and evidence_directory')
+    if __package__:
+        from .placement import _apply_grid_layout
+        from .layout import plan_grid
+    else:
+        from placement import _apply_grid_layout
+        from layout import plan_grid
+    expected_count=len(plan_grid(parameters['spec'])['fixtures'])
+    context={}
+    started=False
+    def reader(project,group,**options):
+        nonlocal started
+        if not started:
+            _,state=prepare_project(app,main,process,project)
+            if state['controls']['DiscardResultsButton']['enabled']:
+                unique_control(main,'Button','DiscardResultsButton').click()
+                time.sleep(.4)
+                if snapshot(app,main,process)['dialogs']:
+                    raise ValueError('Dialog clearing results before grid inspection; no movement attempted')
+            started=True
+        return read_group_fixtures(app,main,process,project,group,expected_count=expected_count,_context=context,**options)
+    def editor(project,runtime,before,target):
+        return edit_fixture(app,main,process,project,{'runtime_id':runtime,'expected_position_m':before,'position_m':target},
+                            _elements=context['source_elements'])
+    return _apply_grid_layout(expected_project=expected_project,page_reader=reader,fixture_editor=editor,**parameters)
 
 
 def select_furniture_tool(main):
@@ -908,7 +947,7 @@ def read_furniture(app, main, process, expected_project, tree_item_id):
             'warning':'UI-displayed native object reference point, not assumed geometric centre. Dimensions do not prove mesh shape, material or optical effect.'}
 
 
-def edit_fixture(app, main, process, expected_project, parameters):
+def edit_fixture(app, main, process, expected_project, parameters, _elements=None):
     """Move one realized fixture with session identity and prior-position guards."""
     import math
     if not isinstance(parameters, dict) or set(parameters) != {'runtime_id', 'expected_position_m', 'position_m'}:
@@ -926,14 +965,17 @@ def edit_fixture(app, main, process, expected_project, parameters):
     def select_and_read():
         unique_control(main, 'TabItem', 'ProjectTreeTool').select()
         tree = wait_control(main, 'List', 'FilterTreeListBox')
-        matches = [c for c in tree.descendants(control_type='ListItem')
-                   if list(c.element_info.runtime_id) == runtime]
+        elements = list(_elements.values()) if _elements is not None else container_elements(tree)
+        native = [e for e in elements if list(e.GetRuntimeId()) == runtime]
+        if len(native)!=1: raise ValueError('Fixture runtime identity is stale or ambiguous')
+        item=materialize_tree_item(native[0])
+        matches=[item] if list(item.element_info.runtime_id)==runtime else []
         if len(matches) != 1 or not matches[0].is_visible():
             raise ValueError('Fixture runtime identity is stale, ambiguous or not visible')
         matches[0].select()
         if not matches[0].is_selected():
             raise ValueError('Fixture selection failed')
-        unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+        select_lighting_tool(main, 'LuminaireArrangementTool')
         set_storey_context(main)
         current = [float(wait_control(main, 'Edit', key).get_value()) for key in fields]
         if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(current, parameters['expected_position_m'])):
@@ -1012,7 +1054,7 @@ def edit_arrangement(app, main, process, expected_project, parameters):
     if not item.is_visible():
         raise ValueError('Target tree item is collapsed or not visible; expand it before editing')
     item.select()
-    unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+    select_lighting_tool(main, 'LuminaireArrangementTool')
     set_storey_context(main)
     before = {key: wait_control(main, 'Edit', key).get_value() for key in values}
     name = unique_control(main, 'Edit', 'ArrangementObjectName').get_value()
@@ -1101,7 +1143,7 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture', 'apply-grid'])
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
@@ -1117,7 +1159,7 @@ def main():
             from desktop_lock import desktop_lease
         with desktop_lease():
             app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-            if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture'} and not args.expected_project:
+            if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture', 'apply-grid'} and not args.expected_project:
                 raise ValueError('expected_project is required')
             if args.action in {'status', 'launch'}:
                 result = snapshot(app, window, process)
@@ -1143,6 +1185,8 @@ def main():
                 result = arrange_space(app, window, process, args.expected_project, args.product_id)
             elif args.action == 'edit-fixture':
                 result = edit_fixture(app, window, process, args.expected_project, json.loads(args.parameters))
+            elif args.action == 'apply-grid':
+                result = apply_grid(app, window, process, args.expected_project, json.loads(args.parameters))
             elif args.action == 'read-furniture':
                 result = read_furniture(app, window, process, args.expected_project, **json.loads(args.parameters))
             elif args.action == 'inspect-group':
