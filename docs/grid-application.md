@@ -47,6 +47,29 @@ Before/after inspection pages are now saved separately as hashed `before-page-NN
 The 168-fixture native movement gate is running separately in `local/large-grid-run-v1` against the new copy `local/large-grid-probe-v1.evo` (initial SHA256 `525aef00ad8c4eca5fea46cf78cb836a78606d02f87e5f2fd9bc40806e92351f`). The explicit target shifts every centre by +0.1 m in X/Y, retaining the original grid spacing, height and zero rotation. The original large project hash was checked unchanged before launch. This gate is pending until the actual process terminates successfully and all evidence is reviewed. 311 tests passed before launch.
 # Mid-movement reminder guard
 
+## Observed interrupted mutation and recovery
+
+Large run v3 completed all 168 initial reads, then the old worker stopped during
+the third movement on a 41-minute reminder. Two steps were committed and one was
+pending. Fresh independent readback found the third fixture at
+`[100000, 1.417, 3.035]`, not its requested target. This demonstrates a real
+partial-write failure; the exact cause of the numeric corruption is not proven.
+Do not infer unchanged geometry from a failed command.
+
+The interrupted project was preserved as `local/large-interrupted-v3.evo`
+(SHA256 `1dbed6de279e85cb69f5a09ec2343f2fe3352c54af9d9323b90e9f8269e68831`).
+A separate recovery copy was created. Coordinate replacement now uses UIA
+ValuePattern SetValue in one call, checks the displayed value, then commits with
+Tab and checks the final coordinates. This avoids streaming a numeric string
+through keyboard events, but does not prove immunity to all interruptions.
+
+The guarded public edit command on that copy verified the observed prior value
+and restored the third fixture to `[5.457, 1.517, 3.035]`; the saved recovery file
+SHA256 is `d7471c3c1cd88081be10cd41b561df89dcbd649f4db49a483d96809a09ee652c`.
+Evidence: `local/large-recovery-page106-v1.json`, `local/large-repair-fixture-v1.json`
+and `local/large-repair-save-v1.json`. This is a single-fixture repair/save check,
+not a full 168-fixture movement, reopening or automatic-resume acceptance.
+
 The worker now handles the recognized periodic unsaved-project reminder between
 coordinate writes through the same project-identity and exact dialog-signature
 guard used for preparation. Before proceeding to another axis, it rechecks the

@@ -46,8 +46,12 @@ The independent CLI retry (`local/large-grid-run-v2`) subsequently failed as des
 Retry v2 also terminated before movement, after 40 recorded fixtures. Native
 status showed the same reminder with 20 elapsed minutes. Recognition now accepts
 only a positive integer duration in the otherwise exact reminder text, retaining
-the window/control signature and project guard. Retry v3 is running with fresh
-evidence; no completed large mutation is claimed. CAD dimensions and bounded
+the window/control signature and project guard. Retry v3 finished initial
+inspection but failed at the third movement. A fresh read found a corrupted X
+coordinate; the interrupted native file was preserved and an independent copy
+was repaired with guarded atomic UIA replacement. See `grid-application.md`.
+Full large mutation remains pending. The two-candidate native test has now
+started on the separate six-fixture case. CAD dimensions and bounded
 fixture-label collision avoidance have separate native evidence in
 `cad-dimensions.md`; drawing composition remains incomplete.
 

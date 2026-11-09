@@ -1007,7 +1007,12 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
         if not control.is_enabled() or control.iface_value.CurrentIsReadOnly:
             raise ValueError('Fixture position is not editable; partial movement possible')
         control.set_focus()
-        control.type_keys('^a' + format(value, '.12g') + '{TAB}', set_foreground=False)
+        # Replace the numeric field atomically through UIA. Character-by-character
+        # replacement can be interrupted by a reminder and concatenate values.
+        control.iface_value.SetValue(format(value, '.12g'))
+        if not math.isclose(float(control.get_value()), value, rel_tol=0, abs_tol=.00051):
+            raise ValueError('Fixture field replacement not observed; partial movement possible')
+        control.type_keys('{TAB}', set_foreground=False)
         time.sleep(1)
         committed[axis_index] = value
         if snapshot(app, main, process)['dialogs']:

@@ -191,11 +191,14 @@ def test_movement_reminder_requires_identity_and_partial_coordinate_readback(mon
         if kind == 'TabItem': return SimpleNamespace(select=lambda:None)
         if kind == 'List': return object()
         axis = 'XYZ'.index(identity[-1])
+        def set_value(text):
+            values[axis] = float(text)
         def type_keys(text, **kwargs):
+            assert text == '{TAB}'
             actions.append(axis)
-            if failure != 'position': values[axis] = float(text[2:-5])
+            if failure == 'position': values[axis] = 1.
         return SimpleNamespace(get_value=lambda:str(values[axis]), is_enabled=lambda:True,
-                               iface_value=SimpleNamespace(CurrentIsReadOnly=False),
+                               iface_value=SimpleNamespace(CurrentIsReadOnly=False, SetValue=set_value),
                                set_focus=lambda:None, type_keys=type_keys)
     monkeypatch.setattr(windows_worker,'prepare_project',prepare)
     monkeypatch.setattr(windows_worker,'unique_control',control)
