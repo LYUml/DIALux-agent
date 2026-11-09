@@ -57,3 +57,19 @@ A separate read-only experiment is now running under
 while sampling four fixture coordinates, first releasing and then retaining scan
 contexts. The native worker's project guards and desktop mutex remain in force.
 Sampling is for diagnosis only and does not replace full geometry acceptance.
+
+The read-only experiment completed in both modes: each compared 168-node
+inventories with zero lost/new IDs; four sampled fixtures retained equal geometry
+and names. The original source stayed unchanged, and a separate UI-session copy
+was saved and closed. Released-mode evidence SHA-256:
+`b8157ff9ad375680aa281eb083e1c33072ca58846de902abe0bb5f6f5d6287d0`;
+retained-mode evidence:
+`125fa9becf0751f02aa7527bdaafd190b9090684bb93c90b3157c5c70beaa8bd`.
+This small read-only sequence did not reproduce the anomaly; it does not explain
+the earlier full mutation sequence or prove a retention fix.
+
+The next isolated experiment, `local/cache-clear-identity-probe-v1`, runs on a new
+native copy. Between inventories it invokes the guarded field adapter with targets
+equal to the current values. It requires exactly a cached-results-clear event and
+zero submitted motion fields. This separates result-cache clearing from coordinate
+writes; the experiment is still running and no causal conclusion is claimed.
