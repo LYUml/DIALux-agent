@@ -5,10 +5,11 @@ import ezdxf
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-from cad import drawing_convert, drawing_inspect, export_layout_dxf
+from cad import drawing_convert, drawing_inspect, export_layout_dxf, _fixture_records
 from layout import plan_grid
 import json
 import copy
+import subprocess
 
 
 def test_survey_keeps_units_handles_and_does_not_promote_grid_to_boundary(tmp_path):
@@ -70,3 +71,33 @@ def test_layout_export_preserves_fixture_identity_geometry_and_test_label(tmp_pa
     with pytest.raises(ValueError, match='does not match'):
         export_layout_dxf(spec, str(tmp_path / 'changed.dxf'), changed)
     assert not (tmp_path / 'changed.dxf').exists()
+
+
+def test_native_readback_rejects_ambiguous_identity(tmp_path):
+    doc = ezdxf.new()
+    doc.units = 6
+    block = doc.blocks.new('PANEL')
+    block.add_attdef('FIXTURE_ID')
+    for x in (0, 1):
+        entity = doc.modelspace().add_blockref('PANEL', (x, 0), dxfattribs={'layer': 'LUMINAIRES'})
+        entity.add_auto_attribs({'FIXTURE_ID': 'L0001'})
+    path = tmp_path / 'duplicate.dxf'
+    doc.saveas(path)
+    with pytest.raises(ValueError, match='duplicate fixture ID'):
+        _fixture_records(path)
+
+
+def test_native_timeout_preserves_partial_console_evidence(tmp_path, monkeypatch):
+    source = tmp_path / 'source.dwg'
+    source.write_bytes(b'fixture')
+    core = tmp_path / 'accoreconsole.exe'
+    core.write_bytes(b'fixture')
+    def timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired(args[0], 90, output='Startup stalled'.encode('utf-16le'))
+    monkeypatch.setattr(subprocess, 'run', timeout)
+    target = tmp_path / 'failed'
+    with pytest.raises(ValueError, match='timed out'):
+        drawing_convert(str(source), str(target), str(core))
+    assert (target / 'console.log').read_text() == 'Startup stalled'
+    assert not (target / 'manifest.json').exists()
+    assert source.read_bytes() == b'fixture'

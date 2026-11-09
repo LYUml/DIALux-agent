@@ -105,9 +105,10 @@ def drawing_convert(path: str, output_directory: str,
                 '(princ "DIALUX_SURVEY_COMPLETE")', '(princ)']
     script.write_text('\n'.join(commands) + '\n', encoding='ascii')
     try:
-        result = subprocess.run([str(core), '/i', str(copy), '/s', str(script), '/l', 'en-US'],
+        result = subprocess.run([str(core), '/i', str(copy), '/s', str(script), '/product', 'ACAD', '/l', 'en-US'],
                                 capture_output=True, timeout=90, cwd=destination)
     except subprocess.TimeoutExpired as exc:
+        (destination / 'console.log').write_text((exc.stdout or b'').decode('utf-16le', errors='replace'), encoding='utf-8')
         raise ValueError('Native survey timed out; inspect its output directory before retrying') from exc
     log = result.stdout.decode('utf-16le', errors='replace')
     (destination / 'console.log').write_text(log, encoding='utf-8')
@@ -120,6 +121,78 @@ def drawing_convert(path: str, output_directory: str,
                 'source_sha256': before, 'original_unchanged': True, 'dxf': str(output),
                 'dxf_sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
                 'native_variables': native, 'geometry_verified': False}
+    (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
+    return evidence
+
+
+def _fixture_records(path: Path) -> dict:
+    doc = ezdxf.readfile(path)
+    records = {}
+    for entity in doc.modelspace().query('INSERT[layer=="LUMINAIRES"]'):
+        identity = entity.get_attrib_text('FIXTURE_ID')
+        if not identity or identity in records:
+            raise ValueError('Missing or duplicate fixture ID')
+        records[identity] = {'position': tuple(entity.dxf.insert), 'rotation': entity.dxf.rotation,
+                             'scale': (entity.dxf.xscale, entity.dxf.yscale, entity.dxf.zscale),
+                             'block': entity.dxf.name}
+    if not records or doc.units != 6:
+        raise ValueError('Expected nonempty metre-unit agent layout')
+    return records
+
+
+def verify_layout_native(path: str, output_directory: str,
+                         executable: str = 'C:/Program Files/Autodesk/AutoCAD 2027/accoreconsole.exe') -> dict:
+    """Save a synthetic DXF as native DWG, reopen it and compare fixture records.
+
+    This verifies identity, insertion coordinates, rotation and scale, not plotting
+    or block-shape fidelity. All writes stay in a new output directory.
+    """
+    source = Path(path).resolve(strict=True)
+    core = Path(executable).resolve(strict=True)
+    destination = Path(output_directory).resolve()
+    if source.suffix.lower() != '.dxf' or core.name.lower() != 'accoreconsole.exe':
+        raise ValueError('Expected DXF and installed accoreconsole.exe')
+    before = _fixture_records(source)
+    if destination.exists() or not str(destination).isascii():
+        raise ValueError('Choose a new ASCII output directory')
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    destination.mkdir(parents=True)
+    copied = destination / 'input.dxf'
+    shutil.copy2(source, copied)
+    native = destination / 'layout.dwg'
+    script = destination / 'save.scr'
+    script.write_text('(setvar "FILEDIA" 0)\n'
+                      + '(command "_.SAVEAS" "_2018" ' + json.dumps(native.as_posix()) + ')\n'
+                      + '(princ "LAYOUT_NATIVE_COMPLETE")\n(princ)\n', encoding='ascii')
+    try:
+        result = subprocess.run([str(core), '/i', str(copied), '/s', str(script), '/product', 'ACAD', '/l', 'en-US'],
+                                capture_output=True, timeout=90, cwd=destination)
+    except subprocess.TimeoutExpired as exc:
+        (destination / 'save.log').write_text((exc.stdout or b'').decode('utf-16le', errors='replace'), encoding='utf-8')
+        raise ValueError('Native save timed out; inspect output before retrying') from exc
+    log = result.stdout.decode('utf-16le', errors='replace')
+    (destination / 'save.log').write_text(log, encoding='utf-8')
+    if result.returncode or 'LAYOUT_NATIVE_COMPLETE' not in log or '; error:' in log.lower() or not native.is_file():
+        raise ValueError('Native save failed; inspect save.log')
+    reopened = drawing_convert(str(native), str(destination / 'reopened'), str(core))
+    after = _fixture_records(Path(reopened['dxf']))
+    if set(before) != set(after):
+        raise ValueError('Native fixture IDs changed')
+    for identity, record in before.items():
+        other = after[identity]
+        if record['block'] != other['block'] or any(
+            not math.isclose(a, b, rel_tol=0, abs_tol=1e-8)
+            for a, b in zip((*record['position'], record['rotation'], *record['scale']),
+                            (*other['position'], other['rotation'], *other['scale']))):
+            raise ValueError(f'Native fixture geometry changed: {identity}')
+    if hashlib.sha256(source.read_bytes()).hexdigest() != digest:
+        raise ValueError('Source DXF changed')
+    evidence = {'schema': 'dialux-agent/native-layout/v1', 'source': str(source),
+                'source_sha256': digest, 'original_unchanged': True, 'dwg': str(native),
+                'dwg_sha256': hashlib.sha256(native.read_bytes()).hexdigest(),
+                'fixture_count': len(after), 'fixture_records_verified': True,
+                'native_reopen_verified': True, 'block_shapes_verified': False,
+                'print_verified': False, 'reopen_evidence': reopened}
     (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
     return evidence
 
