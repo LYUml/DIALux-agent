@@ -102,3 +102,18 @@ def test_public_apply_uses_one_worker(monkeypatch):
     monkeypatch.setattr(desktop,'_run',lambda *a,**k:calls.append((a,k)) or {'state':'verified'})
     assert placement.apply_grid_layout({'test':1},'x.evo','group','evidence')['state']=='verified'
     assert calls==[(('apply-grid','x.evo'),{'parameters':{'spec':{'test':1},'group_id':'group','evidence_directory':'evidence'}})]
+
+
+def test_native_read_pages_are_persisted_before_first_move(tmp_path,monkeypatch):
+    spec,project,directory,_=setup_run(tmp_path,monkeypatch)
+    def edit(*args):
+        journal=json.loads((directory/'journal.json').read_text())
+        assert journal['inspection_pages'][0]['phase']=='before'
+        assert (directory/'before-page-0000.json').exists()
+        assert journal['steps'][-1]['started_utc']
+        return {}
+    result=placement._apply_grid_layout(spec,str(project),'group',str(directory),fixture_editor=edit)
+    journal=json.loads(Path(result['journal']).read_text())
+    assert [p['phase'] for p in journal['inspection_pages']]==['before','after']
+    assert all(s['finished_utc'] for s in journal['steps'])
+    assert journal['finished_utc']>=journal['started_utc']

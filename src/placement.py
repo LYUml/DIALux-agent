@@ -1,6 +1,8 @@
 """Journalled native application of a validated grid to existing fixtures."""
 import json
 import math
+import hashlib
+from datetime import datetime, timezone
 from pathlib import Path
 
 if __package__:
@@ -64,14 +66,25 @@ def _apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidenc
     directory = Path(evidence_directory).resolve()
     directory.mkdir(parents=True, exist_ok=False)
     journal = {'schema': 'dialux-agent/placement-run/v1', 'project': str(project), 'group_id': group_id,
-               'state': 'inspecting', 'plan': plan, 'steps': [], 'native_project_saved': False}
+               'state': 'inspecting', 'plan': plan, 'steps': [], 'native_project_saved': False,
+               'started_utc': datetime.now(timezone.utc).isoformat(), 'inspection_pages': []}
     def record():
         temporary = directory / 'journal.tmp'
         temporary.write_text(json.dumps(journal, indent=2, allow_nan=False) + '\n', encoding='utf-8')
         temporary.replace(directory / 'journal.json')
+    def record_page(phase, page):
+        offset=page.get('offset',0)
+        target=directory/f'{phase}-page-{offset:04d}.json'
+        data=(json.dumps(page,indent=2,allow_nan=False)+'\n').encode('utf-8')
+        with target.open('xb') as stream: stream.write(data)
+        journal['inspection_pages'].append({'phase':phase,'offset':offset,'count':len(page['fixtures']),
+            'path':str(target),'sha256':hashlib.sha256(data).hexdigest(),
+            'collected_utc':datetime.now(timezone.utc).isoformat()})
+        record()
     record()
     try:
-        before = read_realized_group(str(project), group_id, page_reader=page_reader)
+        before = read_realized_group(str(project), group_id, page_reader=page_reader,
+                                     page_sink=lambda page:record_page('before',page))
         journal['before'] = before
         if before.get('coordinate_frame') != 'active_storey':
             raise ValueError('Native observation coordinate frame is not active_storey; no movement attempted')
@@ -102,20 +115,23 @@ def _apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidenc
         for source, target in zip(current, targets):
             step = {'fixture_id': target['id'], 'runtime_id': source['runtime_id'],
                     'before_position_m': source['position_m'], 'target_position_m': target['position_m'],
-                    'state': 'pending'}
+                    'state': 'pending', 'started_utc':datetime.now(timezone.utc).isoformat()}
             journal['steps'].append(step)
             record()  # Persist intent before a potentially partial native mutation.
             step['result'] = editor(str(project), source['runtime_id'], source['position_m'], target['position_m'])
             step['state'] = 'committed'
+            step['finished_utc'] = datetime.now(timezone.utc).isoformat()
             record()
         journal['state'] = 'verifying'
         record()
-        after = read_realized_group(str(project), group_id, page_reader=page_reader)
+        after = read_realized_group(str(project), group_id, page_reader=page_reader,
+                                    page_sink=lambda page:record_page('after',page))
         if after.get('next_offset') is not None or after.get('offset', 0) != 0:
             raise ValueError('Final inspection is partial; cannot verify placement')
         journal['after'] = after
         journal['verification'] = verify_observed_layout(plan, after)
         journal['state'] = 'verified'
+        journal['finished_utc'] = datetime.now(timezone.utc).isoformat()
         journal['whole_project_verified'] = False
         journal['photometry_identity_verified'] = False
         record()
@@ -125,6 +141,7 @@ def _apply_grid_layout(spec: dict, expected_project: str, group_id: str, evidenc
                 'warning': 'Only the supplied realized group geometry was checked. Save/reopen and calculate separately. No automatic rollback or resume.'}
     except Exception as exc:
         journal['state'] = 'failed'
+        journal['finished_utc'] = datetime.now(timezone.utc).isoformat()
         journal['error'] = str(exc)
         record()
         raise ValueError(f'Placement failed; inspect {directory / "journal.json"} and native project before retry: {exc}') from exc
