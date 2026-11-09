@@ -159,6 +159,18 @@ def wait_saved_notification(app, main, process, expected, state):
     return state
 
 
+def wait_empty_popup(app, main, process, state):
+    """Observe a narrowly empty transient popup; never dismiss or interact."""
+    empty = {'title':'', 'automation_id':'', 'class':'Popup', 'children':[]}
+    if state['dialogs'] != [empty]:
+        return state
+    deadline = time.monotonic()+3
+    while state['dialogs']==[empty] and time.monotonic()<deadline:
+        time.sleep(.2)
+        state = snapshot(app,main,process)
+    return state
+
+
 def prepare_project(app, main, process, expected_project, must_exist=True):
     expected = Path(expected_project).resolve(strict=must_exist)
     if expected.suffix.lower() != '.evo':
@@ -169,6 +181,7 @@ def prepare_project(app, main, process, expected_project, must_exist=True):
             raise ValueError('Active project does not match expected_project')
     state = snapshot(app, main, process)
     verify_title(state)
+    state = wait_empty_popup(app,main,process,state)
     state = wait_saved_notification(app, main, process, expected, state)
     verify_title(state)
     state = defer_save_reminder(app, main, process, state)
@@ -180,6 +193,7 @@ def prepare_project(app, main, process, expected_project, must_exist=True):
     main.set_focus()
     time.sleep(.3)
     state = snapshot(app, main, process)
+    state = wait_empty_popup(app,main,process,state)
     state = wait_saved_notification(app, main, process, expected, state)
     verify_title(state)
     state = defer_save_reminder(app, main, process, state)

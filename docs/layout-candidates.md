@@ -278,3 +278,18 @@ change during readback is rejected before another axis can be written. The test
 injects selection loss during the batch read and verifies only the first axis
 was submitted. 103 desktop/placement tests pass. This guard does not prevent
 external UI input or establish an atomic native snapshot.
+
+Generated search v2 passed all six positions/rotations and actual calculation
+for candidate 2 (Uo 0.066). It then stopped at candidate 3's `pending_copy` stage:
+the observed secondary window was exactly an untitled Popup with no automation
+ID or child controls. A later fresh status showed no dialogs and the saved
+candidate-002 project. No fourth candidate copy was accepted.
+
+Preparation now waits at most three seconds only while that exact single empty
+popup remains. It does not click, dismiss or ignore it. If it becomes a named,
+populated or additional unknown dialog, normal refusal applies; if it persists,
+normal refusal applies. The project title is rechecked after waiting. 107
+ desktop/placement tests passed, including disappearance, timeout and unknown-
+dialog transitions. This is a narrowly bounded observation step, not a generic
+unknown-dialog bypass. A new complete search uses `local/offset-search-native-v3`
+and the saved candidate-002 as its source; failed v1/v2 evidence remains intact.

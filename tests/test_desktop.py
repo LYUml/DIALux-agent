@@ -617,3 +617,19 @@ def test_open_waits_for_expanded_menu_before_invoking(tmp_path,monkeypatch):
     monkeypatch.setattr(windows_worker,'wait_control',wait)
     with pytest.raises(ValueError,match='no invocation'):
         windows_worker.open_project(None,main,None,str(target))
+
+@pytest.mark.parametrize('outcome',['gone','persistent','named','additional'])
+def test_empty_popup_wait_is_bounded_and_never_dismisses(monkeypatch,outcome):
+    empty={'title':'','automation_id':'','class':'Popup','children':[]}
+    initial={'dialogs':[empty]};clock=[0.];polls=[]
+    monkeypatch.setattr(windows_worker.time,'monotonic',lambda:clock[0])
+    monkeypatch.setattr(windows_worker.time,'sleep',lambda seconds:clock.__setitem__(0,clock[0]+seconds))
+    after={'dialogs':[] if outcome=='gone' else [empty] if outcome=='persistent' else
+           [{**empty,'title':'Unknown'}] if outcome=='named' else [empty,{'title':'Other'}]}
+    def snapshot(*args):polls.append(True);return after
+    monkeypatch.setattr(windows_worker,'snapshot',snapshot)
+    assert windows_worker.wait_empty_popup(None,None,None,initial) is after
+    assert 1<=len(polls)<=16
+    assert (clock[0]>=3) is (outcome=='persistent')
+    if outcome!='persistent':assert len(polls)==1
+    assert windows_worker.wait_empty_popup(None,None,None,{'dialogs':[empty,empty]})['dialogs']==[empty,empty]
