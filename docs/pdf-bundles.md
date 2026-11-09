@@ -10,7 +10,7 @@ This is a static page copier. Forms and signed documents are refused. Bookmarks,
 
 ## Synthetic acceptance
 
-Nine tests cover reordered visible text and unequal page sizes, pinned source preservation, duplicate/out-of-range pages, hash mismatches, main-page and byte limits, section ordering, boolean page-number rejection and existing-output preservation.
+Thirteen tests cover reordered visible text and unequal page sizes, pinned source preservation, duplicate/out-of-range pages, hash mismatches, main-page and byte limits, section ordering, boolean page-number rejection and existing-output preservation. A real AcroForm fixture is refused. Fault injection verifies that an externally changed source or an importer returning the wrong page cannot publish a bundle. Invalid module requests return JSON with `state: rejected` and exit code 2.
 
 The native-output smoke case `local/pdf-bundle-native-v1` combines the previously verified synthetic mixed-product A3 CAD sheet with pages 18 and 19 of the same synthetic project's DIALux report. All three source/output page rendering, text and size comparisons passed. Each output page was rendered and visually inspected: the landscape sheet, both portrait product tables, coordinates and labels remain legible with no new clipping. Original report page labels remain 18 and 19; they are not renumbered.
 

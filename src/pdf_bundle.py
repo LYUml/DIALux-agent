@@ -114,4 +114,8 @@ if __name__ == '__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--request',required=True)
     args=parser.parse_args()
-    print(json.dumps(build_pdf_bundle(**json.loads(Path(args.request).read_text(encoding='utf-8'))),indent=2))
+    try:
+        print(json.dumps(build_pdf_bundle(**json.loads(Path(args.request).read_text(encoding='utf-8'))),indent=2))
+    except (ValueError,OSError,TypeError,pdfium.PdfiumError) as exc:
+        print(json.dumps({'state':'rejected','error':str(exc)}))
+        raise SystemExit(2)
