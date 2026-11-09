@@ -45,3 +45,19 @@ This drawing uses measured positions, not regenerated grid coordinates, but prod
 Before/after inspection pages are now saved separately as hashed `before-page-NNNN.json` / `after-page-NNNN.json` files before continuing. The journal records each page's phase, offset, count and timestamp, plus start/finish timestamps for each committed movement and the overall run. These are raw observed pages; acceptance still requires the complete final geometry check. Partial files and `state: inspecting/moving/verifying` are not success or process-liveness evidence. The full application timeout is 7200 seconds to allow two complete native scans plus movement; timeout remains an unknown partial outcome requiring inspection, not automatic retry.
 
 The 168-fixture native movement gate is running separately in `local/large-grid-run-v1` against the new copy `local/large-grid-probe-v1.evo` (initial SHA256 `525aef00ad8c4eca5fea46cf78cb836a78606d02f87e5f2fd9bc40806e92351f`). The explicit target shifts every centre by +0.1 m in X/Y, retaining the original grid spacing, height and zero rotation. The original large project hash was checked unchanged before launch. This gate is pending until the actual process terminates successfully and all evidence is reviewed. 311 tests passed before launch.
+# Mid-movement reminder guard
+
+The worker now handles the recognized periodic unsaved-project reminder between
+coordinate writes through the same project-identity and exact dialog-signature
+guard used for preparation. Before proceeding to another axis, it rechecks the
+selected fixture's runtime identity and selection, then compares all coordinates
+with the partial target already submitted. Unknown dialogs, selection changes,
+or blocked/changed coordinate writes stop the operation with partial mutation
+possible. No coordinate is automatically retried and no save is implied.
+
+Tests cover continuation after the known reminder and refusal before the next
+axis for unknown dialogs, changed selection and uncommitted coordinates. Full
+suite: 358 passed. This change is not injected into the already-running
+`large-grid-run-v3` worker; that run retains its launch-time code. Real native
+mid-movement reminder acceptance remains pending.
+

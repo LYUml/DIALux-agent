@@ -971,6 +971,7 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
             raise ValueError('Positions require three finite numbers in metres')
     expected, state = prepare_project(app, main, process, expected_project)
     fields = ['PositionVectorControl_' + axis for axis in 'XYZ']
+    selected_item = []
     def select_and_read():
         unique_control(main, 'TabItem', 'ProjectTreeTool').select()
         tree = wait_control(main, 'List', 'FilterTreeListBox')
@@ -984,6 +985,7 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
         matches[0].select()
         if not matches[0].is_selected():
             raise ValueError('Fixture selection failed')
+        selected_item[:] = matches
         select_lighting_tool(main, 'LuminaireArrangementTool')
         set_storey_context(main)
         current = [float(wait_control(main, 'Edit', key).get_value()) for key in fields]
@@ -997,7 +999,8 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
         if snapshot(app, main, process)['dialogs']:
             raise ValueError('Dialog clearing results; movement not attempted')
         select_and_read()
-    for key, value, old in zip(fields, parameters['position_m'], before):
+    committed = list(before)
+    for axis_index, (key, value, old) in enumerate(zip(fields, parameters['position_m'], before)):
         if math.isclose(value, old, rel_tol=0, abs_tol=1e-10):
             continue
         control = unique_control(main, 'Edit', key)
@@ -1006,8 +1009,15 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
         control.set_focus()
         control.type_keys('^a' + format(value, '.12g') + '{TAB}', set_foreground=False)
         time.sleep(1)
+        committed[axis_index] = value
         if snapshot(app, main, process)['dialogs']:
-            raise ValueError('Dialog during fixture movement; inspect before retry')
+            prepare_project(app, main, process, expected_project)
+            item = selected_item[0]
+            if list(item.element_info.runtime_id) != runtime or not item.is_selected():
+                raise ValueError('Fixture selection changed during movement reminder')
+            observed = [float(unique_control(main, 'Edit', field).get_value()) for field in fields]
+            if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(observed, committed)):
+                raise ValueError('Partial movement differs after reminder; inspect before retry')
     after = [float(unique_control(main, 'Edit', key).get_value()) for key in fields]
     if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(after, parameters['position_m'])):
         raise ValueError('Fixture movement readback differs; partial movement possible')

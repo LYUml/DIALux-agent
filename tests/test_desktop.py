@@ -174,6 +174,49 @@ def test_fixture_stale_position_rejected_before_clearing_results(monkeypatch):
                                     {'runtime_id':[7,1,2], 'expected_position_m':[1,1,1], 'position_m':[3,3,3]})
 
 
+@pytest.mark.parametrize('failure', [None, 'selection', 'position', 'unknown_dialog'])
+def test_movement_reminder_requires_identity_and_partial_coordinate_readback(monkeypatch, failure):
+    values = [1., 1., 1.]
+    actions = []
+    prepared = []
+    node = SimpleNamespace(element_info=SimpleNamespace(runtime_id=[7,1,2]),
+                           is_visible=lambda:True, select=lambda:None,
+                           is_selected=lambda:not (failure == 'selection' and actions))
+    def prepare(*args):
+        prepared.append(True)
+        if len(prepared)>1 and failure == 'unknown_dialog':
+            raise ValueError('Unknown secondary dialog')
+        return Path('test.evo'), {'controls':{'DiscardResultsButton':{'enabled':False}}}
+    def control(parent, kind, identity):
+        if kind == 'TabItem': return SimpleNamespace(select=lambda:None)
+        if kind == 'List': return object()
+        axis = 'XYZ'.index(identity[-1])
+        def type_keys(text, **kwargs):
+            actions.append(axis)
+            if failure != 'position': values[axis] = float(text[2:-5])
+        return SimpleNamespace(get_value=lambda:str(values[axis]), is_enabled=lambda:True,
+                               iface_value=SimpleNamespace(CurrentIsReadOnly=False),
+                               set_focus=lambda:None, type_keys=type_keys)
+    monkeypatch.setattr(windows_worker,'prepare_project',prepare)
+    monkeypatch.setattr(windows_worker,'unique_control',control)
+    monkeypatch.setattr(windows_worker,'wait_control',control)
+    monkeypatch.setattr(windows_worker,'container_elements',lambda *a:[SimpleNamespace(GetRuntimeId=lambda:[7,1,2])])
+    monkeypatch.setattr(windows_worker,'materialize_tree_item',lambda *a:node)
+    monkeypatch.setattr(windows_worker,'select_lighting_tool',lambda *a:None)
+    monkeypatch.setattr(windows_worker,'set_storey_context',lambda *a:None)
+    monkeypatch.setattr(windows_worker.time,'sleep',lambda *a:None)
+    monkeypatch.setattr(windows_worker,'snapshot',lambda *a:{'dialogs':[{}]})
+    parameters = {'runtime_id':[7,1,2], 'expected_position_m':[1,1,1], 'position_m':[2,3,1]}
+    if failure:
+        with pytest.raises(ValueError):
+            windows_worker.edit_fixture(None,None,None,'test.evo',parameters)
+        assert actions == [0]  # never send another coordinate after a failed guard
+    else:
+        result = windows_worker.edit_fixture(None,None,None,'test.evo',parameters)
+        assert result['after_position_m'] == [2,3,1]
+        assert actions == [0,1]
+
+
 def test_tree_identity_with_quotes_survives_worker_transport(monkeypatch):
     identity = 'Building_"Test"_Luminaires'
     monkeypatch.setattr(desktop.sys, 'platform', 'win32')
