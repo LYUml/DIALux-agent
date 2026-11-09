@@ -62,6 +62,22 @@ def connect():
     return app, main, process
 
 
+def is_dimension_label(window):
+    """Recognize only the observed noninteractive metric popup, at either UIA level."""
+    children = window.children()
+    return (window.class_name() == 'Popup' and not window.window_text()
+            and len(children) == 1 and children[0].element_info.control_type == 'Text'
+            and re.fullmatch(r'-?\d+(?:\.\d+)? m', children[0].window_text()) is not None
+            and not children[0].children())
+
+
+def is_plain_tooltip(window):
+    children = window.children()
+    return (window.class_name() == 'Popup' and not window.window_text()
+            and len(children) == 1 and children[0].element_info.control_type == 'ToolTip'
+            and all(c.element_info.control_type in {'Text', 'Image', 'Separator'} for c in children[0].descendants()))
+
+
 def snapshot(app, main, process):
     controls = {}
     for control_id in ('Save', 'CalculationButtonStart', 'DiscardResultsButton'):
@@ -69,17 +85,14 @@ def snapshot(app, main, process):
         controls[control_id] = {'count': len(matches), 'enabled': len(matches) == 1 and matches[0].is_enabled()}
     dialogs = []
     for window in app.windows():
-        if window.handle != main.handle and window.is_visible():
-            dialogs.append({'title': window.window_text(), 'automation_id': window.element_info.automation_id})
+        if window.handle != main.handle and window.is_visible() and not is_dimension_label(window) and not is_plain_tooltip(window):
+            dialogs.append({'title': window.window_text(), 'automation_id': window.element_info.automation_id, 'class': window.class_name(), 'children': [{'type': c.element_info.control_type, 'text': c.window_text()} for c in window.descendants()]})
     for window in main.descendants(control_type='Window'):
         if window.is_visible():
             children = window.children()
             # Arrangement selection exposes dimension labels as native popups.
             # Only an exact, noninteractive one-text metric label is exempt.
-            if (window.class_name() == 'Popup' and not window.window_text()
-                    and len(children) == 1 and children[0].element_info.control_type == 'Text'
-                    and re.fullmatch(r'-?\d+(?:\.\d+)? m', children[0].window_text())
-                    and not children[0].children()):
+            if is_dimension_label(window) or is_plain_tooltip(window):
                 continue
             button_ids = {c.element_info.automation_id for c in window.descendants(control_type='Button')}
             # Observed non-modal energy overlay; no other secondary UI is allowed.
@@ -87,7 +100,7 @@ def snapshot(app, main, process):
                 'CloseEnergyTachometerButton', 'ShowEnergyTachometerMenuButton',
                 'EnergyTachometerChangeToEnergyPerformanceToolButton'}:
                 continue
-            dialogs.append({'title': window.window_text(), 'automation_id': window.element_info.automation_id})
+            dialogs.append({'title': window.window_text(), 'automation_id': window.element_info.automation_id, 'class': window.class_name(), 'children': [{'type': c.element_info.control_type, 'text': c.window_text()} for c in window.descendants()]})
     return {'backend': 'pywinauto-uia', 'pid': process['pid'], 'executable': process['exe'],
             'title': main.window_text(), 'controls': controls, 'dialogs': dialogs,
             'uses_codex_computer_use': False}
@@ -405,6 +418,61 @@ def arrange_space(app, main, process, expected_project, product_id):
     raise ValueError('Arrangement was invoked but readback failed; inspect before retry')
 
 
+def edit_arrangement(app, main, process, expected_project, parameters):
+    """Edit an exact visible tree item, then read committed native parameters."""
+    import math
+    allowed = {'ElementCountX', 'ElementCountY', 'PolygonPosition_X', 'PolygonPosition_Y',
+               'PolygonPosition_Z', 'ArrangementRotation_Z'}
+    if not isinstance(parameters, dict) or set(parameters) != {'tree_item_id', 'values'}:
+        raise ValueError('Expected tree_item_id and values')
+    identity, values = parameters['tree_item_id'], parameters['values']
+    if not isinstance(identity, str) or not identity or not isinstance(values, dict) or not values or not set(values) <= allowed:
+        raise ValueError('Invalid arrangement identity or parameter keys')
+    for key, value in values.items():
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise ValueError('Arrangement values must be finite numbers')
+        if key.startswith('ElementCount') and (value != int(value) or not 1 <= value <= 1000):
+            raise ValueError('Element counts must be integers from 1 to 1000')
+    expected, state = prepare_project(app, main, process, expected_project)
+    unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+    candidate = wait_control(main, 'ListItem', identity)
+    if not candidate.is_visible():
+        raise ValueError('Target tree item is not visible')
+    # Existing results must be explicitly cleared before changing geometry;
+    # otherwise an edit can display a pending value behind a confirmation dialog.
+    if state['controls']['DiscardResultsButton']['enabled']:
+        unique_control(main, 'Button', 'DiscardResultsButton').click()
+        time.sleep(.4)
+        if snapshot(app, main, process)['dialogs']:
+            raise ValueError('Dialog after clearing results; no parameter edit attempted')
+    unique_control(main, 'TabItem', 'ProjectTreeTool').select()
+    item = wait_control(main, 'ListItem', identity)
+    if not item.is_visible():
+        raise ValueError('Target tree item is collapsed or not visible; expand it before editing')
+    item.select()
+    unique_control(main, 'TabItem', 'LuminaireArrangementTool').select()
+    before = {key: wait_control(main, 'Edit', key).get_value() for key in values}
+    name = unique_control(main, 'Edit', 'ArrangementObjectName').get_value()
+    for key, value in values.items():
+        control = unique_control(main, 'Edit', key)
+        control.set_focus()
+        control.type_keys('^a' + format(value, '.12g') + '{TAB}', set_foreground=False)
+        time.sleep(1)
+        edit_state = snapshot(app, main, process)
+        if edit_state['dialogs']:
+            raise ValueError('Dialog during edit; pending values are not verified: ' + json.dumps(edit_state['dialogs']))
+        actual = unique_control(main, 'Edit', key).get_value()
+        if not math.isclose(float(actual), value, rel_tol=0, abs_tol=.00051):
+            raise ValueError(f'Parameter {key} did not commit; partial edit possible, inspect before retry')
+    after = {key: unique_control(main, 'Edit', key).get_value() for key in values}
+    if any(not math.isclose(float(after[key]), value, rel_tol=0, abs_tol=.00051) for key, value in values.items()):
+        raise ValueError('Final readback differs; dependent parameter adjustment possible')
+    return {'operation': 'edit_arrangement', 'path': str(expected), 'tree_item_id': identity,
+            'name': name, 'before': before, 'after': after, 'native_project_saved': False,
+            'fixture_positions_verified': False, 'uses_codex_computer_use': False,
+            'evidence': 'Committed native arrangement parameters read back; individual fixture coordinates and calculation require separate verification.'}
+
+
 def export_pdf(app, main, process, expected_project, path):
     import pdfplumber
     target = Path(path).resolve()
@@ -460,7 +528,8 @@ def export_pdf(app, main, process, expected_project, path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf'])
+    parser.add_argument('action', choices=['status', 'save', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement'])
+    parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
     parser.add_argument('--expected-project')
@@ -470,7 +539,7 @@ def main():
     args = parser.parse_args()
     try:
         app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
-        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf'} and not args.expected_project:
+        if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement'} and not args.expected_project:
             raise ValueError('expected_project is required')
         if args.action in {'status', 'launch'}:
             result = snapshot(app, window, process)
@@ -486,6 +555,8 @@ def main():
             result = import_luminaire(app, window, process, args.expected_project, args.path, args.product_id)
         elif args.action == 'arrange-space':
             result = arrange_space(app, window, process, args.expected_project, args.product_id)
+        elif args.action == 'edit-arrangement':
+            result = edit_arrangement(app, window, process, args.expected_project, json.loads(args.parameters))
         elif args.action == 'export-pdf':
             result = export_pdf(app, window, process, args.expected_project, args.path)
         else:

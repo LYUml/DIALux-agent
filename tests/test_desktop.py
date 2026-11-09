@@ -11,6 +11,34 @@ import desktop
 import windows_worker
 
 
+@pytest.mark.parametrize('kind,text,nested,expected', [
+    ('Text', '2.000 m', False, True), ('Text', '-0.5 m', False, True),
+    ('Edit', '2.000 m', False, False), ('Text', 'Continue?', False, False),
+    ('Text', '2.000 m', True, False)])
+def test_dimension_popup_is_strictly_noninteractive(kind, text, nested, expected):
+    child = SimpleNamespace(element_info=SimpleNamespace(control_type=kind),
+                            window_text=lambda: text, children=lambda: [object()] if nested else [])
+    window = SimpleNamespace(children=lambda: [child], class_name=lambda: 'Popup', window_text=lambda: '')
+    assert windows_worker.is_dimension_label(window) == expected
+
+
+@pytest.mark.parametrize('kind,expected', [('Text', True), ('Separator', True), ('Button', False), ('Edit', False)])
+def test_tooltip_rejects_interactive_descendants(kind, expected):
+    content = SimpleNamespace(element_info=SimpleNamespace(control_type=kind))
+    tooltip = SimpleNamespace(element_info=SimpleNamespace(control_type='ToolTip'), descendants=lambda: [content])
+    window = SimpleNamespace(children=lambda: [tooltip], class_name=lambda: 'Popup', window_text=lambda: '')
+    assert windows_worker.is_plain_tooltip(window) == expected
+
+
+@pytest.mark.parametrize('values', [{'ElementCountX': 0}, {'ElementCountY': 1.5},
+                                  {'ElementCountX': True}, {'PolygonPosition_X': float('nan')},
+                                  {'Unknown': 2}])
+def test_arrangement_invalid_parameters_rejected_before_ui(values, monkeypatch):
+    monkeypatch.setattr(windows_worker, 'prepare_project', lambda *a: pytest.fail('UI accessed'))
+    with pytest.raises(ValueError):
+        windows_worker.edit_arrangement(None, None, None, 'test.evo', {'tree_item_id': 'exact', 'values': values})
+
+
 def test_launch_temp_is_process_local_and_restored_on_failure(tmp_path, monkeypatch):
     import os
     import psutil

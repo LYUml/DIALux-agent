@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 
-def _run(action, expected_project=None, recalculate=False, target=None, save_current=False, product_id=None, runtime_temp=None):
+def _run(action, expected_project=None, recalculate=False, target=None, save_current=False, product_id=None, runtime_temp=None, parameters=None):
     if sys.platform != 'win32':
         raise ValueError('DIALux desktop control requires Windows')
     command = [sys.executable, str(Path(__file__).with_name('windows_worker.py')), action]
@@ -21,9 +21,11 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--product-id', product_id]
     if runtime_temp is not None:
         command += ['--runtime-temp', str(runtime_temp)]
+    if parameters is not None:
+        command += ['--parameters', json.dumps(parameters, allow_nan=False)]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=75 if action in {'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
+                             timeout=75 if action in {'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -38,6 +40,16 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
 def desktop_status() -> dict:
     """Read the unique running DIALux process and current controls using Windows UIA."""
     return _run('status')
+
+
+def desktop_edit_arrangement(expected_project: str, tree_item_id: str, values: dict) -> dict:
+    """Edit an exact visible native arrangement's counts, centre XYZ or Z rotation.
+
+    Tree item must already be expanded. Clears cached results before editing.
+    Does not save or verify individual fixtures.
+    Failure may leave a partial edit; inspect before retrying.
+    """
+    return _run('edit-arrangement', expected_project, parameters={'tree_item_id': tree_item_id, 'values': values})
 
 
 def desktop_import_luminaire(expected_project: str, path: str, product_id: str) -> dict:

@@ -81,6 +81,10 @@ def main():
     drawing = commands.add_parser('drawing-inspect')
     drawing.add_argument('--path', required=True)
     drawing.add_argument('--grid-layer', default='Ceiling Grid')
+    edit_arrangement = commands.add_parser('desktop-edit-arrangement')
+    edit_arrangement.add_argument('--expected-project', required=True)
+    edit_arrangement.add_argument('--tree-item-id', required=True)
+    edit_arrangement.add_argument('--values', required=True, help='Path to JSON parameter object')
     commands.add_parser('desktop-status')
     launching = commands.add_parser('desktop-launch')
     launching.add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
@@ -129,6 +133,8 @@ def main():
             result = _local_module('cad').drawing_convert(args.path, args.output_directory, args.executable)
         elif args.command == 'drawing-inspect':
             result = _local_module('cad').drawing_inspect(args.path, args.grid_layer)
+        elif args.command == 'desktop-edit-arrangement':
+            result = _local_module('desktop').desktop_edit_arrangement(args.expected_project, args.tree_item_id, json.loads(Path(args.values).read_text(encoding='utf-8')))
         elif args.command == 'desktop-status':
             result = _local_module('desktop').desktop_status()
         elif args.command == 'desktop-launch':
