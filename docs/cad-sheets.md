@@ -55,3 +55,15 @@ Actual Core Console negative gates also refused a 1:50 request for a 1:100 sheet
 and a fit-to-page request. Logs contain the specific sheet-guard errors;
 `local/sheet-negative-gates-v1.json` records these outcomes. These are actual
 native refusals, not inferred from unit tests. Full regression suite: 395 passed.
+
+The 168-fixture synthetic planned CAD case also passed A1 1:100 framing,
+independent DWG reopening and vector-scale verification. All 168 unique fixture
+IDs were extracted from the PDF; sheet and fixture records matched the source.
+Whole-sheet preview showed a complete frame and titleblock, with no clipped
+content; typography and whitespace still require content-composition work.
+This is CAD evidence, not a new DIALux placement or photometry acceptance.
+
+- Evidence: ignored `local/sheet-large-evidence-v1.json`.
+- PDF SHA256: `2fc15a23dc4f3dd668fcd1f9d7479e2f7fd0835490f600ef0cfa5417040f8e30`.
+- Native DWG SHA256: `b97113cd91a983fb2829abd7c434027356d1bf378e5c79091dd962fe997416c6`.
+- Maximum outline-coordinate error: 0.07371 pt.
