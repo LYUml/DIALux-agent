@@ -59,6 +59,23 @@ This closes the bounded native serialization/readback check for this tile case.
 It does not prove visual plotting, arbitrary ceiling geometry, semantic layer
 selection or fixture placement. No assignment source was used in this test.
 
+The source generator and native round-trip checks are now reproducible from the
+repository root using:
+
+```powershell
+.venv/Scripts/python.exe -m scripts.validate_native_tile_grid --output-directory local/tile-grid-fresh-run
+```
+
+Requires installed AutoCAD Core Console (2027 default; override `--executable`).
+The script creates only synthetic geometry, uses a copy for native writes, refuses
+existing output directories and retains failure journals/logs. It does not touch
+DIALux or the shared pointer. A fresh run of this checked-in script passed all
+2800 cells/parameters; local `tile-grid-reproducible-v1/evidence.json` hash is
+`497a597a38a10664e9e2cd052bddd50bd33a3e460af0b80458cc42472e0e2b40`.
+Repeating against the same directory was rejected and the evidence hash stayed
+unchanged. File hashes vary with generated CAD metadata; compare geometry and
+the hashes recorded by each run rather than requiring identical bytes across runs.
+
 ## Fixture coverage against present cells
 
 `layout-verify-tile-coverage --request request.json` / MCP
