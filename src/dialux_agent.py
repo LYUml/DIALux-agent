@@ -141,6 +141,8 @@ def main():
     rooms.add_argument('--spec', required=True)
     rooms.add_argument('--output', required=True)
     checkpoint = commands.add_parser('calculation-checkpoint')
+    candidates = commands.add_parser('layout-candidates-run')
+    candidates.add_argument('--request', required=True)
     checkpoint.add_argument('--expected-project', required=True)
     checkpoint.add_argument('--evidence-directory', required=True)
     checkpoint.add_argument('--checks', required=True)
@@ -265,6 +267,8 @@ def main():
             result = _local_module('cad_geometry').drawing_extract_boundary(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'calculation-checkpoint':
             result = _local_module('workflow').calculation_checkpoint(args.expected_project, args.evidence_directory, json.loads(Path(args.checks).read_text(encoding='utf-8-sig')), args.recalculate)
+        elif args.command == 'layout-candidates-run':
+            result = _local_module('iterations').run_layout_candidates(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'desktop-arrange-room':
             spec = json.loads(Path(args.spec).read_text(encoding='utf-8-sig'))
             result = _local_module('desktop').desktop_arrange_room(args.expected_project, **spec)

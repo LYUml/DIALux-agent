@@ -30,6 +30,11 @@ The baseline is MCP_Dialux commit `4489032e67cabe0d409819fad24f091128620a9d`, wi
 
 ## Next acceptance order
 
+The bounded explicit candidate runner is now exposed through CLI/MCP; see
+`layout-candidates.md`. Unit tests cover its stop/comparison/failure policy.
+Real multi-iteration native acceptance and automatic candidate generation remain
+pending; this does not close the iteration capability gate in the matrix above.
+
 The first large movement attempt (`local/large-grid-run-v1`) terminated during
 initial inspection after 88 recorded fixtures, before any movement. Native status
 identified an English 10-minute unsaved-project reminder. The worker previously

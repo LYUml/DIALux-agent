@@ -62,6 +62,11 @@ server.tool()(read_report_pdf)
 server.tool()(check_report)
 server.tool()(check_report_summary)
 server.tool()(calculation_checkpoint)
+if __package__:
+    from .iterations import run_layout_candidates
+else:
+    from iterations import run_layout_candidates
+server.tool()(run_layout_candidates)
 server.tool()(desktop_status)
 server.tool()(desktop_close_project)
 server.tool()(desktop_read_space)
