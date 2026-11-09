@@ -89,3 +89,27 @@ Preparation now waits at most eight seconds for that narrowly matched current-
 project notification to disappear, rechecks the project title, and still rejects
 other or additional dialogs. A persistent notification remains a failure. Run v3
 has started with new copies/evidence to test the repaired transition end to end.
+
+## Completed two-candidate native orchestration
+
+Run v3 exited successfully through the public CLI. Candidate 0 required no
+coordinate writes but passed both group inspections; candidate 1 moved all six
+fixtures through atomic UIA value replacement and passed final group inspection.
+Both then completed real calculation, PDF export, scoped assessment and native
+save. The runner stopped with `candidate_list_exhausted` and ranked candidate 1
+highest by the explicitly requested Uo objective. Neither its smoke threshold nor
+this ranking establishes a satisfactory lighting design.
+
+| Candidate | Mean lx | Uo | W/m2 | Saved native SHA256 | Fresh PDF SHA256 |
+| --- | --- | --- | --- | --- | --- |
+| 0 | 496 | 0.060 | 6.5 | `41f3a7cd0cb45cfe9c44de3bd065daa8215b8fdf68ddffde6d148f741d43a072` | `ed0d8ef58fbaa742279a374d630f06aa0920315f4198ad35227effd0e30c3a0f` |
+| 1 | 493 | 0.062 | 6.5 | `a3e2aca96017b04147a8a71574c795b6fdd412a73e851451045cc83fcb7f7918` | `2c1dc06ac35d9892eefdb208220882c7fb2d8e81ecaf31b89f840d0e04ddf2d4` |
+
+`local/candidate-native-v3/independent-audit.json` independently rereads both
+reports, matches each complete coordinate table against its native UI snapshot,
+checks saved-file/PDF hashes and unchanged source, and recomputes the ranking.
+The coordinate page uses its explicit room-only header; the summary uses its
+separate room/light-scene identity. A native reopen/export check of both saved
+copies is in progress; no reopening claim follows merely from matching hashes.
+Automatic candidate generation, different products/counts, comprehensive project
+criteria and large interrupted recovery remain outside this accepted small case.
