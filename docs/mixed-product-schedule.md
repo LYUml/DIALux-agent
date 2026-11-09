@@ -1,6 +1,6 @@
 # Mixed-product position-linked schedule
 
-CLI `schedule-build-mixed --request request.json` and MCP `build_mixed_luminaire_schedule` build data for a mixed-product drawing schedule. This does **not yet render a mixed-product CAD table or product-specific symbols**.
+CLI `schedule-build-mixed --request request.json` and MCP `build_mixed_luminaire_schedule` build data for a mixed-product drawing schedule. Rendering is available through the separate [mixed-product CAD exporter](mixed-product-cad.md).
 
 The request contains:
 
@@ -26,4 +26,4 @@ For the independently verified five-fixture mixed case, the public CLI linked:
 
 Quantity is five and reported fixture power is 4 × 26 + 1 × 32 = 136 W. This demonstrates that drawing order is not assumed to be report order. The explicit identity transform was checked against all five active-storey UI coordinates. Local request/result: `local/mixed-products-native-v1/mixed-schedule-request.json`, `mixed-schedule.json`, `mixed-schedule-cli.json`. Physical dimensions remain synthetic assumptions. No assignment design or submission artifact was produced.
 
-The full test suite has 498 passing tests, including negative mixed-group/ID/position/evidence cases and MCP discovery. Mixed-product CAD rendering and native round-trip acceptance remain next gates.
+The full test suite has 498 passing tests, including negative mixed-group/ID/position/evidence cases and MCP discovery. Mixed-product CAD rendering and a native round-trip checkpoint are documented in [mixed-product CAD](mixed-product-cad.md).

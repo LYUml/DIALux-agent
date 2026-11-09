@@ -19,21 +19,33 @@ def schedule_records(path, layer='SCHEDULE'):
     return sorted(records)
 
 
-def add_schedule_table(doc, schedule, origin, height):
+def add_schedule_table(doc, schedule, origin, height, symbol_dimensions=None, symbol_label=None):
     # Called only after fresh PDF reading and exact positional correspondence.
     model = doc.modelspace()
-    doc.layers.new('SCHEDULE', dxfattribs={'color':7})
+    if 'SCHEDULE' not in doc.layers:
+        doc.layers.new('SCHEDULE', dxfattribs={'color':7})
     x, y = origin
     def text(value, px, py):
         value = str(value)
         if '%%' in value or any(ord(c)<32 for c in value):
             raise ValueError('Unsupported CAD text escape or control character in schedule')
         return model.add_text(value, dxfattribs={'layer':'SCHEDULE','height':height,'insert':(px,py)})
+    if symbol_dimensions is not None:
+        width,depth=symbol_dimensions['width_m'],symbol_dimensions['depth_m']
+        vertices=[(x,y),(x+width,y),(x+width,y-depth),(x,y-depth)]
+        for a,b in zip(vertices,vertices[1:]+vertices[:1]):
+            model.add_line(a,b,dxfattribs={'layer':'SCHEDULE'})
+        model.add_line(vertices[3],vertices[1],dxfattribs={'layer':'SCHEDULE'})
+        text(symbol_label,x+width+height,y-height)
+        y-=max(depth,height*2)+height*2
     lines = ['REPORT-LINKED LUMINAIRE SCHEDULE | SYNTHETIC TEST',
              'Reported product: '+schedule['product']['reported_label'],
              'Article: '+schedule['product']['article_number'],
-             'Positions matched to all drawing fixtures; supplied alignment.',
+             'Positions matched to this group; supplied alignment.' if symbol_dimensions is not None else 'Positions matched to all drawing fixtures; supplied alignment.',
              'Product identity and manufacturer dimensions not authenticated.']
+    if symbol_dimensions is not None:
+        lines += [f"Mounting height: {symbol_dimensions['mounting_height_m']} m",
+                  'Drawing IDs: '+', '.join(f['fixture_id'] for f in schedule['fixtures'])]
     for value in lines:
         if '%%' in value or any(ord(c)<32 for c in value):
             raise ValueError('Unsupported CAD text escape or control character in schedule')

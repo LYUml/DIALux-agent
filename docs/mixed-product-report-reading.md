@@ -18,7 +18,7 @@ The fresh native calculation report contains an overview on page 17, the seconda
 
 Local evidence: `local/mixed-products-native-v1/creation-v2/journal.json`, `continuation-journal.json`, full `primary-after` / `secondary-after` checkpoints, `calculation/report.pdf`, `arrangements-request.json` and `parsed-arrangements.json`. The first failed creation journal is retained; it stopped before placement and was inspected before the explicit continuation.
 
-The native calculation used synthetic positive-illuminance smoke criteria only. Save/reopen persistence subsequently passed as described below. Mixed-product CAD symbols/tables and varying-product optimization remain unverified. Position-linked mixed schedule data is available; see [mixed-product schedule](mixed-product-schedule.md). No assignment design was made. Full suite: 486 tests passed, including ambiguity/coverage rejection and actual MCP discovery; the public CLI also read this native report successfully.
+The native calculation used synthetic positive-illuminance smoke criteria only. Save/reopen persistence subsequently passed as described below. Mixed-product CAD symbols/tables subsequently passed the [native CAD checkpoint](mixed-product-cad.md); varying-product optimization remains unverified. Position-linked mixed schedule data is available; see [mixed-product schedule](mixed-product-schedule.md). No assignment design was made. Full suite: 486 tests passed, including ambiguity/coverage rejection and actual MCP discovery; the public CLI also read this native report successfully.
 
 ## Save/reopen persistence
 

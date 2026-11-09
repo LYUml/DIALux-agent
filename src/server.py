@@ -3,6 +3,7 @@ from mcp.server.mcpserver import MCPServer
 if __package__:
     from .schedule import build_luminaire_schedule
     from .mixed_schedule import build_mixed_luminaire_schedule
+    from .mixed_cad import export_mixed_scheduled_layout_dxf
     from .workplane import read_workplane_pdf
     from .report_layout import read_report_layout, read_report_arrangements
     from .inspection import verify_group_checkpoint
@@ -20,6 +21,7 @@ if __package__:
 else:
     from schedule import build_luminaire_schedule
     from mixed_schedule import build_mixed_luminaire_schedule
+    from mixed_cad import export_mixed_scheduled_layout_dxf
     from workplane import read_workplane_pdf
     from report_layout import read_report_layout, read_report_arrangements
     from inspection import verify_group_checkpoint
@@ -48,6 +50,7 @@ server.tool()(read_report_arrangements)
 server.tool()(read_workplane_pdf)
 server.tool()(build_luminaire_schedule)
 server.tool()(build_mixed_luminaire_schedule)
+server.tool()(export_mixed_scheduled_layout_dxf)
 server.tool()(verify_room_addition)
 server.tool()(verify_observed_layout)
 server.tool()(drawing_convert)

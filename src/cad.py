@@ -11,11 +11,13 @@ import ezdxf
 from ezdxf import bbox
 
 if __package__:
+    from .cad_plot import plotted_fixture_ids
     from .cad_symbols import fixture_block_records, compare_fixture_blocks
     from .cad_schedule import schedule_records
     from .cad_labels import place_fixture_labels
     from .cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
 else:
+    from cad_plot import plotted_fixture_ids
     from cad_symbols import fixture_block_records, compare_fixture_blocks
     from cad_schedule import schedule_records
     from cad_labels import place_fixture_labels
@@ -72,7 +74,7 @@ def export_scheduled_layout_dxf(spec: dict, observed: dict, fixture_ids: list[st
     return result
 
 
-def _write_layout_dxf(spec, output, layout, schedule=None):
+def _write_layout_dxf(spec, output, layout, schedule=None, fixture_catalog=None):
     dimensions = validate_dimensions(spec.get('dimensions', []))
     target = Path(output).resolve()
     if target.suffix.lower() != '.dxf' or target.exists():
@@ -84,7 +86,7 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
     note_height=annotations.get('note_height_m',.18)
     if any(type(v) not in (int,float) or not math.isfinite(v) or not .02<=v<=2 for v in (label_height,note_height)):
         raise ValueError('Drawing text heights must be finite metres between 0.02 and 2')
-    label_positions = place_fixture_labels(spec, layout, label_height)
+    label_positions = place_fixture_labels(spec, layout, label_height, fixture_catalog)
     doc = ezdxf.new('R2018')
     doc.units = 6  # metres, matching shared layout coordinates
     doc.styles.get('Standard').dxf.font = 'arial.ttf'
@@ -95,15 +97,18 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
     model.add_lwpolyline(spec['contour'], close=True, dxfattribs={'layer': 'ROOM'})
     for region in spec.get('exclusions', []):
         model.add_lwpolyline(region, close=True, dxfattribs={'layer': 'KEEP_OUT'})
-    width, depth = spec['fixture']['width_m'], spec['fixture']['depth_m']
-    symbol = doc.blocks.new('DIALUX_AGENT_PANEL')
-    symbol.add_lwpolyline([(-width/2,-depth/2),(width/2,-depth/2),(width/2,depth/2),(-width/2,depth/2)], close=True)
-    symbol.add_line((-width/2,-depth/2),(width/2,depth/2))
-    symbol.add_attdef('FIXTURE_ID', (0,-depth/2-label_height*1.5), height=label_height)
+    catalog = fixture_catalog or {'DIALUX_AGENT_PANEL': spec['fixture']}
+    for name, dimensions in catalog.items():
+        width, depth = dimensions['width_m'], dimensions['depth_m']
+        symbol = doc.blocks.new(name)
+        symbol.add_lwpolyline([(-width/2,-depth/2),(width/2,-depth/2),(width/2,depth/2),(-width/2,depth/2)], close=True)
+        symbol.add_line((-width/2,-depth/2),(width/2,depth/2))
+        symbol.add_attdef('FIXTURE_ID', (0,-depth/2-label_height*1.5), height=label_height)
     handles = {}
     for fixture in layout['fixtures']:
         x, y, z = fixture['position_m']
-        insert = model.add_blockref(symbol.name, (x,y,0), dxfattribs={'layer':'LUMINAIRES','rotation':fixture['rotation_deg']})
+        symbol_name = fixture['symbol_key'] if fixture_catalog is not None else 'DIALUX_AGENT_PANEL'
+        insert = model.add_blockref(symbol_name, (x,y,0), dxfattribs={'layer':'LUMINAIRES','rotation':fixture['rotation_deg']})
         insert.add_auto_attribs({'FIXTURE_ID':fixture['id']})
         label = insert.get_attrib('FIXTURE_ID')
         label.dxf.rotation = 0
@@ -115,8 +120,8 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
     tx, ty = geometry_bounds.extmax.x+1, geometry_bounds.extmax.y
     notes = ['DIALux-agent | SYNTHETIC TOOL TEST', 'NOT FOR SUBMISSION OR CONSTRUCTION',
              f"Fixtures: {layout['fixture_count']} | Units: metres",
-             f"Product: {spec['fixture']['product_id']}",
-             f"Mounting height: {spec['fixture']['mounting_height_m']} m",
+             f"Product: {spec['fixture']['product_id']}" if fixture_catalog is None else f"Product groups: {len(catalog)} | See individual schedules",
+             f"Mounting height: {spec['fixture']['mounting_height_m']} m" if fixture_catalog is None else 'Mounting heights: see group schedules',
              'Plot scale: fit to page (not to scale)',
              'LUMINAIRES: fixtures; KEEP_OUT: no placement',
              'No simulated performance or compliance claimed',
@@ -134,7 +139,23 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
         else:
             from cad_schedule import add_schedule_table
         annotated_bounds = bbox.extents(model,fast=False)
-        add_schedule_table(doc, schedule, (annotated_bounds.extmin.x, annotated_bounds.extmin.y-2), note_height)
+        if schedule.get('schema') == 'dialux-agent/mixed-luminaire-schedule/v1':
+            left = annotated_bounds.extmin.x
+            cursor_x, cursor_y = left, annotated_bounds.extmin.y-2
+            row_bottom = cursor_y
+            for index, group in enumerate(schedule['groups']):
+                existing = {e.dxf.handle for e in model}
+                add_schedule_table(doc, group['schedule'], (cursor_x, cursor_y),
+                                   note_height, fixture_catalog[group['symbol_key']],
+                                   'Type '+group['symbol_key'].removeprefix('DIALUX_AGENT_TYPE_'))
+                bounds = bbox.extents([e for e in model if e.dxf.handle not in existing], fast=False)
+                row_bottom = min(row_bottom, bounds.extmin.y)
+                cursor_x = bounds.extmax.x+1
+                if index % 2 == 1:
+                    cursor_x, cursor_y = left, row_bottom-1
+                    row_bottom = cursor_y
+        else:
+            add_schedule_table(doc, schedule, (annotated_bounds.extmin.x, annotated_bounds.extmin.y-2), note_height)
     sheet = None
     if 'sheet' in spec:
         if __package__:
@@ -156,6 +177,8 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
             raise ValueError('Exported CAD position readback failed')
         if not math.isclose(entity.dxf.rotation,fixture['rotation_deg'],abs_tol=1e-9):
             raise ValueError('Exported CAD rotation readback failed')
+        if fixture_catalog is not None and entity.dxf.name != fixture['symbol_key']:
+            raise ValueError('Exported product symbol association changed')
     return {'schema':'dialux-agent/layout-cad/v1','path':str(target),'fixture_count':len(inserts),
             'fixture_handles':handles,'input_sha256':layout['input_sha256'],
             'label_placement':label_positions, 'label_envelopes_verified':True,
@@ -389,9 +412,8 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
             raise ValueError('Expected one plotted page')
         page = pdf.pages[0]
         text = page.extract_text() or ''
-        ids = re.findall(r'\bL\d+\b', text)
-        if sorted(ids) != sorted(expected_fixture_ids) or 'SYNTHETIC TOOL TEST' not in text or 'NOT FOR SUBMISSION' not in text:
-            raise ValueError('Expected plot labels/fixture IDs missing or duplicated; inspect PDF')
+        if 'SYNTHETIC TOOL TEST' not in text or 'NOT FOR SUBMISSION' not in text:
+            raise ValueError('Expected plot warning labels missing; inspect PDF')
         if abs(page.width - paper_width*72/25.4) > 2 or abs(page.height - paper_height*72/25.4) > 2:
             raise ValueError('Unexpected PDF paper dimensions')
         scale_evidence = None
@@ -399,6 +421,7 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
             scale_evidence = verify_pdf_outline_scale(page.curves + page.rects, scale_outline_m, scale_denominator)
             if f'1:{scale_denominator}' not in text or 'not to scale' in text:
                 raise ValueError('Fixed scale annotation missing or contradictory')
+        ids, label_scope = plotted_fixture_ids(page, expected_fixture_ids, scale_evidence)
         rendered = page.to_image(resolution=120, antialias=True).original.convert('RGB')
         bounds = ImageChops.difference(rendered, Image.new('RGB', rendered.size, 'white')).convert('L').point(lambda v: 255 if v > 20 else 0).getbbox()
         if not bounds or bounds[0] < 5 or bounds[1] < 5 or bounds[2] > rendered.width-5 or bounds[3] > rendered.height-5:
@@ -409,6 +432,7 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
                     'pages': 1, 'paper':paper, 'paper_size_mm':[paper_width,paper_height], 'fixture_ids': ids, 'text_labels_verified': True, 'rendered_content_bounds_px': bounds,
                     'preview': str(destination / 'preview.png'), 'plot_scale': f'1:{scale_denominator}' if scale_denominator else 'fit_to_page',
                     'scale_evidence': scale_evidence,
+                    'fixture_label_scope': label_scope,
                     'visual_review_verified': False, 'warning': 'Synthetic tool-test plot; visual review and engineering drawing acceptance are separate.'}
     (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
     return evidence

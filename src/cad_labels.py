@@ -3,12 +3,13 @@ from shapely.geometry import Polygon, box
 from shapely.affinity import rotate, translate
 
 
-def place_fixture_labels(spec, layout, height):
+def place_fixture_labels(spec, layout, height, fixture_catalog=None):
     room = Polygon(spec['contour'])
     obstacles = [Polygon(p) for p in spec.get('exclusions', [])]
-    width, depth = spec['fixture']['width_m'], spec['fixture']['depth_m']
     bodies = []
     for fixture in layout['fixtures']:
+        dimensions = spec['fixture'] if fixture_catalog is None else fixture_catalog[fixture['symbol_key']]
+        width, depth = dimensions['width_m'], dimensions['depth_m']
         x, y = fixture['position_m'][:2]
         bodies.append(translate(rotate(box(-width/2, -depth/2, width/2, depth/2),
                                        fixture['rotation_deg'], origin=(0, 0)), x, y))

@@ -68,7 +68,7 @@ CAD export, native DWG verification and fixed-scale PDF workflow, use the
 | Place and verify fixtures | `desktop-import-luminaire`, `desktop-arrange-room`, `desktop-edit-arrangement`, `desktop-edit-fixture`, `layout-apply-grid`, `layout-verify-observed` | [Room creation](docs/journalled-room-creation.md), [grid application](docs/grid-application.md), [large array](docs/large-array-translation.md) |
 | Calculate and compare | `calculation-checkpoint`, `layout-candidates-generate`, `layout-candidates-run`, `layout-offset-search` | [Calculation checkpoints](docs/calculation-checkpoints.md), [candidate runs](docs/layout-candidates.md) |
 | Read and evaluate results | `report-read-all`, `report-workplane-read`, `report-layout-read`, `report-arrangements-read`, `report-check`, `criteria-check` | [Scoped summaries](docs/scoped-report-reading.md), [mixed products](docs/mixed-product-report-reading.md), [workplane extrema](docs/workplane-extrema.md), [applicability](docs/profile-applicability.md) |
-| Produce independent CAD | `drawing-export-observed`, `schedule-build`, `schedule-build-mixed`, `drawing-export-scheduled`, `layout-verify-native`, `layout-plot-native` | [Observed layouts](docs/observed-layout-cad.md), [schedule](docs/luminaire-schedule.md), [sheets](docs/cad-sheets.md) |
+| Produce independent CAD | `drawing-export-observed`, `schedule-build`, `schedule-build-mixed`, `drawing-export-scheduled`, `drawing-export-mixed`, `layout-verify-native`, `layout-plot-native` | [Observed layouts](docs/observed-layout-cad.md), [schedule](docs/luminaire-schedule.md), [sheets](docs/cad-sheets.md) |
 
 `report-read` is the single-summary adapter; use `report-read-all` for multiple
 supported summaries. `report-check --summary-id ...` selects exactly one summary.

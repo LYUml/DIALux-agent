@@ -61,6 +61,7 @@ def main():
     commands.add_parser('schedule-build').add_argument('--request', required=True)
     commands.add_parser('schedule-build-mixed').add_argument('--request', required=True)
     commands.add_parser('drawing-export-scheduled').add_argument('--request', required=True)
+    commands.add_parser('drawing-export-mixed').add_argument('--request', required=True)
     commands.add_parser('layout-candidates-generate').add_argument('--request', required=True)
     commands.add_parser('layout-offset-search').add_argument('--request', required=True)
     commands.add_parser('layout-array-transform-plan').add_argument('--request', required=True)
@@ -264,6 +265,8 @@ def main():
             result = _local_module('mixed_schedule').build_mixed_luminaire_schedule(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'drawing-export-scheduled':
             result = _local_module('cad').export_scheduled_layout_dxf(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
+        elif args.command == 'drawing-export-mixed':
+            result = _local_module('mixed_cad').export_mixed_scheduled_layout_dxf(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'layout-candidates-generate':
             result = _local_module('candidate_search').generate_offset_candidates(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'layout-offset-search':
