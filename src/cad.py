@@ -10,9 +10,11 @@ import math
 import ezdxf
 
 if __package__:
+    from .cad_schedule import schedule_records
     from .cad_labels import place_fixture_labels
     from .cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
 else:
+    from cad_schedule import schedule_records
     from cad_labels import place_fixture_labels
     from cad_dimensions import add_dimensions, dimension_records, compare_dimensions, validate_dimensions
 
@@ -51,7 +53,23 @@ def export_observed_layout_dxf(spec: dict, observed: dict, fixture_ids: list[str
     return result
 
 
-def _write_layout_dxf(spec, output, layout):
+def export_scheduled_layout_dxf(spec: dict, observed: dict, fixture_ids: list[str],
+                                report_spec: dict, alignment: dict, output: str) -> dict:
+    """Export observed geometry and a single-product report-linked schedule table."""
+    if __package__:
+        from .design_data import observed_layout
+        from .schedule import build_luminaire_schedule
+    else:
+        from design_data import observed_layout
+        from schedule import build_luminaire_schedule
+    layout = observed_layout(spec, observed, fixture_ids)
+    schedule = build_luminaire_schedule(layout, report_spec, alignment)
+    result = _write_layout_dxf(spec, output, layout, schedule=schedule)
+    result.update(observed_layout=layout, schedule=schedule)
+    return result
+
+
+def _write_layout_dxf(spec, output, layout, schedule=None):
     dimensions = validate_dimensions(spec.get('dimensions', []))
     target = Path(output).resolve()
     if target.suffix.lower() != '.dxf' or target.exists():
@@ -104,6 +122,12 @@ def _write_layout_dxf(spec, output, layout):
                   layout['observations_sha256'][32:], 'Product and envelope dimensions: supplied assumptions']
     for index, text in enumerate(notes):
         model.add_text(text, dxfattribs={'height':note_height,'layer':'NOTES','insert':(tx,ty-index*note_height*20/9)})
+    if schedule is not None:
+        if __package__:
+            from .cad_schedule import add_schedule_table
+        else:
+            from cad_schedule import add_schedule_table
+        add_schedule_table(doc, schedule, (min(xs), min(ys)-2), note_height)
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open('x', encoding='utf-8') as stream:
         doc.write(stream)
@@ -208,6 +232,7 @@ def verify_layout_native(path: str, output_directory: str,
         raise ValueError('Expected DXF and installed accoreconsole.exe')
     before = _fixture_records(source)
     dimensions_before = dimension_records(source)
+    schedule_before = schedule_records(source)
     if destination.exists() or not str(destination).isascii():
         raise ValueError('Choose a new ASCII output directory')
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
@@ -233,6 +258,8 @@ def verify_layout_native(path: str, output_directory: str,
     after = _fixture_records(Path(reopened['dxf']))
     dimensions_after = dimension_records(Path(reopened['dxf']))
     compare_dimensions(dimensions_before, dimensions_after)
+    if schedule_records(Path(reopened['dxf'])) != schedule_before:
+        raise ValueError('Native schedule text or geometry changed')
     if set(before) != set(after):
         raise ValueError('Native fixture IDs changed')
     for identity, record in before.items():
@@ -249,6 +276,7 @@ def verify_layout_native(path: str, output_directory: str,
                 'dwg_sha256': hashlib.sha256(native.read_bytes()).hexdigest(),
                 'fixture_count': len(after), 'fixture_records_verified': True,
                 'dimension_count': len(dimensions_after), 'dimension_records_verified': True,
+                'schedule_entity_count': len(schedule_before), 'schedule_records_verified': True,
                 'native_reopen_verified': True, 'block_shapes_verified': False,
                 'print_verified': False, 'reopen_evidence': reopened}
     (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')

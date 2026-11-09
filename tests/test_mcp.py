@@ -15,6 +15,7 @@ def test_real_stdio_tools(tmp_path):
                 await session.initialize()
                 listing=await session.list_tools()
                 assert 'run_layout_candidates' in {t.name for t in listing.tools}
+                assert 'export_scheduled_layout_dxf' in {t.name for t in listing.tools}
                 assert {'export_layout_dxf', 'verify_layout_native', 'desktop_edit_arrangement', 'desktop_project_tree', 'desktop_group_fixtures', 'verify_observed_layout', 'desktop_edit_fixture', 'apply_grid_layout', 'plot_layout_native', 'read_report_pdf', 'check_report_summary', 'create_rooms', 'desktop_close_project', 'desktop_read_space', 'desktop_room_context', 'desktop_arrange_room', 'verify_room_addition', 'calculation_checkpoint', 'drawing_extract_boundary', 'export_observed_layout_dxf', 'desktop_read_furniture', 'build_luminaire_schedule', 'read_workplane_pdf', 'read_report_layout', 'verify_group_checkpoint', 'inspect_group_checkpoint'} <= {t.name for t in listing.tools}
                 layout_spec=json.loads((ROOT/'examples/synthetic-grid-layout.json').read_text())
                 cad_path=tmp_path/'mcp-layout.dxf'

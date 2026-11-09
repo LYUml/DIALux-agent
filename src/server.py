@@ -51,6 +51,11 @@ server.tool()(drawing_inspect)
 server.tool()(drawing_extract_boundary)
 server.tool()(export_layout_dxf)
 server.tool()(export_observed_layout_dxf)
+if __package__:
+    from .cad import export_scheduled_layout_dxf
+else:
+    from cad import export_scheduled_layout_dxf
+server.tool()(export_scheduled_layout_dxf)
 server.tool()(verify_layout_native)
 server.tool()(plot_layout_native)
 server.tool()(inspect_stf)

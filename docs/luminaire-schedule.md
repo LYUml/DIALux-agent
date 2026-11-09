@@ -17,3 +17,28 @@ The six moved/observed fixtures from `local/persistent-grid-cad-chain-v1.json` w
 Reported product: Philips RC132V G6 36S/840 PSD W60L60 OC ELB3, article 910505102817, six units at 26 W / 3602 lm each; derived reported fixture power 156 W. Public CLI and backend returned the same schedule. Files: `local/schedule-request-v1.json`, `local/persistent-grid-schedule-v1.json`. No assignment schedule was produced.
 
 330 tests passed at this checkpoint, including explicit rotated/translated coordinate correspondence, duplicate IDs, wrong frame/position, non-observed layouts, missing evidence, nonfinite values, count mismatch and missing observation hash.
+# Report-linked CAD table
+
+CLI `drawing-export-scheduled --request request.json` and MCP
+`export_scheduled_layout_dxf` accept `spec`, `observed`, `fixture_ids`,
+`report_spec`, `alignment` and a new `output` DXF path. The tool builds the
+observed layout and rereads the PDF through the existing schedule adapter before
+drawing anything. All positions must match under the explicit alignment. It
+returns both the observed layout and full per-ID schedule alongside the drawing.
+
+The drawing includes a single-product aggregate table (quantity, reported W and
+lm per luminaire, total reported W), reported article/product, source hashes and
+limits on identity and power-basis claims. It uses editable line/text entities,
+not an AutoCAD TABLE object. Native verification compares schedule text and line
+geometry after independent DWG reopen. Multi-product tables, flexible sheet
+composition and automatic pagination remain pending.
+
+Native synthetic acceptance: `local/scheduled-evidence-v1.json` links six
+observed fixtures to the reopened report, yielding 26 W / 3602 lm each and 156 W
+total. AutoCAD reopened all fixtures and schedule entities; the A3 1:50 PDF
+retained all six labels and the expected physical outline scale. Rendered output
+was inspected: the table, product line and source hashes are visible below the
+room, without clipping. PDF SHA256:
+`6ab49dd4e745a0c1f01e200162c28b8f4d34d446d6ea2a738cceeb8b4367ad72`.
+This is a tool-test sheet, not an assignment or complete electrical load schedule.
+
