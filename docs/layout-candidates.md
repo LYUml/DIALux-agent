@@ -215,3 +215,22 @@ SHA256 `eabc60283044633b5cddf6114733a274ee62953f090975f8fdc7337342037a60`.
 Final mismatch errors now include expected/observed coordinates and completed
 axes. Investigating numeric commit/focus behavior remains necessary; neither
 failure is being relabelled as a transient refresh or an external-user action.
+
+## Explicit numeric focus commit experiment
+
+On a separate synthetic copy, an instrumented three-axis edit replaced the Tab
+keystroke with explicit focus transfer to the next known coordinate Edit control.
+Before/after-focus readings were recorded for each axis. The selected fixture
+changed from (5.2, 3.1, 1) to (5.3, 3.2, 3.035) m and every intermediate/full XYZ
+readback matched. Trace: `local/numeric-commit-trace-v1.json`. This is a successful
+alternative commit experiment, not proof that keyboard navigation caused the
+earlier failures.
+
+Individual fixture editing now commits through explicit numeric-field focus and
+checks the entire XYZ vector after every axis, including axes not requested for
+change. It stops before another write if any coordinate differs. No automatic
+retry, result fabrication or numerical tolerance relaxation was introduced.
+101 targeted desktop/placement tests pass, including refusal of unexpected
+changes to an untouched axis and prohibition of keyboard commit navigation.
+A complete six-fixture placement using the public interface is in progress in
+`local/numeric-focus-layout-run-v1`; full native recovery acceptance is pending.

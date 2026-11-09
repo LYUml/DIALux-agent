@@ -1054,7 +1054,9 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
         control.iface_value.SetValue(format(value, '.12g'))
         if not math.isclose(float(control.get_value()), value, rel_tol=0, abs_tol=.00051):
             raise ValueError('Fixture field replacement not observed; partial movement possible')
-        control.type_keys('{TAB}', set_foreground=False)
+        # Commit via a known numeric field's focus, independent of global Tab
+        # navigation. This changes no value in the receiving field.
+        field_control(fields[(axis_index+1)%3],'commit_focus').set_focus()
         time.sleep(1)
         committed[axis_index] = value
         completed_axes.append(key)
@@ -1066,6 +1068,10 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
             observed = [float(field_control(field,'after_reminder').get_value()) for field in fields]
             if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(observed, committed)):
                 raise ValueError('Partial movement differs after reminder; inspect before retry')
+        observed = [float(field_control(field,'after_axis').get_value()) for field in fields]
+        if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(observed, committed)):
+            raise ValueError(f'Fixture coordinates changed after axis commit; expected={committed}; '
+                             f'observed={observed}; completed_axes={completed_axes}; inspect before retry')
     after = [float(field_control(key,'final_readback').get_value()) for key in fields]
     if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(after, parameters['position_m'])):
         raise ValueError(f'Fixture movement readback differs; expected={parameters["position_m"]}; '
