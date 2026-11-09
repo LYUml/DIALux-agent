@@ -966,7 +966,7 @@ def read_group_fixtures(app, main, process, expected_project, group_id, offset=0
             'warning': 'UI-displayed coordinates rounded by DIALux. Native ItemContainer covers this expanded group, not collapsed or filtered project content. Runtime IDs are session-local. realized_node_count is a compatibility alias for container_node_count.'}
 
 
-def inspect_group(app, main, process, expected_project, parameters):
+def inspect_group(app, main, process, expected_project, parameters, _retained_contexts=None):
     if not isinstance(parameters, dict) or set(parameters) != {'group_id', 'expected_count', 'evidence_directory'}:
         raise ValueError('Expected group_id, expected_count and evidence_directory')
     if __package__:
@@ -974,6 +974,8 @@ def inspect_group(app, main, process, expected_project, parameters):
     else:
         from placement import _inspect_group_checkpoint
     context = {}
+    if _retained_contexts is not None:
+        _retained_contexts.append(context)
     def reader(project, group_id, **options):
         return read_group_fixtures(app, main, process, project, group_id, _context=context, **options)
     return _inspect_group_checkpoint(expected_project, page_reader=reader, **parameters)
@@ -1258,8 +1260,12 @@ def apply_array_transform(app, main, process, expected_project, parameters):
         from .array_execution import _apply_array_transform
     else:
         from array_execution import _apply_array_transform
+    # Keep each scan's native provider references alive across edits. Each scan
+    # still builds a fresh inventory; cached coordinates are never reused.
+    retained_contexts = []
     def inspector(project,group,count,directory):
-        return inspect_group(app,main,process,project,{'group_id':group,'expected_count':count,'evidence_directory':directory})
+        return inspect_group(app,main,process,project,{'group_id':group,'expected_count':count,'evidence_directory':directory},
+                             _retained_contexts=retained_contexts)
     return _apply_array_transform(expected_project,**parameters,inspector=inspector,
         array_reader=lambda project,group:read_arrangement(app,main,process,project,group),
         array_editor=lambda project,arrangement,values,record:guarded_array_edit(app,main,process,project,arrangement,values,record))

@@ -101,3 +101,21 @@ closed separately. Moving cache clearing before the baseline is therefore not
 sufficient by itself in this observed case. A new motion-only copy is now being
 tested with the first inventory's native references retained across the move.
 No production identity guard has been removed or weakened.
+
+## Retained-reference motion result and candidate fix
+
+The retained-reference motion control completed with zero lost/new IDs across the
+two 168-node inventories. All four sampled fixtures uniquely matched the 0.1 m
+XY shift. Evidence SHA-256:
+`be71ac8686c66f2ea28aca7e0f83a6c33a865636cfb0fc6952d179edb42b142d`.
+The original source remained unchanged and the session copy was saved and closed.
+This bounded control supports reference retention; it does not replace full
+before/after geometry or the cached-result-clear-plus-motion acceptance run.
+
+The production array wrapper now retains each scan's context until the entire
+operation returns or raises. Each scan independently enumerates a fresh inventory;
+no old coordinates or cached inventory are substituted. All existing runtime-ID,
+name, count, field-vector and geometry checks remain. Two lifetime regression
+tests confirm separate contexts stay alive through the operation and are released
+on both successful and interrupted exits. Large combined native acceptance of
+this change remains pending.
