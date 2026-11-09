@@ -59,3 +59,19 @@ native fixture attributes' alignment anchor, height, rotation and justification,
 in addition to the previous fixture and dimension records. AutoCAD recomputes
 the glyph-origin insertion point for centered text; that derived origin is not
 compared as if it were the stable alignment anchor. Unit suite: 347 passed.
+
+The placement was also exercised through native save/reopen/plot for two other
+synthetic cases, without altering their original fixtures:
+
+- 19 fixtures rotated 30 degrees in the L-shaped room, A3 1:100. All horizontal
+  labels and their alignment anchors survived native reopening. PDF SHA256:
+  `68d6f3068ae2bcba7b2673978dd52c1f97afedbb661fe6dcbfb4c827364e5210`.
+- 168 planned fixtures in the 30 x 34 m rectangle, A1 1:100. All 168 IDs and
+  label anchors survived native reopening. PDF SHA256:
+  `b7312de54c1f4303c22623202d1d24f209597e745928c626c0938022d43a9cc7`.
+
+Both previews were inspected for clipping and label arrangement. The large CAD
+case is planned geometry, not evidence that the separate DIALux large movement
+task has finished. Full local manifests are `labels-rotated-evidence-v1.json`
+and `labels-large-evidence-v1.json`. A regression test also distinguishes a
+changed alignment anchor from AutoCAD's recomputed glyph origin.
