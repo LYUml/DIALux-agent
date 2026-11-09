@@ -93,6 +93,7 @@ def main():
     native_plot.add_argument('--fixture-ids', nargs='+', required=True)
     native_plot.add_argument('--scale-denominator', type=int)
     native_plot.add_argument('--scale-outline')
+    native_plot.add_argument('--paper', choices=['A3','A2','A1','A0'], default='A3')
     native_layout = commands.add_parser('layout-verify-native')
     native_layout.add_argument('--path', required=True)
     native_layout.add_argument('--output-directory', required=True)
@@ -195,7 +196,7 @@ def main():
             layout = json.loads(Path(args.layout).read_text(encoding='utf-8')) if args.layout else None
             result = _local_module('cad').export_layout_dxf(spec, args.output, layout)
         elif args.command == 'layout-plot-native':
-            result = _local_module('cad').plot_layout_native(args.path, args.output_directory, args.fixture_ids, scale_denominator=args.scale_denominator, scale_outline_m=json.loads(Path(args.scale_outline).read_text(encoding='utf-8-sig')) if args.scale_outline else None)
+            result = _local_module('cad').plot_layout_native(args.path, args.output_directory, args.fixture_ids, scale_denominator=args.scale_denominator, paper=args.paper, scale_outline_m=json.loads(Path(args.scale_outline).read_text(encoding='utf-8-sig')) if args.scale_outline else None)
         elif args.command == 'layout-verify-native':
             result = _local_module('cad').verify_layout_native(args.path, args.output_directory, args.executable)
         elif args.command == 'room-addition-verify':

@@ -48,6 +48,13 @@ def _write_layout_dxf(spec, output, layout):
     target = Path(output).resolve()
     if target.suffix.lower() != '.dxf' or target.exists():
         raise ValueError('Choose a new .dxf output path')
+    annotations=spec.get('annotations', {})
+    if not isinstance(annotations,dict) or set(annotations)-{'fixture_height_m','note_height_m'}:
+        raise ValueError('Unsupported drawing annotations')
+    label_height=annotations.get('fixture_height_m',.12)
+    note_height=annotations.get('note_height_m',.18)
+    if any(type(v) not in (int,float) or not math.isfinite(v) or not .02<=v<=2 for v in (label_height,note_height)):
+        raise ValueError('Drawing text heights must be finite metres between 0.02 and 2')
     doc = ezdxf.new('R2018')
     doc.units = 6  # metres, matching shared layout coordinates
     doc.styles.get('Standard').dxf.font = 'arial.ttf'
@@ -61,7 +68,7 @@ def _write_layout_dxf(spec, output, layout):
     symbol = doc.blocks.new('DIALUX_AGENT_PANEL')
     symbol.add_lwpolyline([(-width/2,-depth/2),(width/2,-depth/2),(width/2,depth/2),(-width/2,depth/2)], close=True)
     symbol.add_line((-width/2,-depth/2),(width/2,depth/2))
-    symbol.add_attdef('FIXTURE_ID', (0,-depth/2-.18), height=.12)
+    symbol.add_attdef('FIXTURE_ID', (0,-depth/2-label_height*1.5), height=label_height)
     handles = {}
     for fixture in layout['fixtures']:
         x, y, z = fixture['position_m']
@@ -82,7 +89,7 @@ def _write_layout_dxf(spec, output, layout):
         notes += ['Native observation snapshot SHA256:', layout['observations_sha256'][:32],
                   layout['observations_sha256'][32:], 'Product and envelope dimensions: supplied assumptions']
     for index, text in enumerate(notes):
-        model.add_text(text, dxfattribs={'height':.18,'layer':'NOTES','insert':(tx,ty-index*.4)})
+        model.add_text(text, dxfattribs={'height':note_height,'layer':'NOTES','insert':(tx,ty-index*note_height*20/9)})
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open('x', encoding='utf-8') as stream:
         doc.write(stream)
@@ -224,8 +231,8 @@ def verify_layout_native(path: str, output_directory: str,
 
 def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: list[str],
                        executable: str = 'C:/Program Files/Autodesk/AutoCAD 2027/accoreconsole.exe',
-                       scale_denominator: int | None = None, scale_outline_m: list | None = None) -> dict:
-    """Plot a copied agent test DWG to A3 PDF with text and rendered-content checks.
+                       scale_denominator: int | None = None, scale_outline_m: list | None = None, paper: str = 'A3') -> dict:
+    """Plot a copied agent test DWG to an explicit ISO landscape PDF with text and rendered-content checks.
 
     Defaults to fit-to-page. Optional fixed scale requires an explicit metre
     outline and verifies its PDF vector dimensions; copied drawing must use metres.
@@ -248,6 +255,10 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
         else:
             from layout import polygon
         polygon(scale_outline_m, 'scale reference outline')
+    papers={'A3':(420,297),'A2':(594,420),'A1':(841,594),'A0':(1189,841)}
+    if not isinstance(paper,str) or paper not in papers:
+        raise ValueError('Supported landscape paper sizes: A3, A2, A1, A0')
+    paper_width,paper_height=papers[paper]
     source = Path(path).resolve(strict=True)
     core = Path(executable).resolve(strict=True)
     destination = Path(output_directory).resolve()
@@ -261,7 +272,7 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
     shutil.copy2(source, copied)
     output = destination / 'layout.pdf'
     script = destination / 'plot.scr'
-    arguments = ['_.-PLOT', '_Y', 'Model', 'DWG To PDF.pc3', 'ISO A3 (420.00 x 297.00 MM)',
+    arguments = ['_.-PLOT', '_Y', 'Model', 'DWG To PDF.pc3', f'ISO {paper} ({paper_width:.2f} x {paper_height:.2f} MM)',
                  '_M', '_L', '_N', '_E', f'1000={scale_denominator}' if scale_denominator else '_F', '_C', '_Y', 'monochrome.ctb', '_Y', '_A',
                  output.as_posix(), '_N', '_Y']
     preparation = ''
@@ -270,7 +281,7 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
             '(setq daScaleNotes (ssget "_X" (list (cons 0 "TEXT") (cons 1 "Plot scale: fit to page (not to scale)"))))\n'
             '(if (or (null daScaleNotes) (/= (sslength daScaleNotes) 1)) (error "Expected one original scale note"))\n'
             '(setq daScaleEntity (ssname daScaleNotes 0) daScaleData (entget daScaleEntity))\n'
-            f'(entmod (subst (cons 1 "Plot scale: 1:{scale_denominator} at A3 (print 100%)") (assoc 1 daScaleData) daScaleData))\n')
+            f'(entmod (subst (cons 1 "Plot scale: 1:{scale_denominator} at {paper} (print 100%)") (assoc 1 daScaleData) daScaleData))\n')
     script.write_text('(setvar "FILEDIA" 0)\n(setvar "BACKGROUNDPLOT" 0)\n' + preparation
                       + '(command ' + ' '.join(json.dumps(a) for a in arguments) + ')\n'
                       + '(princ "NATIVE_PLOT_COMPLETE")\n(princ)\n', encoding='ascii')
@@ -294,11 +305,11 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
         ids = re.findall(r'\bL\d+\b', text)
         if sorted(ids) != sorted(expected_fixture_ids) or 'SYNTHETIC TOOL TEST' not in text or 'NOT FOR SUBMISSION' not in text:
             raise ValueError('Expected plot labels/fixture IDs missing or duplicated; inspect PDF')
-        if abs(page.width - 1190.55) > 2 or abs(page.height - 841.89) > 2:
+        if abs(page.width - paper_width*72/25.4) > 2 or abs(page.height - paper_height*72/25.4) > 2:
             raise ValueError('Unexpected PDF paper dimensions')
         scale_evidence = None
         if scale_denominator:
-            scale_evidence = verify_pdf_outline_scale(page.curves, scale_outline_m, scale_denominator)
+            scale_evidence = verify_pdf_outline_scale(page.curves + page.rects, scale_outline_m, scale_denominator)
             if f'1:{scale_denominator}' not in text or 'not to scale' in text:
                 raise ValueError('Fixed scale annotation missing or contradictory')
         rendered = page.to_image(resolution=120, antialias=True).original.convert('RGB')
@@ -308,7 +319,7 @@ def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: l
         rendered.save(destination / 'preview.png')
         evidence = {'schema': 'dialux-agent/native-plot/v1', 'source': str(source), 'source_sha256': digest,
                     'original_unchanged': True, 'pdf': str(output), 'pdf_sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
-                    'pages': 1, 'fixture_ids': ids, 'text_labels_verified': True, 'rendered_content_bounds_px': bounds,
+                    'pages': 1, 'paper':paper, 'paper_size_mm':[paper_width,paper_height], 'fixture_ids': ids, 'text_labels_verified': True, 'rendered_content_bounds_px': bounds,
                     'preview': str(destination / 'preview.png'), 'plot_scale': f'1:{scale_denominator}' if scale_denominator else 'fit_to_page',
                     'scale_evidence': scale_evidence,
                     'visual_review_verified': False, 'warning': 'Synthetic tool-test plot; visual review and engineering drawing acceptance are separate.'}
@@ -362,7 +373,9 @@ def verify_pdf_outline_scale(curves: list, outline_m: list, denominator: int) ->
     matches=[]
     for index,curve in enumerate(curves):
         if any(command[0] not in {'m','l','h'} for command in curve.get('path',[])): continue
-        points=curve.get('pts',[])
+        points=list(curve.get('pts',[]))
+        if curve.get('object_type')=='rect' and len(points)==4:
+            points.append(points[0])
         if len(points)!=len(outline)+1: continue
         if any(not math.isfinite(v) for point in points for v in point): continue
         if max(abs(a-b) for a,b in zip(points[0],points[-1]))>.25: continue
@@ -373,7 +386,7 @@ def verify_pdf_outline_scale(curves: list, outline_m: list, denominator: int) ->
                 rotated=direction[offset:]+direction[:offset]
                 errors.append(max(abs(a-b) for p,q in zip(expected,rotated) for a,b in zip(p,q)))
         error=min(errors)
-        if error<=.25: matches.append({'pdf_curve_index':index,'maximum_coordinate_error_pt':error})
+        if error<=.25: matches.append({'pdf_curve_index':index,'pdf_object_type':curve.get('object_type','curve'),'maximum_coordinate_error_pt':error})
     if len(matches)!=1:
         raise ValueError('Expected one PDF outline at the requested physical scale; found '+str(len(matches)))
     return {**matches[0],'verified':True,'denominator':denominator,'pdf_points_per_model_metre':factor,

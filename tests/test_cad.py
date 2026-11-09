@@ -144,3 +144,34 @@ def test_pdf_scale_matches_geometry_not_annotation():
 def test_bad_fixed_scale_rejected_before_source_access(denominator,outline):
     with pytest.raises(ValueError):
         plot_layout_native('missing.dwg','missing',['L0001'],scale_denominator=denominator,scale_outline_m=outline)
+
+@pytest.mark.parametrize('paper',['A4','A1\n_Y',None,1])
+def test_bad_plot_paper_rejected_before_source_access(paper):
+    with pytest.raises(ValueError,match='paper sizes'):
+        plot_layout_native('missing.dwg','missing',['L0001'],paper=paper)
+
+
+def test_drawing_annotation_sizes_are_explicit_and_preserved(tmp_path):
+    spec=json.loads((Path(__file__).resolve().parents[1]/'examples/synthetic-grid-layout.json').read_text())
+    spec['annotations']={'fixture_height_m':.25,'note_height_m':.35}
+    target=tmp_path/'large-labels.dxf'
+    export_layout_dxf(spec,str(target))
+    doc=ezdxf.readfile(target)
+    assert all(e.dxf.height==.25 for block in doc.modelspace().query('INSERT') for e in block.attribs)
+    assert all(e.dxf.height==.35 for e in doc.modelspace().query('TEXT[layer=="NOTES"]'))
+    spec['annotations']['fixture_height_m']=float('nan')
+    with pytest.raises(ValueError):
+        export_layout_dxf(spec,str(tmp_path/'invalid.dxf'))
+    assert not (tmp_path/'invalid.dxf').exists()
+
+
+
+def test_pdf_rectangle_path_uses_implicit_closure():
+    from cad import verify_pdf_outline_scale
+    factor=1000/100*72/25.4
+    points=[(0,0),(30*factor,0),(30*factor,34*factor),(0,34*factor)]
+    rect={'object_type':'rect','pts':points,'path':[('m',points[0])]+[('l',p) for p in points[1:]]+[('h',)]}
+    assert verify_pdf_outline_scale([rect],[[0,0],[30,0],[30,34],[0,34]],100)['pdf_object_type']=='rect'
+    with pytest.raises(ValueError): verify_pdf_outline_scale([rect],[[0,0],[30,0],[30,34],[0,34]],200)
+    rect['object_type']='curve'
+    with pytest.raises(ValueError): verify_pdf_outline_scale([rect],[[0,0],[30,0],[30,34],[0,34]],100)
