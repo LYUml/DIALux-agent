@@ -63,4 +63,4 @@ into a guarded native apply command.
 
 The caller must durably record `pending_field` before any write. A write or verification failure retains that pending intent; the helper does not claim no mutation or automatically retry. The native adapter must guard selected runtime identity, set the numeric value and move focus to the supplied known field. Full individual-fixture readback, save/reopen and calculation remain separate obligations.
 
-Fourteen tests cover commit ordering, no-op handling, stale initial values, unintended count/name/coordinate changes, nonfinite/boolean/invalid values and failed intent persistence. This internal module is **not yet connected to a public desktop operation** and does not add a native bulk acceptance claim.
+Fourteen tests cover commit ordering, no-op handling, stale initial values, unintended count/name/coordinate changes, nonfinite/boolean/invalid values and failed intent persistence. This internal module is now connected to the experimental [guarded array executor](guarded-array-execution.md). Native acceptance of the combined executor remains separate from these field-commit tests.

@@ -58,6 +58,7 @@ def verify(manifest):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
+    commands.add_parser('layout-apply-array').add_argument('--request', required=True)
     commands.add_parser('schedule-build').add_argument('--request', required=True)
     commands.add_parser('schedule-build-mixed').add_argument('--request', required=True)
     commands.add_parser('drawing-export-scheduled').add_argument('--request', required=True)
@@ -225,6 +226,8 @@ def main():
             result = _local_module('verification').verify_room_addition(**evidence)
         elif args.command == 'layout-verify-observed':
             result = _local_module('layout').verify_observed_layout(json.loads(Path(args.layout).read_text(encoding='utf-8')), json.loads(Path(args.observed).read_text(encoding='utf-8')))
+        elif args.command == 'layout-apply-array':
+            result = _local_module('desktop').apply_array_transform(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'layout-apply-grid':
             result = _local_module('placement').apply_grid_layout(json.loads(Path(args.spec).read_text(encoding='utf-8')), args.expected_project, args.group_id, args.evidence_directory)
         elif args.command == 'report-read-all':

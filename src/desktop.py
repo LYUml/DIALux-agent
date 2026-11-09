@@ -25,7 +25,7 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--parameters', json.dumps(parameters, allow_nan=False)]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=7200 if action == 'apply-grid' else 3600 if action == 'inspect-group' else 120 if action == 'arrange-room' else 75 if action in {'edit-fixture', 'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
+                             timeout=7200 if action in {'apply-grid','apply-array'} else 3600 if action == 'inspect-group' else 120 if action == 'arrange-room' else 75 if action in {'edit-fixture', 'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
@@ -190,3 +190,12 @@ def desktop_arrange_room(expected_project: str, room_name: str, group_name: str,
 def desktop_read_furniture(expected_project: str, tree_item_id: str) -> dict:
     """Read exact native furniture identity, reference position and dimensions."""
     return _run('read-furniture', expected_project, parameters={'tree_item_id':tree_item_id})
+
+
+def apply_array_transform(expected_project: str, spec: dict, group_id: str, evidence_directory: str) -> dict:
+    """Journal a rigid array transform with full before/after group inspection.
+
+    Leaves the verified geometry unsaved; calculation and persistence are separate.
+    Failure may leave partial edits. Inspect evidence and live state; never retry blindly.
+    """
+    return _run('apply-array', expected_project, parameters={'spec':spec,'group_id':group_id,'evidence_directory':evidence_directory})
