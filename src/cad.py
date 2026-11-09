@@ -5,8 +5,78 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import math
 
 import ezdxf
+
+
+def export_layout_dxf(spec: dict, output: str, layout: dict | None = None) -> dict:
+    """Export the shared planned fixtures as editable CAD blocks, with ID readback.
+
+    This exports a generic tool-test drawing, not a submission sheet or a
+    photometrically verified design. The original architectural DWG is untouched.
+    """
+    if __package__:
+        from .layout import plan_grid
+    else:
+        from layout import plan_grid
+    expected = plan_grid(spec)
+    if layout is None:
+        layout = expected
+    if layout != expected:
+        raise ValueError('Layout does not match the supplied specification; regenerate or review the plan')
+    target = Path(output).resolve()
+    if target.suffix.lower() != '.dxf' or target.exists():
+        raise ValueError('Choose a new .dxf output path')
+    doc = ezdxf.new('R2018')
+    doc.units = 6  # metres, matching shared layout coordinates
+    for layer, color in [('ROOM', 7), ('KEEP_OUT', 1), ('LUMINAIRES', 3), ('LABELS', 7), ('NOTES', 7)]:
+        doc.layers.new(layer, dxfattribs={'color': color})
+    model = doc.modelspace()
+    model.add_lwpolyline(spec['contour'], close=True, dxfattribs={'layer': 'ROOM'})
+    for region in spec.get('exclusions', []):
+        model.add_lwpolyline(region, close=True, dxfattribs={'layer': 'KEEP_OUT'})
+    width, depth = spec['fixture']['width_m'], spec['fixture']['depth_m']
+    symbol = doc.blocks.new('DIALUX_AGENT_PANEL')
+    symbol.add_lwpolyline([(-width/2,-depth/2),(width/2,-depth/2),(width/2,depth/2),(-width/2,depth/2)], close=True)
+    symbol.add_line((-width/2,-depth/2),(width/2,depth/2))
+    symbol.add_attdef('FIXTURE_ID', (0,-depth/2-.18), height=.12)
+    handles = {}
+    for fixture in layout['fixtures']:
+        x, y, z = fixture['position_m']
+        insert = model.add_blockref(symbol.name, (x,y,0), dxfattribs={'layer':'LUMINAIRES','rotation':fixture['rotation_deg']})
+        insert.add_auto_attribs({'FIXTURE_ID':fixture['id']})
+        handles[fixture['id']] = insert.dxf.handle
+    xs, ys = zip(*spec['contour'])
+    tx, ty = max(xs)+1, max(ys)
+    notes = ['DIALux-agent | SYNTHETIC TOOL TEST', 'NOT FOR SUBMISSION OR CONSTRUCTION',
+             f"Fixtures: {layout['fixture_count']} | Units: metres",
+             f"Product: {spec['fixture']['product_id']}",
+             f"Mounting height: {spec['fixture']['mounting_height_m']} m",
+             'Green blocks: fixtures; red: placement keep-out',
+             'No simulated performance or compliance claimed',
+             'Specification SHA256:', layout['input_sha256']]
+    for index, text in enumerate(notes):
+        model.add_text(text, dxfattribs={'height':.18,'layer':'NOTES','insert':(tx,ty-index*.4)})
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open('x', encoding='utf-8') as stream:
+        doc.write(stream)
+    reopened = ezdxf.readfile(target)
+    inserts = list(reopened.modelspace().query('INSERT[layer=="LUMINAIRES"]'))
+    by_id = {e.get_attrib_text('FIXTURE_ID'): e for e in inserts}
+    if len(by_id) != len(inserts) or set(by_id) != set(handles) or reopened.units != 6:
+        raise ValueError('Exported CAD identity/count/units readback failed')
+    for fixture in layout['fixtures']:
+        entity = by_id[fixture['id']]
+        if any(not math.isclose(a,b,abs_tol=1e-9) for a,b in zip(tuple(entity.dxf.insert)[:2],fixture['position_m'][:2])):
+            raise ValueError('Exported CAD position readback failed')
+        if not math.isclose(entity.dxf.rotation,fixture['rotation_deg'],abs_tol=1e-9):
+            raise ValueError('Exported CAD rotation readback failed')
+    return {'schema':'dialux-agent/layout-cad/v1','path':str(target),'fixture_count':len(inserts),
+            'fixture_handles':handles,'input_sha256':layout['input_sha256'],
+            'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),
+            'dxf_readback_verified':True,'native_dwg_verified':False,'print_verified':False,
+            'warnings':['Synthetic tool-test drawing only. Native AutoCAD opening and plotting remain separate verification gates.']}
 
 
 def drawing_convert(path: str, output_directory: str,

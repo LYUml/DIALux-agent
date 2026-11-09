@@ -2,7 +2,7 @@
 from mcp.server.mcpserver import MCPServer
 if __package__:
     from .layout import plan_grid
-    from .cad import drawing_convert, drawing_inspect
+    from .cad import drawing_convert, drawing_inspect, export_layout_dxf
     from .backend import create_room, inspect_stf
     from .dialux_agent import inventory, verify
     from .regulations import evaluate_profile
@@ -11,7 +11,7 @@ if __package__:
     from .desktop import desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 else:
     from layout import plan_grid
-    from cad import drawing_convert, drawing_inspect
+    from cad import drawing_convert, drawing_inspect, export_layout_dxf
     from backend import create_room, inspect_stf
     from dialux_agent import inventory, verify
     from regulations import evaluate_profile
@@ -24,6 +24,7 @@ server.tool()(create_room)
 server.tool()(plan_grid)
 server.tool()(drawing_convert)
 server.tool()(drawing_inspect)
+server.tool()(export_layout_dxf)
 server.tool()(inspect_stf)
 server.tool()(inventory)
 server.tool()(verify)

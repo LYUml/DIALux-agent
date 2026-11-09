@@ -20,4 +20,4 @@ The original assignment DWG was copied into ignored local survey directories and
 
 Observed source metadata: INSUNITS=4 (millimetres); 2829 lightweight polylines, 889 lines, 146 arcs, 29 texts and one insert. The `Ceiling Grid` layer contains 2786 closed straight four-vertex candidates, each with 600 × 600 drawing-unit extents. The text annotation states office area 1022 m². Neither the annotation nor the grid inventory has been adopted as a verified room boundary or design area. No assignment lighting layout has been created.
 
-Current CAD commands only support survey and inventory. A DXF export or entity count does not prove visual fidelity, a valid room polygon, or correct print output. Those gates remain tool-development work using generic test fixtures.
+CAD commands support survey, inventory and synthetic layout DXF export with fixture identity/position/rotation readback. A DXF export or entity count does not prove native visual fidelity or correct print output. Those gates remain tool-development work using generic test fixtures.

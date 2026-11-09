@@ -5,7 +5,10 @@ import ezdxf
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-from cad import drawing_convert, drawing_inspect
+from cad import drawing_convert, drawing_inspect, export_layout_dxf
+from layout import plan_grid
+import json
+import copy
 
 
 def test_survey_keeps_units_handles_and_does_not_promote_grid_to_boundary(tmp_path):
@@ -37,3 +40,33 @@ def test_native_conversion_preserves_existing_destination(tmp_path):
         drawing_convert(str(source), str(target), str(core))
     assert source.read_bytes() == b'fixture'
     assert list(target.iterdir()) == []
+
+
+def test_layout_export_preserves_fixture_identity_geometry_and_test_label(tmp_path):
+    spec = json.loads((Path(__file__).resolve().parents[1] / 'examples/synthetic-grid-layout.json').read_text())
+    spec['grid']['rotation_deg'] = 30
+    layout = plan_grid(spec)
+    target = tmp_path / 'layout.dxf'
+    result = export_layout_dxf(spec, str(target), layout)
+    doc = ezdxf.readfile(target)
+    inserts = {e.get_attrib_text('FIXTURE_ID'): e for e in doc.modelspace().query('INSERT')}
+    assert len(inserts) == layout['fixture_count'] > 0
+    assert doc.units == 6
+    for fixture in layout['fixtures']:
+        entity = inserts[fixture['id']]
+        assert tuple(entity.dxf.insert)[:2] == pytest.approx(fixture['position_m'][:2])
+        assert entity.dxf.rotation == pytest.approx(30)
+        assert entity.dxf.handle == result['fixture_handles'][fixture['id']]
+    assert any('NOT FOR SUBMISSION' in e.dxf.text for e in doc.modelspace().query('TEXT'))
+    assert result['dxf_readback_verified']
+    assert not result['native_dwg_verified']
+    assert not result['print_verified']
+    before = target.read_bytes()
+    with pytest.raises(ValueError, match='new .dxf'):
+        export_layout_dxf(spec, str(target), layout)
+    assert target.read_bytes() == before
+    changed = copy.deepcopy(layout)
+    changed['fixtures'][0]['position_m'][0] += 1
+    with pytest.raises(ValueError, match='does not match'):
+        export_layout_dxf(spec, str(tmp_path / 'changed.dxf'), changed)
+    assert not (tmp_path / 'changed.dxf').exists()
