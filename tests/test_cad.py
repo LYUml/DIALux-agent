@@ -5,7 +5,7 @@ import ezdxf
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-from cad import drawing_convert, drawing_inspect, export_layout_dxf, _fixture_records
+from cad import drawing_convert, drawing_inspect, export_layout_dxf, _fixture_records, plot_layout_native
 from layout import plan_grid
 import json
 import copy
@@ -53,6 +53,7 @@ def test_layout_export_preserves_fixture_identity_geometry_and_test_label(tmp_pa
     inserts = {e.get_attrib_text('FIXTURE_ID'): e for e in doc.modelspace().query('INSERT')}
     assert len(inserts) == layout['fixture_count'] > 0
     assert doc.units == 6
+    assert doc.styles.get('Standard').dxf.font == 'arial.ttf'
     for fixture in layout['fixtures']:
         entity = inserts[fixture['id']]
         assert tuple(entity.dxf.insert)[:2] == pytest.approx(fixture['position_m'][:2])
@@ -101,3 +102,21 @@ def test_native_timeout_preserves_partial_console_evidence(tmp_path, monkeypatch
     assert (target / 'console.log').read_text() == 'Startup stalled'
     assert not (target / 'manifest.json').exists()
     assert source.read_bytes() == b'fixture'
+
+
+def test_native_plot_preserves_existing_output_directory(tmp_path, monkeypatch):
+    source = tmp_path / 'input.dwg'; source.write_bytes(b'preserve')
+    core = tmp_path / 'accoreconsole.exe'; core.write_bytes(b'fixture')
+    target = tmp_path / 'plot'; target.mkdir()
+    (target/'layout.pdf').write_bytes(b'preserve output')
+    monkeypatch.setattr(subprocess, 'run', lambda *a, **k: pytest.fail('Native process started'))
+    with pytest.raises(ValueError, match='new ASCII'):
+        plot_layout_native(str(source), str(target), ['L0001'], str(core))
+    assert source.read_bytes() == b'preserve'
+    assert (target/'layout.pdf').read_bytes() == b'preserve output'
+
+
+@pytest.mark.parametrize('ids', [[], ['L0001','L0001'], ['L0001 extra'], [None]])
+def test_native_plot_requires_unambiguous_fixture_labels(ids):
+    with pytest.raises(ValueError, match='unique generated'):
+        plot_layout_native('nonexistent.dwg', 'nonexistent', ids)

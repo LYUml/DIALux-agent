@@ -3,7 +3,7 @@ from mcp.server.mcpserver import MCPServer
 if __package__:
     from .placement import apply_grid_layout
     from .layout import plan_grid, verify_observed_layout
-    from .cad import drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native
+    from .cad import drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native, plot_layout_native
     from .backend import create_room, inspect_stf
     from .dialux_agent import inventory, verify
     from .regulations import evaluate_profile
@@ -13,7 +13,7 @@ if __package__:
 else:
     from placement import apply_grid_layout
     from layout import plan_grid, verify_observed_layout
-    from cad import drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native
+    from cad import drawing_convert, drawing_inspect, export_layout_dxf, verify_layout_native, plot_layout_native
     from backend import create_room, inspect_stf
     from dialux_agent import inventory, verify
     from regulations import evaluate_profile
@@ -30,6 +30,7 @@ server.tool()(drawing_convert)
 server.tool()(drawing_inspect)
 server.tool()(export_layout_dxf)
 server.tool()(verify_layout_native)
+server.tool()(plot_layout_native)
 server.tool()(inspect_stf)
 server.tool()(inventory)
 server.tool()(verify)

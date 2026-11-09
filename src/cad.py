@@ -30,6 +30,7 @@ def export_layout_dxf(spec: dict, output: str, layout: dict | None = None) -> di
         raise ValueError('Choose a new .dxf output path')
     doc = ezdxf.new('R2018')
     doc.units = 6  # metres, matching shared layout coordinates
+    doc.styles.get('Standard').dxf.font = 'arial.ttf'
     for layer, color in [('ROOM', 7), ('KEEP_OUT', 1), ('LUMINAIRES', 3), ('LABELS', 7), ('NOTES', 7)]:
         doc.layers.new(layer, dxfattribs={'color': color})
     model = doc.modelspace()
@@ -53,9 +54,10 @@ def export_layout_dxf(spec: dict, output: str, layout: dict | None = None) -> di
              f"Fixtures: {layout['fixture_count']} | Units: metres",
              f"Product: {spec['fixture']['product_id']}",
              f"Mounting height: {spec['fixture']['mounting_height_m']} m",
-             'Green blocks: fixtures; red: placement keep-out',
+             'Plot scale: fit to page (not to scale)',
+             'LUMINAIRES: fixtures; KEEP_OUT: no placement',
              'No simulated performance or compliance claimed',
-             'Specification SHA256:', layout['input_sha256']]
+             'Specification SHA256:', layout['input_sha256'][:32], layout['input_sha256'][32:]]
     for index, text in enumerate(notes):
         model.add_text(text, dxfattribs={'height':.18,'layer':'NOTES','insert':(tx,ty-index*.4)})
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -193,6 +195,75 @@ def verify_layout_native(path: str, output_directory: str,
                 'fixture_count': len(after), 'fixture_records_verified': True,
                 'native_reopen_verified': True, 'block_shapes_verified': False,
                 'print_verified': False, 'reopen_evidence': reopened}
+    (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
+    return evidence
+
+
+def plot_layout_native(path: str, output_directory: str, expected_fixture_ids: list[str],
+                       executable: str = 'C:/Program Files/Autodesk/AutoCAD 2027/accoreconsole.exe') -> dict:
+    """Plot a copied agent test DWG to A3 PDF with text and rendered-content checks.
+
+    Fit-to-page is not an engineering scale. Visual review remains separate.
+    Requires generated test labels and the caller's expected fixture IDs.
+    """
+    import re
+    import pdfplumber
+    from PIL import ImageChops, Image
+    if (not isinstance(expected_fixture_ids, list) or not expected_fixture_ids
+            or any(not isinstance(i, str) or not re.fullmatch(r'L\d+', i) for i in expected_fixture_ids)
+            or len(set(expected_fixture_ids)) != len(expected_fixture_ids)):
+        raise ValueError('Expected unique generated fixture IDs')
+    source = Path(path).resolve(strict=True)
+    core = Path(executable).resolve(strict=True)
+    destination = Path(output_directory).resolve()
+    if source.suffix.lower() != '.dwg' or core.name.lower() != 'accoreconsole.exe':
+        raise ValueError('Expected DWG and installed accoreconsole.exe')
+    if destination.exists() or not str(destination).isascii():
+        raise ValueError('Choose a new ASCII output directory')
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    destination.mkdir(parents=True)
+    copied = destination / 'input.dwg'
+    shutil.copy2(source, copied)
+    output = destination / 'layout.pdf'
+    script = destination / 'plot.scr'
+    arguments = ['_.-PLOT', '_Y', 'Model', 'DWG To PDF.pc3', 'ISO A3 (420.00 x 297.00 MM)',
+                 '_M', '_L', '_N', '_E', '_F', '_C', '_Y', 'monochrome.ctb', '_Y', '_A',
+                 output.as_posix(), '_N', '_Y']
+    script.write_text('(setvar "FILEDIA" 0)\n(setvar "BACKGROUNDPLOT" 0)\n'
+                      + '(command ' + ' '.join(json.dumps(a) for a in arguments) + ')\n'
+                      + '(princ "NATIVE_PLOT_COMPLETE")\n(princ)\n', encoding='ascii')
+    try:
+        result = subprocess.run([str(core), '/i', str(copied), '/s', str(script), '/product', 'ACAD', '/l', 'en-US'],
+                                capture_output=True, timeout=90, cwd=destination)
+    except subprocess.TimeoutExpired as exc:
+        (destination / 'console.log').write_text((exc.stdout or b'').decode('utf-16le', errors='replace'), encoding='utf-8')
+        raise ValueError('Native plot timed out; inspect output before retry') from exc
+    log = result.stdout.decode('utf-16le', errors='replace')
+    (destination / 'console.log').write_text(log, encoding='utf-8')
+    if result.returncode or '; error:' in log.lower() or 'NATIVE_PLOT_COMPLETE' not in log or not output.is_file():
+        raise ValueError('Native plotting failed; inspect console.log')
+    if hashlib.sha256(source.read_bytes()).hexdigest() != digest:
+        raise ValueError('Original DWG changed')
+    with pdfplumber.open(output) as pdf:
+        if len(pdf.pages) != 1:
+            raise ValueError('Expected one plotted page')
+        page = pdf.pages[0]
+        text = page.extract_text() or ''
+        ids = re.findall(r'\bL\d+\b', text)
+        if sorted(ids) != sorted(expected_fixture_ids) or 'SYNTHETIC TOOL TEST' not in text or 'NOT FOR SUBMISSION' not in text:
+            raise ValueError('Expected plot labels/fixture IDs missing or duplicated; inspect PDF')
+        if abs(page.width - 1190.55) > 2 or abs(page.height - 841.89) > 2:
+            raise ValueError('Unexpected PDF paper dimensions')
+        rendered = page.to_image(resolution=120, antialias=True).original.convert('RGB')
+        bounds = ImageChops.difference(rendered, Image.new('RGB', rendered.size, 'white')).convert('L').point(lambda v: 255 if v > 20 else 0).getbbox()
+        if not bounds or bounds[0] < 5 or bounds[1] < 5 or bounds[2] > rendered.width-5 or bounds[3] > rendered.height-5:
+            raise ValueError('Blank plot or content touches paper edge; inspect PDF')
+        rendered.save(destination / 'preview.png')
+        evidence = {'schema': 'dialux-agent/native-plot/v1', 'source': str(source), 'source_sha256': digest,
+                    'original_unchanged': True, 'pdf': str(output), 'pdf_sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
+                    'pages': 1, 'fixture_ids': ids, 'text_labels_verified': True, 'rendered_content_bounds_px': bounds,
+                    'preview': str(destination / 'preview.png'), 'plot_scale': 'fit_to_page',
+                    'visual_review_verified': False, 'warning': 'Synthetic tool-test plot; visual review and engineering drawing acceptance are separate.'}
     (destination / 'manifest.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
     return evidence
 

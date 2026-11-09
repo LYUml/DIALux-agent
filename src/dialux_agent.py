@@ -78,6 +78,10 @@ def main():
     layout_export.add_argument('--spec', required=True)
     layout_export.add_argument('--layout')
     layout_export.add_argument('--output', required=True)
+    native_plot = commands.add_parser('layout-plot-native')
+    native_plot.add_argument('--path', required=True)
+    native_plot.add_argument('--output-directory', required=True)
+    native_plot.add_argument('--fixture-ids', nargs='+', required=True)
     native_layout = commands.add_parser('layout-verify-native')
     native_layout.add_argument('--path', required=True)
     native_layout.add_argument('--output-directory', required=True)
@@ -142,6 +146,8 @@ def main():
             spec = json.loads(Path(args.spec).read_text(encoding='utf-8'))
             layout = json.loads(Path(args.layout).read_text(encoding='utf-8')) if args.layout else None
             result = _local_module('cad').export_layout_dxf(spec, args.output, layout)
+        elif args.command == 'layout-plot-native':
+            result = _local_module('cad').plot_layout_native(args.path, args.output_directory, args.fixture_ids)
         elif args.command == 'layout-verify-native':
             result = _local_module('cad').verify_layout_native(args.path, args.output_directory, args.executable)
         elif args.command == 'layout-verify-observed':
