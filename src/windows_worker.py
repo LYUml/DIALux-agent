@@ -1011,6 +1011,13 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
         except ValueError as exc:
             raise ValueError(f'Fixture {stage}; field={key}; runtime_id={runtime}; '
                              f'completed_axes={completed_axes}; inspect native state before retry: {exc}') from exc
+    def read_position(stage):
+        try:
+            values = read_edit_values(main,fields)
+            return [float(values[key]) for key in fields]
+        except ValueError as exc:
+            raise ValueError(f'Fixture {stage}; runtime_id={runtime}; completed_axes={completed_axes}; '
+                             f'inspect native state before retry: {exc}') from exc
     def select_and_read():
         unique_control(main, 'TabItem', 'ProjectTreeTool').select()
         tree = wait_control(main, 'List', 'FilterTreeListBox')
@@ -1065,14 +1072,14 @@ def edit_fixture(app, main, process, expected_project, parameters, _elements=Non
             item = selected_item[0]
             if list(item.element_info.runtime_id) != runtime or not item.is_selected():
                 raise ValueError('Fixture selection changed during movement reminder')
-            observed = [float(field_control(field,'after_reminder').get_value()) for field in fields]
+            observed = read_position('after_reminder')
             if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(observed, committed)):
                 raise ValueError('Partial movement differs after reminder; inspect before retry')
-        observed = [float(field_control(field,'after_axis').get_value()) for field in fields]
+        observed = read_position('after_axis')
         if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(observed, committed)):
             raise ValueError(f'Fixture coordinates changed after axis commit; expected={committed}; '
                              f'observed={observed}; completed_axes={completed_axes}; inspect before retry')
-    after = [float(field_control(key,'final_readback').get_value()) for key in fields]
+    after = read_position('final_readback')
     if any(not math.isclose(a,b,rel_tol=0,abs_tol=.00051) for a,b in zip(after, parameters['position_m'])):
         raise ValueError(f'Fixture movement readback differs; expected={parameters["position_m"]}; '
                          f'observed={after}; completed_axes={completed_axes}; partial movement possible')

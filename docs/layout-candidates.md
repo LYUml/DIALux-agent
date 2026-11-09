@@ -234,3 +234,16 @@ retry, result fabrication or numerical tolerance relaxation was introduced.
 changes to an untouched axis and prohibition of keyboard commit navigation.
 A complete six-fixture placement using the public interface is in progress in
 `local/numeric-focus-layout-run-v1`; full native recovery acceptance is pending.
+
+The explicit-focus six-fixture placement worker exited successfully with all six
+positions/rotations matched (`local/numeric-focus-layout-run-v1/journal.json`).
+Five fixtures required no write; the sixth was corrected and the entire group
+was read again. Actual calculation and save/reopen comparison are now running
+separately; geometry success alone is not persistence or simulation acceptance.
+The full suite before the subsequent readback batching change passed 398 tests.
+
+Post-commit XYZ checks now reuse `read_edit_values` to collect all three numeric
+fields in one UIA traversal, retaining unique visible runtime-control checks.
+This removes repeated full control-tree traversals without relaxing coordinate
+comparison or adding write retries. The 101 desktop/placement tests pass after
+this change. The already-running placement used the prior, unbatched version.

@@ -279,6 +279,7 @@ def test_movement_reminder_requires_identity_and_partial_coordinate_readback(mon
     monkeypatch.setattr(windows_worker,'prepare_project',prepare)
     monkeypatch.setattr(windows_worker,'unique_control',control)
     monkeypatch.setattr(windows_worker,'wait_control',control)
+    monkeypatch.setattr(windows_worker,'read_edit_values',lambda main,keys:{key:control(main,'Edit',key).get_value() for key in keys})
     monkeypatch.setattr(windows_worker,'container_elements',lambda *a:[SimpleNamespace(GetRuntimeId=lambda:[7,1,2])])
     monkeypatch.setattr(windows_worker,'materialize_tree_item',lambda *a:node)
     monkeypatch.setattr(windows_worker,'select_lighting_tool',lambda *a:None)
