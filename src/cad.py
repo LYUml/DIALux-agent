@@ -8,6 +8,7 @@ import subprocess
 import math
 
 import ezdxf
+from ezdxf import bbox
 
 if __package__:
     from .cad_schedule import schedule_records
@@ -108,7 +109,8 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
                             align=ezdxf.enums.TextEntityAlignment.MIDDLE_CENTER)
         handles[fixture['id']] = insert.dxf.handle
     xs, ys = zip(*spec['contour'])
-    tx, ty = max(xs)+1, max(ys)
+    geometry_bounds = bbox.extents(model,fast=False)
+    tx, ty = geometry_bounds.extmax.x+1, geometry_bounds.extmax.y
     notes = ['DIALux-agent | SYNTHETIC TOOL TEST', 'NOT FOR SUBMISSION OR CONSTRUCTION',
              f"Fixtures: {layout['fixture_count']} | Units: metres",
              f"Product: {spec['fixture']['product_id']}",
@@ -129,7 +131,8 @@ def _write_layout_dxf(spec, output, layout, schedule=None):
             from .cad_schedule import add_schedule_table
         else:
             from cad_schedule import add_schedule_table
-        add_schedule_table(doc, schedule, (min(xs), min(ys)-2), note_height)
+        annotated_bounds = bbox.extents(model,fast=False)
+        add_schedule_table(doc, schedule, (annotated_bounds.extmin.x, annotated_bounds.extmin.y-2), note_height)
     sheet = None
     if 'sheet' in spec:
         if __package__:

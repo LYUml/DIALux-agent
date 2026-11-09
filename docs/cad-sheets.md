@@ -67,3 +67,24 @@ This is CAD evidence, not a new DIALux placement or photometry acceptance.
 - PDF SHA256: `2fc15a23dc4f3dd668fcd1f9d7479e2f7fd0835490f600ef0cfa5417040f8e30`.
 - Native DWG SHA256: `b97113cd91a983fb2829abd7c434027356d1bf378e5c79091dd962fe997416c6`.
 - Maximum outline-coordinate error: 0.07371 pt.
+
+## Non-overlapping annotation regions
+
+Drawing notes now start to the right of the actual CAD geometry extents,
+including dimensions and fixture labels, rather than only the room contour.
+The schedule starts below the combined geometry/notes extents. This separates
+these three regions using ezdxf's existing bounding-box support; it is not a
+proof against collisions inside the geometry region or font changes after print.
+A regression uses dimensions far outside the room to verify region separation.
+34 CAD tests passed.
+
+A native combined gate used six observed fixtures, two linear dimensions,
+notes, a freshly PDF-linked schedule and the titleblock together. A3 1:50 was
+correctly refused before export because the content did not fit. Explicit A2
+1:50 passed native DWG reopening, all fixture/dimension/table/sheet comparisons,
+physical outline scale verification (error below 0.078 pt) and rendered visual
+inspection without region overlaps. Evidence: ignored
+`local/sheet-combined-evidence-v1.json`.
+PDF SHA256: `4890173df92f28e3ae223778498a550286a793e20bc1e91760f9ad28f32f46f2`.
+Native DWG SHA256: `77ef732cc6956b8e3a3db3e3ebe541e14b787f0fb0461f732d1868b590c7fa17`.
+The choice of a larger sheet was explicit, not an automatic scale adjustment.

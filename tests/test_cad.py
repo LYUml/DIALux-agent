@@ -184,3 +184,20 @@ def test_drawing_notes_reject_cad_escapes_before_output(tmp_path,product):
     with pytest.raises(ValueError,match='drawing notes'):
         export_layout_dxf(spec,str(output))
     assert not output.exists()
+
+def test_annotation_regions_clear_external_dimensions_and_notes(tmp_path):
+    from ezdxf import bbox
+    from src.cad import _write_layout_dxf
+    spec=json.loads((Path(__file__).parents[1]/'examples/synthetic-apply-grid.json').read_text())
+    spec['dimensions']=[dict(id='D1',p1_m=[0,0],p2_m=[0,4],base_m=[12,0],angle_deg=90),
+                        dict(id='D2',p1_m=[0,0],p2_m=[6,0],base_m=[0,-8],angle_deg=0)]
+    schedule={'quantity':4,'product':{'reported_label':'Test','article_number':'123','power_w':26.,'luminaire_flux_lm':3602.},
+              'total_reported_fixture_power_w':104.,'report_sha256':'a'*64,'source_layout_sha256':'b'*64}
+    output=tmp_path/'combined.dxf'
+    _write_layout_dxf(spec,str(output),plan_grid(spec),schedule=schedule)
+    model=ezdxf.readfile(output).modelspace()
+    body=bbox.extents([e for e in model if e.dxf.layer not in {'NOTES','SCHEDULE'}])
+    notes=bbox.extents([e for e in model if e.dxf.layer=='NOTES'])
+    table=bbox.extents([e for e in model if e.dxf.layer=='SCHEDULE'])
+    assert notes.extmin.x>body.extmax.x
+    assert table.extmax.y<min(body.extmin.y,notes.extmin.y)
