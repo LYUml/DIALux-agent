@@ -88,3 +88,49 @@ def test_persistent_reader_rejects_identity_change_before_selection(monkeypatch)
              'source_elements':{(7,1):SimpleNamespace(GetRuntimeId=lambda:[7,2],CurrentAutomationId='group_child')}}
     with pytest.raises(ValueError,match='Persistent fixture identity changed'):
         windows_worker.read_group_fixtures(None,None,None,'x.evo','group',_context=context)
+
+@pytest.fixture
+def completed_checkpoint(pages,tmp_path):
+    project,first,second=pages
+    responses=iter([first,second])
+    directory=tmp_path/'completed'
+    placement._inspect_group_checkpoint(str(project),'group',2,str(directory),page_reader=lambda *a,**k:next(responses))
+    plan={'schema':'dialux-agent/layout/v1','units':'m','coordinate_frame':'active_storey',
+          'fixture_count':2,'fixtures':[{'id':f'L{i}','position_m':position,'rotation_deg':0}
+                                      for i,position in enumerate(([1,2,3],[4,2,3]))]}
+    return directory,plan
+
+
+def test_offline_checkpoint_checks_every_page_and_geometry(completed_checkpoint):
+    from src.inspection import verify_group_checkpoint
+    directory,plan=completed_checkpoint
+    result=verify_group_checkpoint(str(directory),plan)
+    assert result['geometry']['matched_count']==2 and result['page_count']==2
+    assert not result['source_authenticity_verified']
+    plan['fixtures'][1]['position_m'][0]=8
+    with pytest.raises(ValueError,match='Unmatched'):
+        verify_group_checkpoint(str(directory),plan)
+
+
+@pytest.mark.parametrize('mutation',['page_bytes','assembly','state','offset','missing_page','duplicate','escape'])
+def test_offline_checkpoint_rejects_corrupted_or_inconsistent_evidence(completed_checkpoint,mutation):
+    from src.inspection import verify_group_checkpoint
+    import hashlib
+    directory,plan=completed_checkpoint
+    jp=directory/'journal.json';journal=json.loads(jp.read_text())
+    if mutation=='page_bytes':
+        page=directory/'page-0000.json';page.write_bytes(page.read_bytes()+b' ')
+    elif mutation=='assembly':
+        observed=directory/'observed.json';value=json.loads(observed.read_text());value['fixtures'][0]['position_m'][0]=9
+        observed.write_text(json.dumps(value));journal['observed_sha256']=hashlib.sha256(observed.read_bytes()).hexdigest()
+    elif mutation=='state': journal['state']='reading'
+    elif mutation=='offset': journal['pages'][1]['offset']=0
+    elif mutation=='missing_page': journal['pages'].pop()
+    elif mutation=='duplicate':
+        page=directory/'page-0001.json';value=json.loads(page.read_text());value['fixtures'][0]['runtime_id']=[7,1]
+        page.write_text(json.dumps(value));journal['pages'][1]['sha256']=hashlib.sha256(page.read_bytes()).hexdigest()
+    elif mutation=='escape':
+        outside=directory.parent/'page-0000.json';outside.write_bytes((directory/'page-0000.json').read_bytes())
+        journal['pages'][0]['path']=str(outside)
+    jp.write_text(json.dumps(journal))
+    with pytest.raises(ValueError): verify_group_checkpoint(str(directory),plan)

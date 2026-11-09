@@ -136,6 +136,9 @@ def main():
     boundary.add_argument('--request', required=True)
     observed_cad = commands.add_parser('drawing-export-observed')
     observed_cad.add_argument('--request', required=True)
+    scan_check = commands.add_parser('group-inspection-verify')
+    scan_check.add_argument('--evidence-directory', required=True)
+    scan_check.add_argument('--layout', required=True)
     scan = commands.add_parser('group-inspection-checkpoint')
     scan.add_argument('--expected-project', required=True)
     scan.add_argument('--group-id', required=True)
@@ -228,6 +231,8 @@ def main():
             result = _local_module('desktop').desktop_import_stf(args.path)
         elif args.command == 'desktop-export-pdf':
             result = _local_module('desktop').desktop_export_pdf(args.expected_project, args.path)
+        elif args.command == 'group-inspection-verify':
+            result = _local_module('inspection').verify_group_checkpoint(args.evidence_directory, json.loads(Path(args.layout).read_text(encoding='utf-8-sig')))
         elif args.command == 'group-inspection-checkpoint':
             result = _local_module('placement').inspect_group_checkpoint(args.expected_project, args.group_id, args.expected_count, args.evidence_directory)
         elif args.command == 'drawing-export-observed':
