@@ -1,0 +1,26 @@
+# Reported model parameters
+
+CLI `report-model-parameters --request <json>` and MCP `read_model_parameters`
+accept `path` and an exact `summary_id` discovered through `report-read-all`.
+The reader reuses the existing complete, adjacent English Summary-pair parser
+and binds all values to one room/scene, source page and PDF SHA-256.
+
+Returned parameters: ceiling/wall/floor reflection percentages, explicitly fixed
+maintenance factor, mounting height, working-plane wall zone, ground area,
+clearance height and working-plane height. Values are those rounded in the report.
+Missing/duplicate fields, unknown summary IDs, out-of-range reflectances and
+unsupported maintenance modes are rejected. No defaults are substituted.
+
+The summary's wall value is not proof of each wall's material; mounting height is
+not proof of every fixture's Z. Live settings, calculation freshness and
+individual surface materials remain explicitly unverified. This reader does not
+compare a design specification, infer applicability or declare compliance.
+
+Ten focused tests use deliberately different synthetic values (72/46/18 percent,
+maintenance 0.76) and reject missing/ambiguous/invalid fields and wrong scopes.
+The main CLI also read the native mixed-product synthetic report, SHA-256
+`0460dfefe9bf1ea397be1cfc8da8f82f0835beaeb6818b8d36f42f644e482fcf`,
+summary `3837d1f7d66cf857a136131a7287babde530ed18370c4d0be3fc09252c7b6d7d`.
+Page 15 was rendered and visually checked: 70/50/20%, fixed 0.80, mounting
+height 3.035 m, workplane 0.8 m, wall zone 0 m, room height 3 m and area 24 m².
+This is tool-validation evidence, not an assignment design.

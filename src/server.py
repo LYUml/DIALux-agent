@@ -3,6 +3,7 @@ from mcp.server.mcpserver import MCPServer
 if __package__:
     from .array_audit import verify_array_execution
     from .pdf_bundle import build_pdf_bundle, verify_pdf_bundle
+    from .model_parameters import read_model_parameters
     from .desktop import apply_array_transform
     from .schedule import build_luminaire_schedule
     from .mixed_schedule import build_mixed_luminaire_schedule
@@ -24,6 +25,7 @@ if __package__:
 else:
     from array_audit import verify_array_execution
     from pdf_bundle import build_pdf_bundle, verify_pdf_bundle
+    from model_parameters import read_model_parameters
     from desktop import apply_array_transform
     from schedule import build_luminaire_schedule
     from mixed_schedule import build_mixed_luminaire_schedule
@@ -47,6 +49,7 @@ server = MCPServer('DIALux-agent', instructions='Geometry tools do not run light
 server.tool()(verify_array_execution)
 server.tool()(build_pdf_bundle)
 server.tool()(verify_pdf_bundle)
+server.tool()(read_model_parameters)
 server.tool()(create_room)
 server.tool()(create_rooms)
 server.tool()(plan_grid)

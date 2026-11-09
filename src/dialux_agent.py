@@ -61,6 +61,7 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('array-execution-verify').add_argument('--evidence-directory', required=True)
     commands.add_parser('pdf-bundle-build').add_argument('--request', required=True)
+    commands.add_parser('report-model-parameters').add_argument('--request', required=True)
     commands.add_parser('pdf-bundle-verify').add_argument('--evidence-directory', required=True)
     commands.add_parser('layout-apply-array').add_argument('--request', required=True)
     commands.add_parser('schedule-build').add_argument('--request', required=True)
@@ -221,6 +222,8 @@ def main():
             result = _local_module('array_audit').verify_array_execution(args.evidence_directory)
         elif args.command == 'pdf-bundle-build':
             result = _local_module('pdf_bundle').build_pdf_bundle(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
+        elif args.command == 'report-model-parameters':
+            result = _local_module('model_parameters').read_model_parameters(**json.loads(Path(args.request).read_text(encoding='utf-8-sig')))
         elif args.command == 'pdf-bundle-verify':
             result = _local_module('pdf_bundle').verify_pdf_bundle(args.evidence_directory)
         elif args.command == 'layout-export-dxf':

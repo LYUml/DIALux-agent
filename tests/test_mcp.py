@@ -15,6 +15,7 @@ def test_real_stdio_tools(tmp_path):
             async with ClientSession(read,write,read_timeout_seconds=15) as session:
                 await session.initialize()
                 listing=await session.list_tools()
+                assert 'read_model_parameters' in {t.name for t in listing.tools}
                 assert {'verify_array_execution','build_pdf_bundle','verify_pdf_bundle'} <= {t.name for t in listing.tools}
                 source=tmp_path/'bundle-source.pdf';digest=fixture_pdf(source)
                 bundle_args={'sections':[{'path':str(source),'sha256':digest,'pages':[2,1],'role':'main'}],
