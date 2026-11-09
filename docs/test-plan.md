@@ -9,3 +9,8 @@ A manufacturer ULD/IES/LDT candidate is now cached. Follow `docs/validation-lumi
 The user authorized shared desktop operation on 2026-11-08. The first live gate has now completed; see `live-validation-2026-11-08.md` and its hashed artifacts. Further work must distinguish this observed agent-directed run from an implemented unattended CLI/MCP driver.
 
 The second edit/recalculate/export/reopen gate also completed. The desktop module's screenshot-guided save and calculation paths were exercised separately in the live app; see `desktop-adapter.md`. The calculation gate observed an obsolete-results banner before input and new values with the banner removed afterward. Accessibility-index calculation remains unverified. Eight Node tests cover observation consumption, foreign controls, message boxes, window identity and visual-point validation; fake-client tests alone are not live evidence.
+
+
+## Independent backend acceptance, 2026-11-09
+
+The v9 gate now replays public CLI commands from a new DIALux process through room/ULD import, automatic placement, fresh calculation, native saving, PDF export, switching projects, reopening and exporting again. A real stdio MCP session verified desktop tool discovery, live project status and report extraction. See `acceptance-2026-11-09.md`; historical Computer Use gates above are not the acceptance evidence for independence.

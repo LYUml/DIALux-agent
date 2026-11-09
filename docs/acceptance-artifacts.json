@@ -1,15 +1,64 @@
 {
   "schema": "dialux-agent/acceptance-artifacts/v1",
-  "recorded_date": "2026-11-08",
+  "recorded_date": "2026-11-09",
   "note": "Local checkpoint integrity only. Matching files do not replay desktop actions or establish compliance. The original v1 native file was subsequently saved and is not a current-hash baseline.",
   "artifacts": [
-    {"path":"local/adapter-room-v1.stf","sha256":"810562a8522979b6dfdb1b6b02e0b272d0ce37c4e8b1a7b493d78295cb81eba5"},
-    {"path":"local/luminaires/910505102817.uld","sha256":"6dc1c0220a9928ce96f7110daf816b9db73b614c8f8ed5041216113d6d40e1fa"},
-    {"path":"local/validation-summary-v1.pdf","sha256":"ab6af3bc36541c8bb0d6d2634e3ee7367239af082de1c42de0fe2cf9dd0038f7"},
-    {"path":"local/validation-summary-v2.pdf","sha256":"25f4a51ecbf4a5a9187a2dd1fc354bdf98b2e3dc3149d6d8234d0fae3e7d0820"},
-    {"path":"local/adapter-calculation-v2.evo","sha256":"af1d6d05318772a2c1cfdab6e5ae294e1900dccf60dc7d7d0e04ca4d6791c602"},
-    {"path":"local/adapter-module-calculation-v3.evo","sha256":"7fc80a915e9c985769dcd965e56bcd19cbd7ffe129371edc858a7d5b200491ff"},
-    {"path":"local/standalone-room-v4.stf","sha256":"5567bcdf31d727ce46915e06d75b1e3c04fdcd2caaa355b98c37237b3aa32658"},
-    {"path":"local/standalone-validation-v5.evo","sha256":"019662e5a15e85ec10c5dba558692331d25a26acd6497d758e0f8b0e9ac08ab5"}
+    {
+      "path": "local/adapter-room-v1.stf",
+      "sha256": "810562a8522979b6dfdb1b6b02e0b272d0ce37c4e8b1a7b493d78295cb81eba5"
+    },
+    {
+      "path": "local/luminaires/910505102817.uld",
+      "sha256": "6dc1c0220a9928ce96f7110daf816b9db73b614c8f8ed5041216113d6d40e1fa"
+    },
+    {
+      "path": "local/validation-summary-v1.pdf",
+      "sha256": "ab6af3bc36541c8bb0d6d2634e3ee7367239af082de1c42de0fe2cf9dd0038f7"
+    },
+    {
+      "path": "local/validation-summary-v2.pdf",
+      "sha256": "25f4a51ecbf4a5a9187a2dd1fc354bdf98b2e3dc3149d6d8234d0fae3e7d0820"
+    },
+    {
+      "path": "local/adapter-calculation-v2.evo",
+      "sha256": "af1d6d05318772a2c1cfdab6e5ae294e1900dccf60dc7d7d0e04ca4d6791c602"
+    },
+    {
+      "path": "local/adapter-module-calculation-v3.evo",
+      "sha256": "7fc80a915e9c985769dcd965e56bcd19cbd7ffe129371edc858a7d5b200491ff"
+    },
+    {
+      "path": "local/standalone-room-v4.stf",
+      "sha256": "5567bcdf31d727ce46915e06d75b1e3c04fdcd2caaa355b98c37237b3aa32658"
+    },
+    {
+      "path": "local/standalone-validation-v5.evo",
+      "sha256": "019662e5a15e85ec10c5dba558692331d25a26acd6497d758e0f8b0e9ac08ab5"
+    },
+    {
+      "path": "local/acceptance-v9.json",
+      "sha256": "2cf02e3687ae906217b6fe4bb82f67dc77c592fed43a033013027c0e49b54e51",
+      "bytes": 515
+    },
+    {
+      "path": "local/acceptance-v9.stf",
+      "sha256": "565b9cb02b2fbf9eda8c95eceb29c291473e75ba95872c553ac93f8e286a11ed",
+      "bytes": 427
+    },
+    {
+      "path": "local/acceptance-project-v9.evo",
+      "sha256": "e43c9e75083d11e7c777c2b534cc3910853c047e3a5b4251d6cacf9debc70cad",
+      "bytes": 610836
+    },
+    {
+      "path": "local/acceptance-v9.pdf",
+      "sha256": "85ebf2c84108854f7f77a2915444b57e357e537c835ff0647eefbae308da0b6e",
+      "bytes": 1572896
+    },
+    {
+      "path": "local/acceptance-v9-reopened.pdf",
+      "sha256": "cd300e080275a7d555b81f562334336570adec5380a01df1a489f2eae18c28ea",
+      "bytes": 1572896
+    }
   ]
 }

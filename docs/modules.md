@@ -3,7 +3,7 @@
 The domain boundaries are independent of country:
 
 - Geometry/photometry adapters: source formats, units, fixture identities and geometry; reuse licensed upstream parsers.
-- DIALux execution: agent-inspected Computer Use plus an injected desktop session adapter for save/calculation. Real import, placement and export are verified workflows; standalone CLI/MCP desktop automation is not implemented.
+- DIALux execution: independent Windows pywinauto worker, shared by CLI and MCP. A fresh-process single-room import/placement/calculation/save/export/reopen run is verified; see acceptance-2026-11-09.md. The earlier Computer Use adapter is historical research.
 - Result adapters: normalize measured values, units, calculation surfaces and artifact evidence.
 - Regulations: region-independent evaluator consumes versioned criteria profiles. No thresholds embedded in evaluator code.
 - Reporting: compares evidence-backed results and produces reviewable outputs; independent from rules and simulation.
