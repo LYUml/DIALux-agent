@@ -401,6 +401,7 @@ def test_arrangement_invalid_parameters_rejected_before_ui(values, monkeypatch):
 
 def test_launch_temp_is_process_local_and_restored_on_failure(tmp_path, monkeypatch):
     import os
+    import tempfile
     import psutil
     import pywinauto
     executable = tmp_path / 'DIALux_x64.exe'
@@ -415,8 +416,9 @@ def test_launch_temp_is_process_local_and_restored_on_failure(tmp_path, monkeypa
         assert os.environ['TEMP'] != 'original-temp'
         raise RuntimeError('simulated launch failure')
     monkeypatch.setattr(pywinauto, 'Application', lambda **k: SimpleNamespace(start=start))
-    with pytest.raises(RuntimeError, match='simulated'):
-        windows_worker.launch(executable)
+    with tempfile.TemporaryDirectory(prefix='dx-') as scratch:
+        with pytest.raises(RuntimeError, match='simulated'):
+            windows_worker.launch(executable, runtime_temp=scratch)
     assert os.environ['TEMP'] == 'original-temp'
     assert os.environ['TMP'] == 'original-tmp'
 
