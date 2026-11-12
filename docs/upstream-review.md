@@ -26,3 +26,7 @@ Installed evo 14.1 reaches logged-in start screen. UI exposes StartRoomPlanning,
 ## Explicit grid planner extension
 
 The vendored `dialux/luminarias.py` was reviewed before implementing `src/layout.py`. Its `reticula` places a requested count into bounding-box subdivisions and clips center points. It does not provide an externally anchored/rotated ceiling grid, full fixture footprint containment or polygonal keep-out regions. The new module addresses those distinct requirements using the already installed Shapely library, while leaving the upstream implementation and MIT notice unchanged. It does not replace the upstream STF serializer or claim photometric optimization. Synthetic tests cover footprint containment, exclusions, transform invariance and invalid inputs.
+
+## Repository subset
+
+The vendored copy retains the STF reader/writer and their optional CAD-reading dependencies, together with the original MIT license. Unused upstream room-building, layout and regulation modules were removed during repository cleanup. The original reviewed commit remains documented above.

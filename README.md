@@ -1,166 +1,86 @@
 # DIALux-agent
 
-Independent Windows CLI/MCP tools for DIALux evo and native AutoCAD verification.
-The shared Python backend runs desktop operations through pywinauto; Codex
-Computer Use is not required.
+用 AI 或命令行操作 DIALux evo，完成建模、布灯、计算、保存和报告导出。
 
-**Current scope: develop and verify the agent first.** BSE3125 materials inform
-requirements only. Assignment design and submission production require a separate
-user instruction. All development layouts are synthetic tests.
+- CLI 是命令行入口。
+- MCP 让 AI 客户端调用工具。
+- [Skill](skills/dialux-agent/SKILL.md) 是给 AI 的操作说明。
 
-Start with the [current acceptance matrix](docs/current-acceptance.md),
-[scope](docs/agent-development-scope.md) and
-[workflow skill](skills/dialux-agent/SKILL.md). Passing unit tests or exporting a
-file does not establish complete native engineering acceptance.
+## 安装
 
-Explicit DXF tile layers can now supply hash-bound lattice origin, spacing and
-rotation through CLI/MCP; see [CAD tile grid reading](docs/cad-tile-grid.md).
-This validates selected geometry without inferring a room or designing a layout.
+需要 Windows、Python 3.12 和 DIALux evo。已测试 DIALux evo 14.1。桌面操作需要交互式 Windows 会话，可能占用前台焦点。CAD 原生转换和打印另需 AutoCAD Core Console，默认使用 AutoCAD 2027。
 
-## Verified capability and remaining limits
+在 PowerShell 中运行：
 
-| Area | Native evidence and present boundary |
-| --- | --- |
-| Independent desktop control | STF/ULD import, arrangement, actual calculation, save, PDF export and reopen through standalone workers. Requires an interactive Windows session; no private mouse. |
-| Geometry | Concave and adjacent synthetic rooms, ground-supported box obstacles, source-preserving DWG survey and explicitly selected DXF boundary extraction. General CAD room inference and arbitrary object topology are not established. |
-| Fixture control | Six-fixture explicit grid movement and 168-fixture regular-array translation passed full position checks, calculation and persistence. A six-fixture 5° native rotation also passed those gates. Arbitrary large individual movement and general recovery remain unaccepted. |
-| Iteration | Two explicit candidates passed actual calculations, comparison and reopen checks. A generated four-candidate domain also passed calculation, comparison and reopen checks; previous failures are retained. No global-optimum or automatic winner-installation claim. |
-| Drawing | Observed fixture coordinates, editable IDs, bounded label placement, linear dimensions, single-product schedule and fixed-paper frame/titleblock. Native DWG reopen and physical PDF scale checked on A3, A2 and 168-symbol A1 synthetic sheets. Mixed-product symbols/tables passed one five-fixture native A3 case; general sheet composition remains unfinished. |
-| Results | Exact supported English room/scene summaries, direct working-plane minimum/maximum and explicitly scoped coordinate tables. Missing/ambiguous evidence is rejected; whole-project completeness is not inferred. |
-| Regulation | Replaceable source-bearing Hong Kong BEC office LPD, selected-zone automatic-control numerical checks and separately adopted Labour advisory modules. Project applicability remains explicit; these do not constitute comprehensive legal compliance. |
-
-Detailed acceptance and retained failures are linked from the matrix. See the
-[generated four-candidate acceptance](docs/generated-search-acceptance.md). The latest
-notification-transition investigation is in
-[desktop notification transitions](docs/desktop-notification-transitions.md).
-
-## Setup
-
-Tested with Python 3.12, DIALux evo 14.1 and AutoCAD 2027 on Windows. Native CAD
-commands use the installed AutoCAD Core Console. From this checkout in PowerShell:
-
-```powershell
+~~~powershell
+git clone https://github.com/LYUml/DIALux-agent.git
+cd DIALux-agent
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
-.\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe -m src.dialux_agent --help
-```
+~~~
 
-Commands emit JSON and expose per-command `--help`. Use new output paths: creation
-operations preserve existing artifacts. Local source copies, native projects,
-reports and logs belong in ignored `local/`, not Git.
+## CLI
 
-A small offline geometry example:
+启动并查看 DIALux 状态：
 
-```powershell
+~~~powershell
+.\.venv\Scripts\python.exe -m src.dialux_agent desktop-launch
+.\.venv\Scripts\python.exe -m src.dialux_agent desktop-status
+~~~
+
+创建和检查示例房间：
+
+~~~powershell
 .\.venv\Scripts\python.exe -m src.dialux_agent room-create --spec examples/validation-room.json --output local/demo-room.stf
 .\.venv\Scripts\python.exe -m src.dialux_agent stf-inspect --path local/demo-room.stf
-.\.venv\Scripts\python.exe -m src.dialux_agent layout-plan --spec examples/synthetic-grid-layout.json
-```
+~~~
 
-STF round-trip and layout planning do not run DIALux. For a reproducible synthetic
-CAD export, native DWG verification and fixed-scale PDF workflow, use the
-[framed CAD quickstart](docs/framed-cad-quickstart.md).
+对已打开的工程计算、保存和导出，将路径替换为自己的工程：
 
-## Workflow entry points
+~~~powershell
+.\.venv\Scripts\python.exe -m src.dialux_agent desktop-calculate --expected-project C:/Projects/demo.evo
+.\.venv\Scripts\python.exe -m src.dialux_agent desktop-save --expected-project C:/Projects/demo.evo
+.\.venv\Scripts\python.exe -m src.dialux_agent desktop-export-pdf --expected-project C:/Projects/demo.evo --path C:/Projects/report.pdf
+~~~
 
-| Task | CLI entry points | Contract and evidence |
-| --- | --- | --- |
-| Preserve and inspect inputs | `inventory`, `verify`, `drawing-convert`, `drawing-inspect`, `drawing-extract-boundary` | [Boundary extraction](docs/cad-boundary-extraction.md) |
-| Create geometry | `room-create`, `rooms-create`, `stf-inspect`, `desktop-import-stf` | [Multiroom](docs/multiroom-import.md), [obstacles](docs/obstacle-exchange.md) |
-| Discover native state | `desktop-status`, `desktop-project-tree`, `desktop-read-arrangement`, `group-inspection-checkpoint`, `group-inspection-verify` | [Group inspection](docs/group-inspection-checkpoints.md) |
-| Place and verify fixtures | `desktop-import-luminaire`, `desktop-arrange-room`, `desktop-edit-arrangement`, `desktop-edit-fixture`, `layout-apply-grid`, `layout-apply-array`, `layout-verify-observed` | [Room creation](docs/journalled-room-creation.md), [grid application](docs/grid-application.md), [large array](docs/large-array-translation.md) |
-| Calculate and compare | `calculation-checkpoint`, `layout-candidates-generate`, `layout-candidates-run`, `layout-offset-search` | [Calculation checkpoints](docs/calculation-checkpoints.md), [candidate runs](docs/layout-candidates.md) |
-| Read and evaluate results | `report-read-all`, `report-model-parameters`, `report-workplane-read`, `report-layout-read`, `report-arrangements-read`, `report-check`, `criteria-check` | [Scoped summaries](docs/scoped-report-reading.md), [mixed products](docs/mixed-product-report-reading.md), [workplane extrema](docs/workplane-extrema.md), [applicability](docs/profile-applicability.md) |
-| Produce independent CAD | `drawing-export-observed`, `schedule-build`, `schedule-build-mixed`, `drawing-export-scheduled`, `drawing-export-mixed`, `layout-verify-native`, `layout-plot-native` | [Observed layouts](docs/observed-layout-cad.md), [schedule](docs/luminaire-schedule.md), [sheets](docs/cad-sheets.md) |
+命令返回 JSON，各子命令支持 --help。冷启动可能需要数分钟。输出请选择新路径，工程和报告建议存放在 Git 忽略的 local/ 目录。一次运行一个桌面任务。超时后先检查工程状态，再决定是否重试。
 
-`report-read` is the single-summary adapter; use `report-read-all` for multiple
-supported summaries. `report-check --summary-id ...` selects exactly one summary.
-Report export uses stored results unless a fresh calculation was explicitly run.
-[Reported model parameters](docs/reported-model-parameters.md) expose scoped
-reflection percentages and fixed maintenance factors without assuming defaults
-or claiming individual-surface materials.
+## MCP
 
-Native reads/edits qualify coordinates as `active_storey`. Runtime IDs are
-session-local and must be rediscovered after reopening. Operation journals retain
-pending actions and partial failures. A timeout does not prove that no write
-occurred; inspect fresh state before deciding what to do next. There is no generic
-automatic resume or rollback.
+在 AI 客户端中添加以下配置，将 C:/path/to/DIALux-agent 替换为实际克隆路径，然后重新连接客户端：
 
-The offline [rigid-array preflight](docs/array-transform-preflight.md) checks whether
-a complete observed array can reach a target grid by one translation/rotation.
-It does not execute that movement. The separate
-[native 5° rotation test](docs/native-array-rotation.md) has scoped readback,
-calculation and reopen evidence.
-
-## Offline evidence and PDF packaging
-
-The main CLI exposes offline evidence and packaging commands:
-
-```powershell
-.\.venv\Scripts\python.exe -m src.dialux_agent array-execution-verify --evidence-directory local/completed-array/execution
-.\.venv\Scripts\python.exe -m src.dialux_agent pdf-bundle-build --request local/bundle-request.json
-```
-
-Use an actual completed execution folder and an explicit bundle request; these
-paths are placeholders. [Array replay](docs/guarded-array-execution.md) verifies
-retained evidence without accessing the desktop. [PDF bundles](docs/pdf-bundles.md)
-preserve explicitly selected static pages, enforce page/byte limits and compare
-source/output page text, dimensions and 72-dpi rendering. Neither tool validates
-engineering conclusions. Use `pdf-bundle-verify --evidence-directory <folder>`
-for independent PDF replay. MCP exposes `verify_array_execution`,
-`build_pdf_bundle` and `verify_pdf_bundle`; the standalone module commands remain
-available.
-
-## MCP and AI skill
-
-The stdio MCP server exposes the same backend functions as the CLI. Configure an
-MCP client with absolute paths, adjusting these for another checkout:
-
-```json
+~~~json
 {
   "mcpServers": {
-    "dialux-agent": {
-      "command": "C:/Users/lyuml-win/Desktop/DIALux-agent/.venv/Scripts/python.exe",
-      "args": ["C:/Users/lyuml-win/Desktop/DIALux-agent/src/server.py"]
+    "dialux": {
+      "command": "C:/path/to/DIALux-agent/.venv/Scripts/python.exe",
+      "args": ["C:/path/to/DIALux-agent/src/server.py"]
     }
   }
 }
-```
+~~~
 
-[skills/dialux-agent/SKILL.md](skills/dialux-agent/SKILL.md) describes workflow,
-evidence and failure handling. It is repository-local, not globally installed.
-The tools are a trusted local prototype, not a remotely exposed service.
+可调用 desktop_status、create_room、desktop_calculate 等工具。CLI 与 MCP 共用后端。Skill 可按客户端支持的方式加载。
 
-Desktop workers use a session-local mutex to reject overlapping cooperating
-operations. They can change foreground focus and do not exclude human input.
-Do not run another desktop workflow concurrently with a candidate search.
-See the [standalone desktop guide](docs/standalone-desktop.md).
+## 使用范围
 
-The launcher applies a process-local ASCII TEMP/TMP workaround for the reproduced
-ZeroMQ failure on this machine. It changes no installed DLL or global environment;
-an already-running DIALux process retains its existing environment.
+支持 STF 房间、ULD 灯具、阵列控制、真实计算、PDF 报告及独立 CAD 工具。香港规则放在可替换的 profiles/ 中，使用时需要确认适用范围。
 
-## Sources, reuse and development
+报告解析以英文 DIALux 输出为主。复杂工程的布灯和恢复能力有适用边界，详见 [验收与限制](docs/current-acceptance.md)。
 
-The pinned MIT [MCP_Dialux backend](docs/upstream-review.md) is retained under
-`vendor/MCP_Dialux` with its license. Room/obstacle serialization and shared-wall
-splitting reuse that work. CLI-Anything informs the CLI/JSON/shared-backend design.
-The [acceptance matrix](docs/current-acceptance.md) compares reviewed upstream
-modules without claiming to outperform every upstream feature or release.
+## 参考
 
-Regulation profiles remain separate from geometry and desktop control. Consult the
-[Hong Kong source register](docs/hk-source-register.md),
-[BEC office LPD scope](docs/hk-office-lpd.md) and
-[Labour desk-lighting advisory](docs/hk-desk-lighting.md).
-The separate [office automatic-control numerical module](docs/hk-automatic-control.md)
-requires control-zone evidence; illumination results cannot establish control operation.
-An empty or inapplicable evidence set does not pass. A supplied `verified` profile
-label is not independent verification of its authority or project applicability.
-Refresh cached official PDFs with `python scripts/cache_hk_sources.py`; downloading
-sources does not activate criteria.
+- [桌面操作](docs/standalone-desktop.md)
+- [布灯与核对](docs/grid-application.md)
+- [CAD 示例](docs/framed-cad-quickstart.md)
+- [香港规则来源](docs/hk-source-register.md)
+- [上游来源](docs/upstream-review.md)
 
-See [requirements](docs/requirements.md), [module boundaries](docs/modules.md)
-and [test plan](docs/test-plan.md). Commit convention:
-`YYYY-MM-DD English change description`. Preserve assignment originals; never
-publish private source files, generated local evidence or credentials.
+开发测试：
+
+~~~powershell
+.\.venv\Scripts\python.exe -m pytest -q
+~~~
+
+STF 读写复用 MIT 许可的 MCP_Dialux，许可证保留在 vendor/MCP_Dialux/LICENSE。
