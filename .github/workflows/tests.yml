@@ -15,4 +15,9 @@ jobs:
         run: ./scripts/setup.ps1 -Python (Get-Command python).Source
       - name: Test CLI and MCP
         shell: pwsh
-        run: ./.venv/Scripts/python.exe -m pytest -q
+        run: |
+          ./.venv/Scripts/python.exe -m pytest -q --junitxml=local/test-results.xml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          [xml]$results = Get-Content local/test-results.xml -Raw
+          $skipped = ($results.testsuites.testsuite | Measure-Object -Property skipped -Sum).Sum
+          if ($skipped -gt 0) { throw "CI requires zero skipped tests; observed $skipped." }

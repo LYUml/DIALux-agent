@@ -63,10 +63,9 @@ def test_report_check_uses_profile_limits_and_retains_evidence(monkeypatch, thre
     assert result['assessment']['criteria'][0]['evidence'] == measurement['evidence']
 
 
-@pytest.mark.skipif(not (ROOT/'local/validation-summary-v2.pdf').exists(), reason='Local live artifact not distributed')
-def test_real_report_cli_does_not_pass_without_hk_applicability():
+def test_synthetic_pdf_cli_requires_hk_applicability():
     run = subprocess.run([sys.executable, '-m', 'src.dialux_agent', 'report-check',
-                          '--path', 'local/validation-summary-v2.pdf',
+                          '--path', 'tests/fixtures/reports/summary-v2.pdf',
                           '--profile', 'resources/profiles/hk-bec2024-office-lpd.json'],
                          cwd=ROOT, capture_output=True, text=True)
     assert run.returncode == 3, run.stderr

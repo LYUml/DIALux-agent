@@ -1,0 +1,32 @@
+{
+  "three-rooms": {
+    "file": "three-rooms.pdf",
+    "sha256": "c34bc57ff14b13dbe66bd491b9faacc03c7e8a5a13827238eba2d309b7998a5a",
+    "pages": 39
+  },
+  "two-lit-rooms": {
+    "file": "two-lit-rooms.pdf",
+    "sha256": "f5496aae7d4b56154aaf89d48aa87e69fc8590dc39fe5b0c71dc26bc7afcaf69",
+    "pages": 42
+  },
+  "full-document": {
+    "file": "full-document.pdf",
+    "sha256": "85aaa859e442ea9b701f19662a7cc2a3e8a1e01a6a1b272c27a32d845257820e",
+    "pages": 28
+  },
+  "summary-v1": {
+    "file": "summary-v1.pdf",
+    "sha256": "07df554d8efa54ef17df0c1b95edc3ff5c51c2174d541b12ab1139e1bf1eeb46",
+    "pages": 2
+  },
+  "summary-v2": {
+    "file": "summary-v2.pdf",
+    "sha256": "dee08d1e4c3e1b31ec470f58086b8419228bdfaa13a2d193c8285313f883eec1",
+    "pages": 2
+  },
+  "concave-area": {
+    "file": "concave-area.pdf",
+    "sha256": "b1c493a18bfb7bab9990d833f5aabcef97249fc2a4df565d41562da7feecf6fa",
+    "pages": 24
+  }
+}

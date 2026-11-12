@@ -1,8 +1,19 @@
 from pathlib import Path
 import sys
+import json
+import hashlib
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+REPORTS = ROOT/'tests/fixtures/reports'
+MANIFEST = json.loads((REPORTS/'manifest.json').read_text())
+
+def fixture_report(name):
+    record = MANIFEST[name]
+    path = REPORTS/record['file']
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == record['sha256']
+    return str(path)
+
 sys.path.insert(0, str(ROOT / 'src'))
 from results import parse_summary_pages, parse_report_pages, read_summary_pdf, parse_report_summaries, read_report_pdf
 
@@ -35,10 +46,9 @@ def test_custom_building_header_and_unavailable_uniformity(pages):
     assert 'value' not in missing
 
 
-@pytest.mark.skipif(not (ROOT/'local/three-room-B-report-v1.pdf').exists(), reason='Local native artifact is not distributed')
-def test_native_three_room_report():
-    result = read_report_pdf(str(ROOT/'local/three-room-B-report-v1.pdf'))
-    assert result['sha256'] == '86159502dd89c02c69c510f3746b6fb6639eb86171fcc05443e34e7ed10f8b43'
+def test_synthetic_three_room_report():
+    result = read_report_pdf(fixture_report('three-rooms'))
+    assert result['sha256'] == MANIFEST['three-rooms']['sha256']
     assert result['document_pages'] == 39
     assert result['summary_count'] == 3
     summaries = result['summaries']
@@ -50,13 +60,12 @@ def test_native_three_room_report():
         for row in summary['measurements'] + summary['unavailable_measurements']:
             assert result['sha256'] in row['evidence']
     with pytest.raises(ValueError):
-        read_summary_pdf(str(ROOT/'local/three-room-B-report-v1.pdf'))
+        read_summary_pdf(fixture_report('three-rooms'))
 
 
-@pytest.mark.skipif(not (ROOT/'local/multiroom-two-lit-v1.pdf').exists(), reason='Local native artifact is not distributed')
-def test_native_two_lit_rooms_recalculation():
-    report = read_report_pdf(str(ROOT/'local/multiroom-two-lit-v1.pdf'))
-    assert report['sha256'] == '5e2bb749c33701bed5c94eb77c8b107beed1dbe6d336844b9e08eb2aa9e2c992'
+def test_synthetic_two_lit_rooms():
+    report = read_report_pdf(fixture_report('two-lit-rooms'))
+    assert report['sha256'] == MANIFEST['two-lit-rooms']['sha256']
     assert report['document_pages'] == 42
     assert [s['summary_pages'] for s in report['summaries']] == [[15,16],[23,24],[31,32]]
     assert [[m['value'] for m in s['measurements']] for s in report['summaries']] == [
@@ -113,9 +122,8 @@ def test_full_document_refuses_ambiguous_summary_selection(pages, kind):
         parse_report_pages(report)
 
 
-@pytest.mark.skipif(not (ROOT/'local/standalone-cli-export-v3.pdf').exists(), reason='Local live artifact is not distributed')
-def test_standalone_full_document_export():
-    result = read_summary_pdf(str(ROOT/'local/standalone-cli-export-v3.pdf'))
+def test_synthetic_full_document_report():
+    result = read_summary_pdf(fixture_report('full-document'))
     assert result['document_pages'] == 28
     assert result['summary_pages'] == [14, 15]
     assert [row['value'] for row in result['measurements']] == [104, .21, 1.08]
@@ -146,26 +154,23 @@ def test_reject_ambiguous_reports(pages, mutation):
     with pytest.raises(ValueError): parse_summary_pages(pages)
 
 
-@pytest.mark.skipif(not (ROOT/'local/validation-summary-v1.pdf').exists(), reason='Local live artifact is not distributed')
-def test_real_evo_export():
-    result = read_summary_pdf(str(ROOT/'local/validation-summary-v1.pdf'))
+def test_synthetic_summary_v1():
+    result = read_summary_pdf(fixture_report('summary-v1'))
     assert result['area_m2'] == 24
     assert [r['value'] for r in result['measurements']] == [104, .20, 1.08]
-    assert result['sha256'] == 'ab6af3bc36541c8bb0d6d2634e3ee7367239af082de1c42de0fe2cf9dd0038f7'
+    assert result['sha256'] == MANIFEST['summary-v1']['sha256']
     assert all(result['sha256'] in r['evidence'] for r in result['measurements'])
 
 
-@pytest.mark.skipif(not (ROOT/'local/validation-summary-v2.pdf').exists(), reason='Local live artifact is not distributed')
-def test_second_evo_export():
-    result = read_summary_pdf(str(ROOT/'local/validation-summary-v2.pdf'))
+def test_synthetic_summary_v2():
+    result = read_summary_pdf(fixture_report('summary-v2'))
     assert result['area_m2'] == 24
     assert [r['value'] for r in result['measurements']] == [104, .22, 1.08]
-    assert result['sha256'] == '25f4a51ecbf4a5a9187a2dd1fc354bdf98b2e3dc3149d6d8234d0fae3e7d0820'
+    assert result['sha256'] == MANIFEST['summary-v2']['sha256']
 
-@pytest.mark.skipif(not (ROOT/'local/concave-report-v1.pdf').exists(), reason='Local native artifact is not distributed')
-def test_native_concave_report_geometry_and_results():
-    result=read_summary_pdf(str(ROOT/'local/concave-report-v1.pdf'))
-    assert result['sha256']=='1134b36263af8f5b26c70c512be2758ecd1e5d5f98bc6627842a5f58e20de04c'
+def test_synthetic_concave_area_and_results():
+    result=read_summary_pdf(fixture_report('concave-area'))
+    assert result['sha256'] == MANIFEST['concave-area']['sha256']
     assert result['area_m2']==20
     assert result['summary_pages']==[14,15]
     assert [m['value'] for m in result['measurements']]==[493,.55,6.5]
