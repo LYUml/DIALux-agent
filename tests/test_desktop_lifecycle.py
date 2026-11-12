@@ -33,3 +33,22 @@ def test_modal_is_reported_as_blocked(monkeypatch):
     install_fakes(monkeypatch, [dict(pid=1, name='DIALux_x64.exe', exe='dialux')], True)
     monkeypatch.setattr('src.windows_worker.snapshot', lambda *args: {'dialogs': [{'title': 'Confirm'}]})
     assert desktop_state()['state'] == 'blocked'
+
+
+def test_nonblocking_launch_does_not_wait_for_idle_or_main_window(tmp_path, monkeypatch):
+    from src import windows_worker
+    executable = tmp_path/'DIALux_x64.exe'
+    executable.write_bytes(b'synthetic executable')
+    install_fakes(monkeypatch, [])
+    calls = []
+    def start(command, **kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(window=lambda **kwargs: (_ for _ in ()).throw(AssertionError('Unexpected window wait')))
+    monkeypatch.setitem(sys.modules, 'pywinauto', SimpleNamespace(
+        Application=lambda **kwargs: SimpleNamespace(start=start)))
+    monkeypatch.setattr(windows_worker, 'desktop_state', lambda: {'state':'starting'})
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix='dx-') as scratch:
+        result = windows_worker.launch(executable, scratch, wait_for_ready=False)
+    assert result['state'] == 'starting'
+    assert calls == [{'timeout':20, 'wait_for_idle':False}]

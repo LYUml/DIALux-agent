@@ -50,6 +50,9 @@ Calculate, save and export an open project. Replace the paths with your own:
 ```
 
 Commands return JSON and support --help. Cold startup can take several minutes.
+Launch returns the current startup status by default. Poll desktop-status until
+ready before sending project commands. CLI --wait-for-ready (MCP wait_for_ready=true)
+enables an explicit long wait when your client's tool timeout permits it.
 The status command reports ready, starting, blocked, not_running or
 multiple_processes. Wait while starting and inspect reported dialogs when blocked.
 Use fresh output paths and run one desktop operation at a time. After a timeout,

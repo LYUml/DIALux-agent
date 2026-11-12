@@ -186,6 +186,7 @@ def main():
     launching = commands.add_parser('desktop-launch')
     launching.add_argument('--executable', default='C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe')
     launching.add_argument('--runtime-temp')
+    launching.add_argument('--wait-for-ready', action='store_true')
     commands.add_parser('desktop-import-stf').add_argument('--path', required=True)
     exporting = commands.add_parser('desktop-export-pdf')
     exporting.add_argument('--expected-project', required=True)
@@ -282,7 +283,7 @@ def main():
         elif args.command == 'desktop-status':
             result = _local_module('desktop').desktop_status()
         elif args.command == 'desktop-launch':
-            result = _local_module('desktop').desktop_launch(args.executable, args.runtime_temp)
+            result = _local_module('desktop').desktop_launch(args.executable, args.runtime_temp, args.wait_for_ready)
         elif args.command == 'desktop-import-stf':
             result = _local_module('desktop').desktop_import_stf(args.path)
         elif args.command == 'desktop-export-pdf':

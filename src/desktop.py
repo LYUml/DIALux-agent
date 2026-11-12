@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 
-def _run(action, expected_project=None, recalculate=False, target=None, save_current=False, product_id=None, runtime_temp=None, parameters=None):
+def _run(action, expected_project=None, recalculate=False, target=None, save_current=False, product_id=None, runtime_temp=None, parameters=None, wait_for_ready=False):
     if sys.platform != 'win32':
         raise ValueError('DIALux desktop control requires Windows')
     command = [sys.executable, str(Path(__file__).with_name('windows_worker.py')), action]
@@ -21,6 +21,8 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--product-id', product_id]
     if runtime_temp is not None:
         command += ['--runtime-temp', str(runtime_temp)]
+    if wait_for_ready:
+        command.append('--wait-for-ready')
     if parameters is not None:
         command += ['--parameters', json.dumps(parameters, allow_nan=False)]
     try:
@@ -78,12 +80,16 @@ def desktop_arrange_space(expected_project: str, product_id: str) -> dict:
     return _run('arrange-space', expected_project, product_id=product_id)
 
 
-def desktop_launch(executable: str = 'C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe', runtime_temp: str | None = None) -> dict:
+def desktop_launch(executable: str = 'C:/Program Files/DIAL GmbH/DIALux/DIALux_x64.exe', runtime_temp: str | None = None, wait_for_ready: bool = False) -> dict:
     """Launch with a process-local ASCII temp directory (default checkout/local/tmp).
 
+    Returns startup status by default. Poll desktop_status until ready or blocked.
+    Set wait_for_ready=True only when the client's tool timeout permits a long wait.
     Reusing an existing process cannot change its inherited TEMP/TMP.
     """
-    return _run('launch', target=executable, runtime_temp=runtime_temp)
+    if not isinstance(wait_for_ready, bool):
+        raise ValueError('wait_for_ready must be a boolean')
+    return _run('launch', target=executable, runtime_temp=runtime_temp, wait_for_ready=wait_for_ready)
 
 
 def desktop_import_stf(path: str) -> dict:

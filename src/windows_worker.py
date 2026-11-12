@@ -9,7 +9,7 @@ import sys
 import time
 
 
-def launch(executable, runtime_temp=None):
+def launch(executable, runtime_temp=None, wait_for_ready=True):
     import psutil
     from pywinauto import Application
     path = Path(executable).resolve(strict=True)
@@ -34,13 +34,15 @@ def launch(executable, runtime_temp=None):
         previous = {key: os.environ.get(key) for key in ('TEMP', 'TMP')}
         try:
             os.environ.update(TEMP=str(scratch), TMP=str(scratch))
-            app = Application(backend='uia').start('"' + str(path) + '"', timeout=20)
+            app = Application(backend='uia').start('"' + str(path) + '"', timeout=20, wait_for_idle=False)
         finally:
             for key, value in previous.items():
                 if value is None:
                     os.environ.pop(key, None)
                 else:
                     os.environ[key] = value
+    if not wait_for_ready:
+        return desktop_state()
     # Cold module loading can keep the splash screen visible for several minutes.
     app.window(auto_id='MainWindow').wait('exists visible', timeout=600)
     return connect()
@@ -1452,6 +1454,7 @@ def main():
     parser.add_argument('--parameters')
     parser.add_argument('--product-id')
     parser.add_argument('--runtime-temp')
+    parser.add_argument('--wait-for-ready', action='store_true')
     parser.add_argument('--expected-project')
     parser.add_argument('--recalculate', action='store_true')
     parser.add_argument('--path')
@@ -1465,6 +1468,9 @@ def main():
         with desktop_lease():
             if args.action == 'status':
                 print(json.dumps(desktop_state(), ensure_ascii=True))
+                return
+            if args.action == 'launch' and not args.wait_for_ready:
+                print(json.dumps(launch(args.path, args.runtime_temp, wait_for_ready=False), ensure_ascii=True))
                 return
             app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
             if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture', 'apply-grid', 'read-arrangement', 'apply-array'} and not args.expected_project:
