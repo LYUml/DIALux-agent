@@ -1,0 +1,18 @@
+name: Windows checks
+on:
+  push:
+  pull_request:
+jobs:
+  tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install and verify setup
+        shell: pwsh
+        run: ./scripts/setup.ps1 -Python (Get-Command python).Source
+      - name: Test CLI and MCP
+        shell: pwsh
+        run: ./.venv/Scripts/python.exe -m pytest -q

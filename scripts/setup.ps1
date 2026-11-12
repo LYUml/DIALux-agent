@@ -27,6 +27,10 @@ if (-not (Test-Path -LiteralPath $venv)) {
     & $Python -m venv .venv
     if ($LASTEXITCODE -ne 0) { throw 'Could not create the virtual environment.' }
 }
+$environmentVersion = & $venv -c 'import sys; print("%s.%s" % sys.version_info[:2])'
+if ($LASTEXITCODE -ne 0 -or $environmentVersion -ne '3.12') {
+    throw 'The existing .venv does not use Python 3.12. Rename it and rerun setup.'
+}
 & $venv -m pip install -r requirements-lock.txt
 if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
 & $venv -m pip check
