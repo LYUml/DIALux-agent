@@ -16,10 +16,14 @@ Run in PowerShell:
 ```powershell
 git clone https://github.com/LYUml/DIALux-agent.git
 cd DIALux-agent
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
+powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
 .\.venv\Scripts\python.exe -m src.dialux_agent --help
 ```
+
+The setup script detects Python 3.12, installs pinned dependencies, checks their
+consistency and writes a ready-to-copy MCP configuration to local/mcp.json.
+If Python is installed in a custom location, add -Python C:/path/to/python.exe.
+Install Python 3.12 from python.org if the script cannot find it.
 
 ## CLI
 
