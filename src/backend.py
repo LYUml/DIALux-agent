@@ -5,7 +5,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'vendor' / 'MCP_Dialux'))
+sys.path.insert(0, str(ROOT / 'resources' / 'vendor' / 'MCP_Dialux'))
 from dialux.stf import Estancia, Obstaculo, escribir
 from dialux.leer_stf import leer
 from shapely.geometry import Polygon, box

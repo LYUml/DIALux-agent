@@ -37,7 +37,7 @@ executor for this plan. A public guarded apply operation is still pending.
 ## Reproducible synthetic example
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.dialux_agent layout-array-transform-plan --request examples/synthetic-array-transform.json
+.\.venv\Scripts\python.exe -m src.dialux_agent layout-array-transform-plan --request resources/examples/synthetic-array-transform.json
 ```
 
 The example contains invented test observations/runtime IDs for `synthetic.evo`;

@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    catalog = json.loads((ROOT / 'profiles/hk-sources.json').read_text(encoding='utf-8'))
+    catalog = json.loads((ROOT / 'resources/profiles/hk-sources.json').read_text(encoding='utf-8'))
     target = ROOT / 'local/references/official'
     target.mkdir(parents=True, exist_ok=True)
     records = []

@@ -14,7 +14,7 @@ from dialux_agent import inventory, verify
 
 @pytest.fixture
 def spec():
-    return json.loads((ROOT / 'examples/validation-room.json').read_text())
+    return json.loads((ROOT / 'resources/examples/validation-room.json').read_text())
 
 
 def test_roundtrip(spec, tmp_path):
@@ -30,7 +30,7 @@ def test_roundtrip(spec, tmp_path):
 
 
 def test_adjacent_rooms_reuse_upstream_boundary_splitting(tmp_path):
-    specs = json.loads((ROOT/'examples/synthetic-three-rooms.json').read_text())
+    specs = json.loads((ROOT/'resources/examples/synthetic-three-rooms.json').read_text())
     target = tmp_path/'rooms.stf'
     result = create_rooms(specs, str(target))
     rooms = inspect_stf(str(target))['salas']
@@ -103,7 +103,7 @@ def test_source_changes_detected(tmp_path):
 def test_cli_from_other_directory(tmp_path):
     output = tmp_path / 'cli.stf'
     command = [sys.executable, str(ROOT/'src/dialux_agent.py'), 'room-create',
-               '--spec', str(ROOT/'examples/validation-room.json'), '--output', str(output)]
+               '--spec', str(ROOT/'resources/examples/validation-room.json'), '--output', str(output)]
     result = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)['area_m2'] == 24
@@ -113,7 +113,7 @@ def test_cli_from_other_directory(tmp_path):
 
 
 def test_concave_room_preserves_reentrant_vertices_in_upstream_exchange(tmp_path):
-    spec=json.loads((ROOT/'examples/synthetic-concave-room.json').read_text())
+    spec=json.loads((ROOT/'resources/examples/synthetic-concave-room.json').read_text())
     target=tmp_path/'concave.stf'
     create_room(spec,str(target))
     room=inspect_stf(str(target))['salas'][0]
@@ -123,7 +123,7 @@ def test_concave_room_preserves_reentrant_vertices_in_upstream_exchange(tmp_path
 
 
 def test_obstacle_exchange_reuses_upstream_boxes(tmp_path):
-    spec=json.loads((ROOT/'examples/synthetic-obstacles-room.json').read_text())
+    spec=json.loads((ROOT/'resources/examples/synthetic-obstacles-room.json').read_text())
     target=tmp_path/'boxes.stf'
     result=create_room(spec,str(target))
     objects=inspect_stf(str(target))['salas'][0]['muebles']
@@ -136,7 +136,7 @@ def test_obstacle_exchange_reuses_upstream_boxes(tmp_path):
 
 @pytest.mark.parametrize('change',['outside','overlap','high','negative','nan','reserved','duplicate','injection','material','elevated'])
 def test_obstacle_invalid_geometry_or_unsupported_material_never_writes(tmp_path,change):
-    spec=json.loads((ROOT/'examples/synthetic-obstacles-room.json').read_text())
+    spec=json.loads((ROOT/'resources/examples/synthetic-obstacles-room.json').read_text())
     first,second=spec['obstacles']
     if change=='outside': first['center_m']=[0,0]
     if change=='overlap': second['center_m']=[3,2]

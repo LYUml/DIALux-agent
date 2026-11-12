@@ -7,7 +7,7 @@ from src.layout import plan_grid
 
 @pytest.fixture
 def case(tmp_path):
- data=json.loads((Path(__file__).parents[1]/'examples/synthetic-array-transform.json').read_text())
+ data=json.loads((Path(__file__).parents[1]/'resources/examples/synthetic-array-transform.json').read_text())
  project=tmp_path/'synthetic.evo';project.write_bytes(b'original synthetic saved file')
  group='Project_Storey_Luminaires_Array'
  observed=data['observed'];observed.update(path=str(project),group_id=group)

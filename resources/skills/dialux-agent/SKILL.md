@@ -5,7 +5,7 @@ description: Use the DIALux-agent repository to preserve design inputs, prepare 
 
 # DIALux-agent
 
-Locate the user's DIALux-agent checkout. This skill is distributed inside it at `skills/dialux-agent`; the repository root is two directories above this file. If installed elsewhere, locate the checkout from user workspace context rather than assuming the skill directory contains the backend.
+Locate the user's DIALux-agent checkout. This skill is distributed inside it at `resources/skills/dialux-agent`; the repository root is two directories above this file. If installed elsewhere, locate the checkout from user workspace context rather than assuming the skill directory contains the backend.
 
 Read the checkout's `README.md` for current commands and verified capabilities. Use its Python environment (`.venv/Scripts/python.exe` on Windows) and absolute paths when the working directory differs. CLI and MCP share a backend; select the available interface rather than reimplementing STF serialization. Do not describe unsupported commands as implemented.
 
@@ -14,12 +14,12 @@ Read the checkout's `AGENTS.md` and `docs/current-acceptance.md` before selectin
 ## Prepare inputs and geometry
 
 - Inventory original PDF/DWG files and preserve their hashes. A DWG header identifies format only; it does not prove dimensions, units or room boundaries.
-- Room creation needs explicit metre coordinates, height, workplane, reflectances in percent, maintenance factor and nonempty source/assumption descriptions. Read `examples/validation-room.json` for the schema. It is synthetic test geometry, never an assignment-derived plan.
+- Room creation needs explicit metre coordinates, height, workplane, reflectances in percent, maintenance factor and nonempty source/assumption descriptions. Read `resources/examples/validation-room.json` for the schema. It is synthetic test geometry, never an assignment-derived plan.
 - Generate new versioned STF outputs. Read them back to check the serialized room before import. Do not equate this round trip with successful evo import; the upstream STF route does not transfer real luminaire photometry reliably.
 
 ## Regional criteria
 
-Keep criteria in replaceable profiles. For Hong Kong, read `docs/hk-source-register.md` and the applicable source entries in `profiles/hk-sources.json`. Cached PDF hashes are in `profiles/hk-sources.snapshot.json`; full files are local, not distributed with the skill.
+Keep criteria in replaceable profiles. For Hong Kong, read `docs/hk-source-register.md` and the applicable source entries in `resources/profiles/hk-sources.json`. Cached PDF hashes are in `resources/profiles/hk-sources.snapshot.json`; full files are local, not distributed with the skill.
 
 Before adopting a criterion, verify its official document edition, clause/table, page, amendments, project scope and exceptions. Keep advisory recommendations, government-contract specifications, normal lighting, energy and emergency-lighting requirements distinct. A source being downloaded does not make its rules active. The Hong Kong template is intentionally unverified.
 

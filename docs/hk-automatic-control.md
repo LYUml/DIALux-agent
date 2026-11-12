@@ -1,6 +1,6 @@
 # Hong Kong office automatic-control numerical checks
 
-`profiles/hk-bec2024-office-automatic-control.json` is an optional module for one
+`resources/profiles/hk-bec2024-office-automatic-control.json` is an optional module for one
 explicitly mapped office control zone. It reuses the region-independent evaluator;
 no DIALux geometry, calculation or controller settings are changed.
 
@@ -59,7 +59,7 @@ for lighting control points. This module must not be used as a Table 5.5 assessm
 ## Synthetic reproducible check
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.dialux_agent criteria-check --profile profiles/hk-bec2024-office-automatic-control.json --measurements examples/synthetic-control-measurements.json --context examples/synthetic-control-context.json
+.\.venv\Scripts\python.exe -m src.dialux_agent criteria-check --profile resources/profiles/hk-bec2024-office-automatic-control.json --measurements resources/examples/synthetic-control-measurements.json --context resources/examples/synthetic-control-context.json
 ```
 
 The supplied examples are fabricated **test inputs**, clearly labelled in every

@@ -35,7 +35,7 @@ def test_cli_status(tmp_path, value, evidence, status, code):
 
 def test_malformed_measurement_is_json_error(tmp_path):
     p, m = tmp_path / 'profile.json', tmp_path / 'measurement.json'
-    p.write_text((ROOT / 'profiles/hk-office.template.json').read_text())
+    p.write_text((ROOT / 'resources/profiles/hk-office.template.json').read_text())
     m.write_text('{}')
     result = subprocess.run([sys.executable, str(ROOT / 'src/dialux_agent.py'),
                              'criteria-check', '--profile', str(p), '--measurements', str(m)],

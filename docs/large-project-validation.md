@@ -1,6 +1,6 @@
 # Large-project scalability and virtualized fixture reading
 
-Synthetic tool test only. `examples/synthetic-large-room.json` is a 30 × 34 m rectangle (1020 m²), unrelated to traced assignment geometry. The same tested manufacturer ULD was imported. Native automatic placement created a 14 × 12 arrangement with 168 luminaires.
+Synthetic tool test only. `resources/examples/synthetic-large-room.json` is a 30 × 34 m rectangle (1020 m²), unrelated to traced assignment geometry. The same tested manufacturer ULD was imported. Native automatic placement created a 14 × 12 arrangement with 168 luminaires.
 
 ## Native calculation evidence
 

@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def check(root=ROOT):
     live = json.loads((root/'docs/acceptance-artifacts.json').read_text())['artifacts']
-    sources = json.loads((root/'profiles/hk-sources.snapshot.json').read_text())
+    sources = json.loads((root/'resources/profiles/hk-sources.snapshot.json').read_text())
     if not live or not sources:
         raise ValueError('Evidence manifests must not be empty')
     rows = []

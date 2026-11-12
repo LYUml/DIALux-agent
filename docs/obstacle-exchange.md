@@ -6,7 +6,7 @@ Each box requires exactly `name`, `center_m: [x,y]`, `size_m: [width,depth,heigh
 
 The upstream implementation writes centre Z at half box height and `Poly.Color=40 150 150 150`. The explicit 40 percent input acknowledges that fixed material assumption; it is not native material readback. No claim of optical obstruction or furniture import is made from file generation alone. Upstream prose contains conflicting historical descriptions of furniture import, so native validation is required.
 
-`examples/synthetic-obstacles-room.json` contains a 0.6 x 0.6 x 3 m column at (3,2) and a 1.2 x 0.6 x 0.75 m desk box at (1,1). Independent upstream STF reading returned both sizes and centres, including Z=1.5 and 0.375 m. `local/synthetic-obstacles-v1.stf` is prepared for a separate native import/calculation/reopen gate after the active large-group scan. It is a synthetic tool fixture only. Neither the assignment DWG nor assignment design was changed.
+`resources/examples/synthetic-obstacles-room.json` contains a 0.6 x 0.6 x 3 m column at (3,2) and a 1.2 x 0.6 x 0.75 m desk box at (1,1). Independent upstream STF reading returned both sizes and centres, including Z=1.5 and 0.375 m. `local/synthetic-obstacles-v1.stf` is prepared for a separate native import/calculation/reopen gate after the active large-group scan. It is a synthetic tool fixture only. Neither the assignment DWG nor assignment design was changed.
 
 ## Native import, calculation and reopen gate
 

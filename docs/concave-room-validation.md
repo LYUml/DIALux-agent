@@ -1,6 +1,6 @@
 # Concave-room native validation
 
-Synthetic software validation only, not assignment geometry or design criteria. The source fixture is `examples/synthetic-concave-room.json`: (0,0), (6,0), (6,2), (4,2), (4,4), (0,4), height 3 m, working plane 0.8 m, maintenance factor 0.8, assumed reflectances 70/50/20 percent. Area is 20 m², versus a 24 m² bounding rectangle.
+Synthetic software validation only, not assignment geometry or design criteria. The source fixture is `resources/examples/synthetic-concave-room.json`: (0,0), (6,0), (6,2), (4,2), (4,4), (0,4), height 3 m, working plane 0.8 m, maintenance factor 0.8, assumed reflectances 70/50/20 percent. Area is 20 m², versus a 24 m² bounding rectangle.
 
 ## Observed chain, 2026-11-09
 

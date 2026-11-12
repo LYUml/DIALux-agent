@@ -24,7 +24,7 @@ def test_group_collection_consumes_all_identity_checked_pages(monkeypatch):
 
 
 def setup_run(tmp_path, monkeypatch):
-    spec = json.loads((Path(__file__).resolve().parents[1] / 'examples/synthetic-apply-grid.json').read_text())
+    spec = json.loads((Path(__file__).resolve().parents[1] / 'resources/examples/synthetic-apply-grid.json').read_text())
     plan = placement.plan_grid(spec)
     after = {'operation':'read_group_fixtures', 'coordinate_frame':'active_storey', 'observed_count':4, 'fixtures':[
         {'runtime_id':[7,1,i], 'position_m':f['position_m'], 'rotation_deg':[0,0,0]}

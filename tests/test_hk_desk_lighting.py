@@ -10,7 +10,7 @@ from regulations import evaluate_profile
 
 
 def fixtures():
-    profile = json.loads((ROOT/'profiles/hk-labour-desk-lighting.json').read_text())
+    profile = json.loads((ROOT/'resources/profiles/hk-labour-desk-lighting.json').read_text())
     facts = {'labour_desk_guidance_adopted': True, 'visual_task': 'normal_desk_work',
              'task_surface_mapping_reviewed': True, 'operating_conditions_coverage_reviewed': True}
     context = {k: {'value': v, 'evidence': 'Synthetic test; not an actual project'} for k, v in facts.items()}

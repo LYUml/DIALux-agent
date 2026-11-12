@@ -11,7 +11,7 @@ import ezdxf
 
 
 def test_label_avoids_observed_keepout_collision():
-    spec = json.loads((Path(__file__).parents[1]/'examples/synthetic-grid-layout.json').read_text())
+    spec = json.loads((Path(__file__).parents[1]/'resources/examples/synthetic-grid-layout.json').read_text())
     layout = plan_grid(spec)
     labels = place_fixture_labels(spec, layout, .25)
     fixture = next(f for f in layout['fixtures'] if f['id'] == 'L0013')
@@ -31,7 +31,7 @@ def test_dense_room_refuses_unplaceable_label():
 
 
 def test_rotated_fixture_labels_remain_horizontal_and_preserve_anchor(tmp_path):
-    spec = json.loads((Path(__file__).parents[1]/'examples/synthetic-grid-layout.json').read_text())
+    spec = json.loads((Path(__file__).parents[1]/'resources/examples/synthetic-grid-layout.json').read_text())
     spec['grid']['rotation_deg'] = 30
     spec['annotations'] = {'fixture_height_m': .25, 'note_height_m': .35}
     path = tmp_path/'rotated.dxf'

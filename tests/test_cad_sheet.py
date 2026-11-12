@@ -12,7 +12,7 @@ def config():
 
 
 def test_sheet_preserves_fixture_coordinates_and_reads_back(tmp_path):
-    spec=json.loads(Path('examples/synthetic-apply-grid.json').read_text())
+    spec=json.loads(Path('resources/examples/synthetic-apply-grid.json').read_text())
     plain=tmp_path/'plain.dxf';framed=tmp_path/'framed.dxf'
     export_layout_dxf(spec,str(plain));spec['sheet']=config()
     result=export_layout_dxf(spec,str(framed))

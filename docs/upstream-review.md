@@ -4,7 +4,7 @@
 
 MCP_Dialux — https://github.com/MarcosCastanedaVentura/MCP_Dialux
 
-Pinned commit: 4489032e67cabe0d409819fad24f091128620a9d. MIT, copyright Marcos Castañeda. Unmodified `dialux/` sources and LICENSE copied to `vendor/MCP_Dialux`. Planned reuse: STF serialization/reading, geometry and layout routines, exported-result inspection. The Spanish standards parser is not a Hong Kong compliance engine. Do not run upstream building conversion against originals: review output destinations first. Upstream comments and README disagree about furniture/openings; verify actual evo behavior rather than treating either as proof.
+Pinned commit: 4489032e67cabe0d409819fad24f091128620a9d. MIT, copyright Marcos Castañeda. Unmodified `dialux/` sources and LICENSE copied to `resources/vendor/MCP_Dialux`. Planned reuse: STF serialization/reading, geometry and layout routines, exported-result inspection. The Spanish standards parser is not a Hong Kong compliance engine. Do not run upstream building conversion against originals: review output destinations first. Upstream comments and README disagree about furniture/openings; verify actual evo behavior rather than treating either as proof.
 
 CLI-Anything — https://github.com/HKUDS/CLI-Anything
 

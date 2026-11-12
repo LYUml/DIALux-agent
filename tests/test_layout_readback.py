@@ -9,7 +9,7 @@ from layout import plan_grid, verify_observed_layout
 
 
 def fixture_pair():
-    spec = json.loads((Path(__file__).resolve().parents[1] / 'examples/synthetic-translated-grid.json').read_text())
+    spec = json.loads((Path(__file__).resolve().parents[1] / 'resources/examples/synthetic-translated-grid.json').read_text())
     plan = plan_grid(spec)
     observed = {'operation': 'read_group_fixtures', 'coordinate_frame': 'active_storey', 'observed_count': 4, 'fixtures': [
         {'position_m': list(p), 'rotation_deg': [0, 0, 360]} for p in

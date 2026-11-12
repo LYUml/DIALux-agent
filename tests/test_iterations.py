@@ -10,7 +10,7 @@ from src import iterations as module
 def harness(tmp_path, monkeypatch):
     project = tmp_path/'source.evo'
     project.write_bytes(b'original')
-    spec = json.loads((Path(__file__).parents[1]/'examples/synthetic-grid-layout.json').read_text())
+    spec = json.loads((Path(__file__).parents[1]/'resources/examples/synthetic-grid-layout.json').read_text())
     request = dict(expected_project=str(project), group_id='group', candidates=[copy.deepcopy(spec) for _ in range(4)],
                    checks=[{'summary_id':'room', 'profile':{}}],
                    objective={'summary_id':'room','metric':'uniformity_u0','unit':'1','calculation_surface':'WP1','direction':'maximize'},

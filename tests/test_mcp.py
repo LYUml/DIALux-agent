@@ -46,19 +46,19 @@ def test_real_stdio_tools(tmp_path):
                 assert 'generate_offset_candidates' in {t.name for t in listing.tools}
                 assert 'run_offset_search' in {t.name for t in listing.tools}
                 assert 'plan_array_transform' in {t.name for t in listing.tools}
-                transform=await session.call_tool('plan_array_transform',json.loads((ROOT/'examples/synthetic-array-transform.json').read_text()))
+                transform=await session.call_tool('plan_array_transform',json.loads((ROOT/'resources/examples/synthetic-array-transform.json').read_text()))
                 assert not transform.is_error
                 transform_payload=json.loads(transform.content[0].text)
                 assert transform_payload['predicted_geometry']['matched_count']==6
                 assert not transform_payload['native_mutation_verified']
                 assert {'export_layout_dxf', 'verify_layout_native', 'desktop_edit_arrangement', 'desktop_project_tree', 'desktop_group_fixtures', 'verify_observed_layout', 'desktop_edit_fixture', 'apply_grid_layout', 'apply_array_transform', 'plot_layout_native', 'read_report_pdf', 'check_report_summary', 'create_rooms', 'desktop_close_project', 'desktop_read_space', 'desktop_room_context', 'desktop_arrange_room', 'verify_room_addition', 'calculation_checkpoint', 'drawing_extract_boundary', 'export_observed_layout_dxf', 'desktop_read_furniture', 'build_luminaire_schedule', 'build_mixed_luminaire_schedule', 'export_mixed_scheduled_layout_dxf', 'read_workplane_pdf', 'read_report_layout', 'read_report_arrangements', 'verify_group_checkpoint', 'inspect_group_checkpoint'} <= {t.name for t in listing.tools}
-                layout_spec=json.loads((ROOT/'examples/synthetic-grid-layout.json').read_text())
+                layout_spec=json.loads((ROOT/'resources/examples/synthetic-grid-layout.json').read_text())
                 cad_path=tmp_path/'mcp-layout.dxf'
                 cad_result=await session.call_tool('export_layout_dxf',{'spec':layout_spec,'output':str(cad_path)})
                 assert not cad_result.is_error
                 assert cad_path.is_file()
                 assert {'create_room','inspect_stf','inventory','evaluate_profile','read_summary_pdf','check_report','desktop_status','desktop_save','desktop_calculate','desktop_open','desktop_launch','desktop_import_stf','desktop_save_as','desktop_import_luminaire','desktop_arrange_space','desktop_export_pdf','drawing_convert','drawing_inspect','plan_grid'} <= {t.name for t in listing.tools}
-                spec=json.loads((ROOT/'examples/validation-room.json').read_text())
+                spec=json.loads((ROOT/'resources/examples/validation-room.json').read_text())
                 path=tmp_path/'mcp-room.stf'
                 result=await session.call_tool('create_room',{'spec':spec,'output':str(path)})
                 assert not result.is_error
@@ -70,7 +70,7 @@ def test_real_stdio_tools(tmp_path):
                 if report.exists():
                     checked = await session.call_tool('check_report', {
                         'path': str(report),
-                        'profile': json.loads((ROOT/'profiles/hk-bec2024-office-lpd.json').read_text())})
+                        'profile': json.loads((ROOT/'resources/profiles/hk-bec2024-office-lpd.json').read_text())})
                     assert not checked.is_error
                     payload = json.loads(checked.content[0].text)
                     assert payload['status'] == 'unverified'

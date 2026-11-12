@@ -9,7 +9,7 @@ from regulations import evaluate_profile
 
 
 def evaluate(area, lpd, power=100, missing=None):
-    profile=json.loads((ROOT/'profiles/hk-bec2024-office-lpd.json').read_text())
+    profile=json.loads((ROOT/'resources/profiles/hk-bec2024-office-lpd.json').read_text())
     values={'design_code':'BEC 2024','bec_section5_scope_confirmed':True,
             'space_use':'office','single_function_space':True,'enclosed':True,
             'space_boundary_5_4_3_reviewed':True,'lpd_power_basis_5_4_2_reviewed':True}

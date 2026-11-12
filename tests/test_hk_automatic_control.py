@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from src.regulations import evaluate_profile
 
-PROFILE = json.loads((Path(__file__).resolve().parents[1]/'profiles/hk-bec2024-office-automatic-control.json').read_text())
+PROFILE = json.loads((Path(__file__).resolve().parents[1]/'resources/profiles/hk-bec2024-office-automatic-control.json').read_text())
 
 
 def inputs():

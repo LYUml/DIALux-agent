@@ -8,7 +8,7 @@
 
 Native test on 2026-11-09:
 
-- `examples/synthetic-three-rooms.json` defines rooms A (24 m²), B (16 m²) and a corridor (20 m²) sharing boundaries. The upstream writer inserts the junction (6,4) into the corridor's originally four-vertex contour; serialized readback shows five vertices and unchanged area.
+- `resources/examples/synthetic-three-rooms.json` defines rooms A (24 m²), B (16 m²) and a corridor (20 m²) sharing boundaries. The upstream writer inserts the junction (6,4) into the corridor's originally four-vertex contour; serialized readback shows five vertices and unchanged area.
 - Public CLI closed the saved bulk test, imported the three-room STF and saved a new native project. STF SHA256 `01b08188ed5e556ed461548a08231085377ad72021d6aed7368389a548837e16`; native saved SHA256 `1e0c7d157109c62fba44dc1dd6790855c046de1a4e322152a5241adcf2ed4eea`.
 - Native tree inspection found three distinct rooms in one STF building/storey. Public space readback returned each correct room name, height 3.000 m, working-plane height 0.800 m, margin 0.000 m and maintenance factor 0.80.
 - Independent pywinauto floor-plan capture `local/three-room-native-view-v2.png` was visually inspected: two lower rooms and the full-width upper corridor appeared as intended, with no observed diagonal crossing the corridor. This is visual topology evidence, not a complete native boundary/area measurement audit. No Codex Computer Use dependency was used.

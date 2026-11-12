@@ -13,7 +13,7 @@ from layout import plan_grid
 
 @pytest.fixture
 def spec():
-    return json.loads((Path(__file__).resolve().parents[1] / 'examples/synthetic-grid-layout.json').read_text())
+    return json.loads((Path(__file__).resolve().parents[1] / 'resources/examples/synthetic-grid-layout.json').read_text())
 
 
 def test_every_full_footprint_fits_and_avoids_exclusion(spec):

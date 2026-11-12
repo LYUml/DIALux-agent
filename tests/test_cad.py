@@ -44,7 +44,7 @@ def test_native_conversion_preserves_existing_destination(tmp_path):
 
 
 def test_layout_export_preserves_fixture_identity_geometry_and_test_label(tmp_path):
-    spec = json.loads((Path(__file__).resolve().parents[1] / 'examples/synthetic-grid-layout.json').read_text())
+    spec = json.loads((Path(__file__).resolve().parents[1] / 'resources/examples/synthetic-grid-layout.json').read_text())
     spec['grid']['rotation_deg'] = 30
     layout = plan_grid(spec)
     target = tmp_path / 'layout.dxf'
@@ -152,7 +152,7 @@ def test_bad_plot_paper_rejected_before_source_access(paper):
 
 
 def test_drawing_annotation_sizes_are_explicit_and_preserved(tmp_path):
-    spec=json.loads((Path(__file__).resolve().parents[1]/'examples/synthetic-grid-layout.json').read_text())
+    spec=json.loads((Path(__file__).resolve().parents[1]/'resources/examples/synthetic-grid-layout.json').read_text())
     spec['annotations']={'fixture_height_m':.25,'note_height_m':.35}
     target=tmp_path/'large-labels.dxf'
     export_layout_dxf(spec,str(target))
@@ -178,7 +178,7 @@ def test_pdf_rectangle_path_uses_implicit_closure():
 
 @pytest.mark.parametrize('product',['Panel %%d','Panel\nInjected note','Panel\tModel'])
 def test_drawing_notes_reject_cad_escapes_before_output(tmp_path,product):
-    spec=json.loads((Path(__file__).parents[1]/'examples/synthetic-apply-grid.json').read_text())
+    spec=json.loads((Path(__file__).parents[1]/'resources/examples/synthetic-apply-grid.json').read_text())
     spec['fixture']['product_id']=product
     output=tmp_path/'invalid.dxf'
     with pytest.raises(ValueError,match='drawing notes'):
@@ -188,7 +188,7 @@ def test_drawing_notes_reject_cad_escapes_before_output(tmp_path,product):
 def test_annotation_regions_clear_external_dimensions_and_notes(tmp_path):
     from ezdxf import bbox
     from src.cad import _write_layout_dxf
-    spec=json.loads((Path(__file__).parents[1]/'examples/synthetic-apply-grid.json').read_text())
+    spec=json.loads((Path(__file__).parents[1]/'resources/examples/synthetic-apply-grid.json').read_text())
     spec['dimensions']=[dict(id='D1',p1_m=[0,0],p2_m=[0,4],base_m=[12,0],angle_deg=90),
                         dict(id='D2',p1_m=[0,0],p2_m=[6,0],base_m=[0,-8],angle_deg=0)]
     schedule={'quantity':4,'product':{'reported_label':'Test','article_number':'123','power_w':26.,'luminaire_flux_lm':3602.},

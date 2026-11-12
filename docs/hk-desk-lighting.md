@@ -1,6 +1,6 @@
 # Hong Kong desk-lighting advisory module
 
-`profiles/hk-labour-desk-lighting.json` is separate from the EMSD energy module. Its source is Labour Department, *Lighting in Offices*, September 2003 third edition, [official PDF](https://www.labour.gov.hk/eng/public/oh/OHB50.pdf). Pages 8 and 11 were checked in both extracted text and rendered images on 2026-11-08. The source hash is retained in the profile.
+`resources/profiles/hk-labour-desk-lighting.json` is separate from the EMSD energy module. Its source is Labour Department, *Lighting in Offices*, September 2003 third edition, [official PDF](https://www.labour.gov.hk/eng/public/oh/OHB50.pdf). Pages 8 and 11 were checked in both extracted text and rendered images on 2026-11-08. The source hash is retained in the profile.
 
 Paragraph 8 on page 8 recommends an optimum 300–500 lx for normal desk work and a floor of 200 lx under all conditions. The implemented criterion checks only that floor. The page 11 Appendix instead gives optimum **average** examples for different activities. Those examples are retained as non-executable notes, not converted to legal minimums. This publication is advisory guidance; `verified` means the extraction was reviewed, not that a project is legally compliant.
 

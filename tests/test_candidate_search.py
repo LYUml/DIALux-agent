@@ -9,7 +9,7 @@ from src.layout import plan_grid
 
 
 def spec():
-    return json.loads((Path(__file__).parents[1]/'examples/synthetic-apply-grid.json').read_text())
+    return json.loads((Path(__file__).parents[1]/'resources/examples/synthetic-apply-grid.json').read_text())
 
 
 def test_geometry_search_deduplicates_periodic_grids_and_keeps_input():

@@ -17,7 +17,7 @@ Do not import legacy EMSD `lightingcop.pdf` values merely because search results
 
 ## Expanded review, 2026-11-08
 
-Machine-readable PDF discovery is in `profiles/hk-sources.json`. Run `python scripts/cache_hk_sources.py` to cache the official files under ignored `local/references/official` and record SHA-256 hashes. Cache success does not mean the document has been reviewed. PDFs are not redistributed in Git.
+Machine-readable PDF discovery is in `resources/profiles/hk-sources.json`. Run `python scripts/cache_hk_sources.py` to cache the official files under ignored `local/references/official` and record SHA-256 hashes. Cache success does not mean the document has been reviewed. PDFs are not redistributed in Git.
 
 - ArchSD's [building services specification index](https://www.archsd.gov.hk/en/publications-publicity/general-specification-for-building-services.html) embeds the 2022 edition incorporating GSBS05-2022 (July 2026). Its static footer date is misleading; the embedded publication entries and actual PDF must be inspected. Government-building contractual scope must be explicitly selected.
 - EMSD's [lighting FAQ](https://www.emsd.gov.hk/beeo/en/mibec_faq_lighting_a.html), answer 1, confirms that section 5.5 control points and section 5.6 automatic lighting controls are independent. Sensors and timers do not substitute for the required control points.
@@ -31,11 +31,11 @@ Machine-readable PDF discovery is in `profiles/hk-sources.json`. Run `python scr
 
 The office rows of Table 5.4 were checked against a rendered copy of PDF page 22 (printed 16): enclosed office up to 15 m2, office above 15 up to 200 m2, and office above 200 m2 have different LPD limits. This confirms that a single hard-coded office limit is invalid. Before activation, check section 5.1 exclusions, 5.4.1 low-power exception, space boundaries under 5.4.3, the applicable code edition, and evidence for area and complete fixed-lighting power. Automatic control has separate exceptions under 5.6; do not reuse the LPD exception. No project has been declared compliant from this extraction.
 
-Rendered PDF pages 20, 21 and 23 were subsequently checked for scope, the 70 W exception and boundary/load rules. The scoped implementation is now `profiles/hk-bec2024-office-lpd.json`; see `docs/hk-office-lpd.md`. This does not activate any rule for an actual project without its evidenced context.
+Rendered PDF pages 20, 21 and 23 were subsequently checked for scope, the 70 W exception and boundary/load rules. The scoped implementation is now `resources/profiles/hk-bec2024-office-lpd.json`; see `docs/hk-office-lpd.md`. This does not activate any rule for an actual project without its evidenced context.
 
 ## Labour Department extraction checkpoint
 
-The official OHB50 PDF was re-opened online and locally rendered at pages 8 and 11. Paragraph 8's normal-desk minimum recommendation is now isolated in `profiles/hk-labour-desk-lighting.json`, with explicit advisory classification and adoption/surface/condition evidence. Appendix optimum-average examples remain non-executable reference notes. See `docs/hk-desk-lighting.md`; a Summary average is not an acceptable substitute for the required task minimum.
+The official OHB50 PDF was re-opened online and locally rendered at pages 8 and 11. Paragraph 8's normal-desk minimum recommendation is now isolated in `resources/profiles/hk-labour-desk-lighting.json`, with explicit advisory classification and adoption/surface/condition evidence. Appendix optimum-average examples remain non-executable reference notes. See `docs/hk-desk-lighting.md`; a Summary average is not an acceptable substitute for the required task minimum.
 
 ## Automatic-control numerical extraction, 2026-11-09
 

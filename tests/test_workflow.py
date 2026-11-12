@@ -67,7 +67,7 @@ def test_report_check_uses_profile_limits_and_retains_evidence(monkeypatch, thre
 def test_real_report_cli_does_not_pass_without_hk_applicability():
     run = subprocess.run([sys.executable, '-m', 'src.dialux_agent', 'report-check',
                           '--path', 'local/validation-summary-v2.pdf',
-                          '--profile', 'profiles/hk-bec2024-office-lpd.json'],
+                          '--profile', 'resources/profiles/hk-bec2024-office-lpd.json'],
                          cwd=ROOT, capture_output=True, text=True)
     assert run.returncode == 3, run.stderr
     result = json.loads(run.stdout)

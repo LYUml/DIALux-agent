@@ -102,7 +102,7 @@ def test_invalid_evidence_shapes_are_refused(change):
 def test_public_cli_from_another_working_directory(tmp_path):
     root = Path(__file__).resolve().parents[1]
     result = subprocess.run([sys.executable,str(root/'src/dialux_agent.py'),
-        'layout-array-transform-plan','--request',str(root/'examples/synthetic-array-transform.json')],
+        'layout-array-transform-plan','--request',str(root/'resources/examples/synthetic-array-transform.json')],
         cwd=tmp_path,capture_output=True,text=True,encoding='utf-8',timeout=20)
     assert result.returncode == 0, result.stderr+result.stdout
     payload = json.loads(result.stdout)

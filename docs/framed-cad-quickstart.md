@@ -6,10 +6,10 @@ Core Console at the CLI default path. This does not control DIALux or create an
 assignment. All output paths must be new; existing files/directories are refused.
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.dialux_agent layout-export-dxf --spec examples/synthetic-framed-layout.json --output local/example-sheet.dxf
+.\.venv\Scripts\python.exe -m src.dialux_agent layout-export-dxf --spec resources/examples/synthetic-framed-layout.json --output local/example-sheet.dxf
 .\.venv\Scripts\python.exe -m src.dialux_agent layout-verify-native --path local/example-sheet.dxf --output-directory local/example-sheet-native
 $fixtureIds = 1..23 | ForEach-Object { 'L{0:D4}' -f $_ }
-.\.venv\Scripts\python.exe -m src.dialux_agent layout-plot-native --path local/example-sheet-native/layout.dwg --output-directory local/example-sheet-plot --fixture-ids $fixtureIds --scale-denominator 100 --scale-outline examples/synthetic-framed-outline.json --paper A3
+.\.venv\Scripts\python.exe -m src.dialux_agent layout-plot-native --path local/example-sheet-native/layout.dwg --output-directory local/example-sheet-plot --fixture-ids $fixtureIds --scale-denominator 100 --scale-outline resources/examples/synthetic-framed-outline.json --paper A3
 ```
 
 The example contains an L-shaped room, keep-out region, 23 synthetic panel
