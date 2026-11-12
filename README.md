@@ -55,6 +55,14 @@ multiple_processes. Wait while starting and inspect reported dialogs when blocke
 Use fresh output paths and run one desktop operation at a time. After a timeout,
 inspect the project before retrying. Keep generated projects and reports in local/.
 
+To restart from a saved checkpoint, use project-recover --request request.json
+(MCP recover_saved_project). The JSON request contains source, source_sha256,
+output_directory, checks and optional expected_current_project. Each scoped check
+contains summary_id, profile and optional context, as used by calculation-checkpoint.
+Recovery creates a new project copy, recalculates, exports and assesses its report,
+then saves it. Select a known saved checkpoint after inspecting any failed operation
+journal. Recovery keeps step logs and refuses existing output directories.
+
 ## MCP
 
 Add this server to your AI client's MCP configuration, replacing the checkout path:

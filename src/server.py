@@ -1,6 +1,7 @@
 """stdio MCP sharing the same validated backend as the CLI."""
 from mcp.server.mcpserver import MCPServer
 if __package__:
+    from .recovery import recover_saved_project
     from .model_parameter_check import check_model_parameters
     from .tile_coverage import verify_layout_tile_coverage
     from .cad_grid import drawing_read_tile_grid
@@ -26,6 +27,7 @@ if __package__:
     from .workflow import calculation_checkpoint, check_report, check_report_summary
     from .desktop import desktop_read_furniture, desktop_arrange_room, desktop_room_context, desktop_read_space, desktop_close_project, desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 else:
+    from recovery import recover_saved_project
     from model_parameter_check import check_model_parameters
     from tile_coverage import verify_layout_tile_coverage
     from cad_grid import drawing_read_tile_grid
@@ -56,6 +58,7 @@ server.tool()(verify_array_execution)
 server.tool()(build_pdf_bundle)
 server.tool()(verify_pdf_bundle)
 server.tool()(read_model_parameters)
+server.tool()(recover_saved_project)
 server.tool()(check_model_parameters)
 server.tool()(drawing_read_tile_grid)
 server.tool()(verify_layout_tile_coverage)
