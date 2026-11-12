@@ -41,7 +41,8 @@ def launch(executable, runtime_temp=None):
                     os.environ.pop(key, None)
                 else:
                     os.environ[key] = value
-    app.window(auto_id='MainWindow').wait('exists visible', timeout=30)
+    # Cold module loading can keep the splash screen visible for several minutes.
+    app.window(auto_id='MainWindow').wait('exists visible', timeout=600)
     return connect()
 
 
@@ -78,6 +79,15 @@ def is_plain_tooltip(window):
             and all(c.element_info.control_type in {'Text', 'Image', 'Separator'} for c in children[0].descendants()))
 
 
+def is_energy_overlay(window):
+    if window.window_text() or window.class_name() != 'Popup':
+        return False
+    buttons = window.descendants(control_type='Button')
+    return {c.element_info.automation_id for c in buttons} == {
+        'CloseEnergyTachometerButton', 'ShowEnergyTachometerMenuButton',
+        'EnergyTachometerChangeToEnergyPerformanceToolButton'}
+
+
 def snapshot(app, main, process):
     controls = {}
     buttons = main.descendants(control_type='Button')
@@ -86,7 +96,7 @@ def snapshot(app, main, process):
         controls[control_id] = {'count': len(matches), 'enabled': len(matches) == 1 and matches[0].is_enabled()}
     dialogs = []
     for window in app.windows():
-        if window.handle != main.handle and window.is_visible() and not is_dimension_label(window) and not is_plain_tooltip(window):
+        if window.handle != main.handle and window.is_visible() and not is_dimension_label(window) and not is_plain_tooltip(window) and not is_energy_overlay(window):
             dialogs.append({'title': window.window_text(), 'automation_id': window.element_info.automation_id, 'class': window.class_name(), 'children': [{'type': c.element_info.control_type, 'text': c.window_text()} for c in window.descendants()]})
     for window in main.descendants(control_type='Window'):
         if window.is_visible():
@@ -95,11 +105,8 @@ def snapshot(app, main, process):
             # Only an exact, noninteractive one-text metric label is exempt.
             if is_dimension_label(window) or is_plain_tooltip(window):
                 continue
-            button_ids = {c.element_info.automation_id for c in window.descendants(control_type='Button')}
             # Observed non-modal energy overlay; no other secondary UI is allowed.
-            if not window.window_text() and button_ids == {
-                'CloseEnergyTachometerButton', 'ShowEnergyTachometerMenuButton',
-                'EnergyTachometerChangeToEnergyPerformanceToolButton'}:
+            if is_energy_overlay(window):
                 continue
             dialogs.append({'title': window.window_text(), 'automation_id': window.element_info.automation_id, 'class': window.class_name(), 'children': [{'type': c.element_info.control_type, 'text': c.window_text()} for c in window.descendants()]})
     return {'backend': 'pywinauto-uia', 'pid': process['pid'], 'executable': process['exe'],
@@ -187,7 +194,8 @@ def prepare_project(app, main, process, expected_project, must_exist=True):
     def verify_title(state):
         prefix, separator, version = state['title'].rpartition(' - DIALux evo ')
         if not separator or Path(prefix.rstrip('* ')).resolve() != expected:
-            raise ValueError('Active project does not match expected_project')
+            raise ValueError(f'Active project does not match expected_project {str(expected)!r}; '
+                             f'observed window title {state["title"]!r}')
     state = snapshot(app, main, process)
     verify_title(state)
     state = wait_empty_popup(app,main,process,state)

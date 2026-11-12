@@ -25,7 +25,7 @@ def _run(action, expected_project=None, recalculate=False, target=None, save_cur
         command += ['--parameters', json.dumps(parameters, allow_nan=False)]
     try:
         run = subprocess.run(command, capture_output=True, text=True, encoding='utf-8',
-                             timeout=7200 if action in {'apply-grid','apply-array'} else 3600 if action == 'inspect-group' else 120 if action == 'arrange-room' else 75 if action in {'edit-fixture', 'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'launch', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
+                             timeout=660 if action == 'launch' else 7200 if action in {'apply-grid','apply-array'} else 3600 if action == 'inspect-group' else 120 if action == 'arrange-room' else 75 if action in {'edit-fixture', 'group-fixtures', 'edit-arrangement', 'calculate', 'open', 'import-stf', 'save-as', 'import-luminaire', 'export-pdf'} else 30)
     except subprocess.TimeoutExpired as exc:
         raise ValueError('Desktop operation timed out; outcome unknown. Inspect status before any retry.') from exc
     try:
