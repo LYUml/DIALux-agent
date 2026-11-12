@@ -1441,7 +1441,9 @@ def export_pdf(app, main, process, expected_project, path):
                         'uses_codex_computer_use': False, 'fresh_calculation_verified': False,
                         'evidence': 'Native PDF export of all currently selected documentation pages; new file stabilized and parsed. Stored results are not proof of a fresh calculation.'}
         time.sleep(.3)
-    raise ValueError('PDF export submitted but file not verified; inspect before retry')
+    dialogs = snapshot(app, main, process)['dialogs']
+    raise ValueError(f'PDF export destination {str(target)!r} was not verified; '
+                     f'inspect pending dialogs before retry: {json.dumps(dialogs, ensure_ascii=True)}')
 
 
 def main():
