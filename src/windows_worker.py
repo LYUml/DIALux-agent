@@ -46,6 +46,36 @@ def launch(executable, runtime_temp=None):
     return connect()
 
 
+def desktop_state():
+    """Report process lifecycle before attempting project-specific UI operations."""
+    import psutil
+    import win32gui
+    import win32process
+    from pywinauto import Application
+    processes = [p.info for p in psutil.process_iter(['pid', 'name', 'exe'])
+                 if (p.info['name'] or '').lower() == 'dialux_x64.exe']
+    base = {'backend': 'pywinauto-uia', 'uses_codex_computer_use': False}
+    if not processes:
+        return {**base, 'state': 'not_running', 'title': '', 'dialogs': [], 'controls': {}}
+    if len(processes) != 1:
+        return {**base, 'state': 'multiple_processes', 'processes': processes}
+    process = processes[0]
+    windows = []
+    def collect(handle, _):
+        if win32process.GetWindowThreadProcessId(handle)[1] == process['pid'] and win32gui.IsWindowVisible(handle):
+            windows.append({'title': win32gui.GetWindowText(handle), 'handle': handle})
+    win32gui.EnumWindows(collect, None)
+    app = Application(backend='uia').connect(process=process['pid'], timeout=2)
+    main = app.window(auto_id='MainWindow')
+    if not main.exists(timeout=2):
+        return {**base, 'state': 'starting', 'pid': process['pid'], 'executable': process['exe'],
+                'title': next((w['title'] for w in windows if w['title']), ''),
+                'windows': windows, 'dialogs': [], 'controls': {},
+                'message': 'DIALux has not exposed its main controls yet. Wait and check status again.'}
+    state = snapshot(app, main.wrapper_object(), process)
+    return {**state, 'state': 'blocked' if state['dialogs'] else 'ready'}
+
+
 def connect():
     import psutil
     from pywinauto import Application
@@ -1431,6 +1461,9 @@ def main():
         else:
             from desktop_lock import desktop_lease
         with desktop_lease():
+            if args.action == 'status':
+                print(json.dumps(desktop_state(), ensure_ascii=True))
+                return
             app, window, process = launch(args.path, args.runtime_temp) if args.action == 'launch' else connect()
             if args.action in {'save', 'calculate', 'save-as', 'import-luminaire', 'arrange-space', 'export-pdf', 'edit-arrangement', 'project-tree', 'group-fixtures', 'edit-fixture', 'close-project', 'read-space', 'room-context', 'arrange-room', 'inspect-group', 'read-furniture', 'apply-grid', 'read-arrangement', 'apply-array'} and not args.expected_project:
                 raise ValueError('expected_project is required')
