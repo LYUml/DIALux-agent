@@ -26,7 +26,7 @@
         "page": "Printed 8; PDF 8",
         "source_path_or_url": "https://www.labour.gov.hk/eng/public/oh/OHB50.pdf",
         "applicability": "Advisory minimum for normal desk work, explicitly adopted for reviewed task surfaces and operating conditions; not a statutory threshold or average-illuminance criterion.",
-        "verified_by": "DIALux-agent: official PDF text and rendered pages 8 and 11 reviewed",
+        "verified_by": "DIALux Agent Toolkit: official PDF text and rendered pages 8 and 11 reviewed",
         "verified_date": "2026-11-08",
         "sha256": "777ed90aa692aa355713069d0e9fa451d645919be0bc3e2d53330df5213485d8",
         "authority_type": "advisory_guidance_not_statutory_threshold"

@@ -30,7 +30,7 @@ def generate():
         path = OUTPUT/f'{name}.pdf'
         canvas = Canvas(str(path), pagesize=(595, 842), invariant=1, pageCompression=1)
         canvas.setTitle('Synthetic parser fixture - '+name)
-        canvas.setAuthor('DIALux-agent contributors')
+        canvas.setAuthor('DIALux Agent Toolkit contributors')
         summaries = {}
         for page, room, area, illuminance, uniformity, power in rooms:
             header = f'Synthetic Building · Synthetic Storey · {room} (Light scene 1)\nSummary\n'

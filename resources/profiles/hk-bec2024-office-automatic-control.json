@@ -18,7 +18,7 @@
         "page": "Printed 18-19; PDF 24-25",
         "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
         "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
-        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_by": "DIALux Agent Toolkit: text extraction and rendered-page inspection; not professional certification",
         "verified_date": "2026-11-09",
         "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
         "clause_or_table": "5.6.1.1; scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
@@ -81,7 +81,7 @@
         "page": "Printed 18-19; PDF 24-25",
         "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
         "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
-        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_by": "DIALux Agent Toolkit: text extraction and rendered-page inspection; not professional certification",
         "verified_date": "2026-11-09",
         "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
         "clause_or_table": "5.6.1.3(a); scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
@@ -144,7 +144,7 @@
         "page": "Printed 18-19; PDF 24-25",
         "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
         "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
-        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_by": "DIALux Agent Toolkit: text extraction and rendered-page inspection; not professional certification",
         "verified_date": "2026-11-09",
         "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
         "clause_or_table": "5.6.1.5; scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
@@ -212,7 +212,7 @@
         "page": "Printed 18-19; PDF 24-25",
         "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
         "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
-        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_by": "DIALux Agent Toolkit: text extraction and rendered-page inspection; not professional certification",
         "verified_date": "2026-11-09",
         "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
         "clause_or_table": "5.6.1.4; scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"
@@ -280,7 +280,7 @@
         "page": "Printed 18-19; PDF 24-25",
         "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
         "applicability": "Selected evidenced automatic-control zone in an office above 150 W and not occupied 24 hours a day, 7 days a week; numerical checks only.",
-        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_by": "DIALux Agent Toolkit: text extraction and rendered-page inspection; not professional certification",
         "verified_date": "2026-11-09",
         "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7",
         "clause_or_table": "5.6.1.4; scope/exceptions 5.1, Table 5.4, 5.6.1.1 and 5.6.1.6"

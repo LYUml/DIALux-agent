@@ -1,4 +1,4 @@
-"""DIALux-agent JSON CLI: source integrity, geometry exchange and criteria checks."""
+"""DIALux Agent Toolkit JSON CLI: source integrity, geometry exchange and criteria checks."""
 import argparse
 import hashlib
 import json

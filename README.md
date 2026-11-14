@@ -1,6 +1,6 @@
-# DIALux-agent
+# DIALux Agent Toolkit
 
-Control DIALux evo through a command-line interface or an MCP-compatible AI client.
+MCP tools, a command-line interface and verifiable automation workflows for AI assistants operating DIALux evo.
 Create room geometry, place luminaires, calculate lighting, save projects and export reports.
 
 ## Requirements
@@ -14,8 +14,8 @@ Native CAD conversion and plotting also require AutoCAD Core Console, with AutoC
 Run in PowerShell:
 
 ```powershell
-git clone https://github.com/LYUml/DIALux-agent.git
-cd DIALux-agent
+git clone https://github.com/LYUml/dialux-agent-toolkit.git
+cd dialux-agent-toolkit
 powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
 .\.venv\Scripts\python.exe -m src.dialux_agent --help
 ```
@@ -74,8 +74,8 @@ Add this server to your AI client's MCP configuration, replacing the checkout pa
 {
   "mcpServers": {
     "dialux": {
-      "command": "C:/path/to/DIALux-agent/.venv/Scripts/python.exe",
-      "args": ["C:/path/to/DIALux-agent/src/server.py"]
+      "command": "C:/path/to/dialux-agent-toolkit/.venv/Scripts/python.exe",
+      "args": ["C:/path/to/dialux-agent-toolkit/src/server.py"]
     }
   }
 }

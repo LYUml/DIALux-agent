@@ -1,4 +1,4 @@
-# DIALux-agent scope
+# DIALux Agent Toolkit scope
 
 The user's clarification on 2026-11-09 is authoritative: develop and verify the agent first. Do not produce the BSE3125 assignment until the user separately instructs that work after the agent is ready.
 

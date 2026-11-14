@@ -118,7 +118,7 @@ def _write_layout_dxf(spec, output, layout, schedule=None, fixture_catalog=None)
     xs, ys = zip(*spec['contour'])
     geometry_bounds = bbox.extents(model,fast=False)
     tx, ty = geometry_bounds.extmax.x+1, geometry_bounds.extmax.y
-    notes = ['DIALux-agent | SYNTHETIC TOOL TEST', 'NOT FOR SUBMISSION OR CONSTRUCTION',
+    notes = ['DIALux Agent Toolkit | SYNTHETIC TOOL TEST', 'NOT FOR SUBMISSION OR CONSTRUCTION',
              f"Fixtures: {layout['fixture_count']} | Units: metres",
              f"Product: {spec['fixture']['product_id']}" if fixture_catalog is None else f"Product groups: {len(catalog)} | See individual schedules",
              f"Mounting height: {spec['fixture']['mounting_height_m']} m" if fixture_catalog is None else 'Mounting heights: see group schedules',

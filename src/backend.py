@@ -89,7 +89,7 @@ def create_room(spec: dict, output: str) -> dict:
     # existence check is useful feedback but cannot prevent a concurrent writer.
     with tempfile.TemporaryDirectory(prefix='dialux-stf-') as staging:
         staged = Path(staging) / 'room.stf'
-        escribir([room], staged, proyecto='DIALux-agent', autor='DIALux-agent')
+        escribir([room], staged, proyecto='DIALux Agent Toolkit', autor='DIALux Agent Toolkit')
         data = staged.read_bytes()
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open('xb') as stream:
@@ -124,7 +124,7 @@ def create_rooms(specs: list[dict], output: str) -> dict:
         raise ValueError('Choose a new .stf output path')
     with tempfile.TemporaryDirectory(prefix='dialux-rooms-') as staging:
         staged = Path(staging) / 'rooms.stf'
-        escribir([room for room, _ in validated], staged, proyecto='DIALux-agent', autor='DIALux-agent')
+        escribir([room for room, _ in validated], staged, proyecto='DIALux Agent Toolkit', autor='DIALux Agent Toolkit')
         parsed = leer(staged)
         if len(parsed['salas']) != len(specs):
             raise ValueError('Serialized room-count readback failed')

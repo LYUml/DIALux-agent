@@ -53,7 +53,7 @@ else:
     from workflow import calculation_checkpoint, check_report, check_report_summary
     from desktop import desktop_read_furniture, desktop_arrange_room, desktop_room_context, desktop_read_space, desktop_close_project, desktop_edit_fixture, desktop_group_fixtures, desktop_project_tree, desktop_edit_arrangement, desktop_status, desktop_save, desktop_calculate, desktop_open, desktop_launch, desktop_import_stf, desktop_save_as, desktop_import_luminaire, desktop_arrange_space, desktop_export_pdf
 
-server = MCPServer('DIALux-agent', instructions='Geometry tools do not run lighting calculations. Preserve source files; report unverified capabilities explicitly.')
+server = MCPServer('DIALux Agent Toolkit', instructions='Geometry tools do not run lighting calculations. Preserve source files; report unverified capabilities explicitly.')
 server.tool()(verify_array_execution)
 server.tool()(build_pdf_bundle)
 server.tool()(verify_pdf_bundle)

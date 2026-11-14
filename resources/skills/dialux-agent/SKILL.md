@@ -1,11 +1,11 @@
 ---
 name: dialux-agent
-description: Use the DIALux-agent repository to preserve design inputs, prepare room geometry, check sourced lighting criteria, and verify DIALux evo workflows. Use for DIALux lighting tasks with this local tool; geometry generation alone is not lighting simulation.
+description: Use the DIALux Agent Toolkit repository to preserve design inputs, prepare room geometry, check sourced lighting criteria, and verify DIALux evo workflows. Use for DIALux lighting tasks with this local tool; geometry generation alone is not lighting simulation.
 ---
 
-# DIALux-agent
+# DIALux Agent Toolkit
 
-Locate the user's DIALux-agent checkout. This skill is distributed inside it at `resources/skills/dialux-agent`; the repository root is two directories above this file. If installed elsewhere, locate the checkout from user workspace context rather than assuming the skill directory contains the backend.
+Locate the user's DIALux Agent Toolkit checkout. This skill is distributed inside it at `resources/skills/dialux-agent`; the repository root is two directories above this file. If installed elsewhere, locate the checkout from user workspace context rather than assuming the skill directory contains the backend.
 
 Read the checkout's `README.md` for current commands and verified capabilities. Use its Python environment (`.venv/Scripts/python.exe` on Windows) and absolute paths when the working directory differs. CLI and MCP share a backend; select the available interface rather than reimplementing STF serialization. Do not describe unsupported commands as implemented.
 

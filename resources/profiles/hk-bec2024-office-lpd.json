@@ -19,7 +19,7 @@
         "page": "Printed 14-17; PDF 20-23",
         "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
         "applicability": "Office LPD only; evidenced code scope, boundary, power basis and area classification required.",
-        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_by": "DIALux Agent Toolkit: text extraction and rendered-page inspection; not professional certification",
         "verified_date": "2026-11-08",
         "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7"
       },
@@ -94,7 +94,7 @@
         "page": "Printed 14-17; PDF 20-23",
         "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
         "applicability": "Office LPD only; evidenced code scope, boundary, power basis and area classification required.",
-        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_by": "DIALux Agent Toolkit: text extraction and rendered-page inspection; not professional certification",
         "verified_date": "2026-11-08",
         "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7"
       },
@@ -170,7 +170,7 @@
         "page": "Printed 14-17; PDF 20-23",
         "source_path_or_url": "https://www.emsd.gov.hk/beeo/en/pee/BEC_2024_ENG.pdf",
         "applicability": "Office LPD only; evidenced code scope, boundary, power basis and area classification required.",
-        "verified_by": "DIALux-agent: text extraction and rendered-page inspection; not professional certification",
+        "verified_by": "DIALux Agent Toolkit: text extraction and rendered-page inspection; not professional certification",
         "verified_date": "2026-11-08",
         "sha256": "9fae5eb2134caa7f5645735d618d82da0cf3f284e576a9f6402de9b8357f95b7"
       },
